@@ -44,3 +44,23 @@ export const weekSalesQuery = queryOptions({
     return data;
   },
 });
+
+export const customersQuery = queryOptions({
+  queryKey: ["customers"],
+  queryFn: async () => {
+    const [c, s, p] = await Promise.all([
+      supabase.from("customers").select("*").order("name"),
+      supabase.from("sales").select("id, customer_id, total, items_count, created_at").eq("is_credit", true).order("created_at", { ascending: false }),
+      supabase.from("credit_payments").select("*").order("created_at", { ascending: false }),
+    ]);
+    if (c.error) throw c.error;
+    if (s.error) throw s.error;
+    if (p.error) throw p.error;
+    return c.data.map((cu) => {
+      const sales = s.data.filter((x) => x.customer_id === cu.id);
+      const payments = p.data.filter((x) => x.customer_id === cu.id);
+      const owed = sales.reduce((a, x) => a + Number(x.total), 0) - payments.reduce((a, x) => a + Number(x.amount), 0);
+      return { ...cu, sales, payments, owed };
+    });
+  },
+});
