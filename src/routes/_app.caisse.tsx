@@ -28,14 +28,15 @@ function Caisse() {
   const [q, setQ] = useState("");
   const [cart, setCart] = useState<Record<string, number>>({});
 
-  const byId = Object.fromEntries(products.map((p) => [p.id, p]));
-  const lines = Object.entries(cart).filter(([id]) => byId[id]).map(([id, qty]) => ({ p: byId[id], qty }));
+  const byId: Record<string, (typeof products)[number]> = Object.fromEntries(products.map((p) => [p.id, p]));
+  const lines = Object.entries(cart).filter(([id]) => byId[id]).map(([id, qty]) => ({ p: byId[id]!, qty }));
   const total = lines.reduce((s, l) => s + l.qty * Number(l.p.sale_price), 0);
   const todayTotal = today.reduce((s, x) => s + Number(x.total), 0);
 
   const add = (id: string, delta: number) => {
     setCart((c) => {
       const p = byId[id];
+      if (!p) return c;
       const next = Math.min(p.stock, (c[id] ?? 0) + delta);
       const copy = { ...c };
       if (next <= 0) delete copy[id]; else copy[id] = next;
