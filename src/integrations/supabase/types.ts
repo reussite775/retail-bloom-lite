@@ -14,6 +14,62 @@ export type Database = {
   }
   public: {
     Tables: {
+      credit_payments: {
+        Row: {
+          amount: number
+          created_at: string
+          customer_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          customer_id: string
+          id?: string
+          user_id?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          customer_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "credit_payments_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      customers: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          phone: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          phone?: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          phone?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       products: {
         Row: {
           created_at: string
@@ -119,7 +175,9 @@ export type Database = {
       sales: {
         Row: {
           created_at: string
+          customer_id: string | null
           id: string
+          is_credit: boolean
           items_count: number
           profit: number
           total: number
@@ -127,7 +185,9 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          customer_id?: string | null
           id?: string
+          is_credit?: boolean
           items_count?: number
           profit?: number
           total?: number
@@ -135,21 +195,40 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          customer_id?: string | null
           id?: string
+          is_credit?: boolean
           items_count?: number
           profit?: number
           total?: number
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "sales_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      create_credit_sale: {
+        Args: { _customer_id: string; _items: Json }
+        Returns: string
+      }
       create_sale: { Args: { _items: Json }; Returns: string }
+      customer_debt: { Args: { _cid: string }; Returns: number }
       has_access: { Args: { _uid: string }; Returns: boolean }
+      record_payment: {
+        Args: { _amount: number; _customer_id: string }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never

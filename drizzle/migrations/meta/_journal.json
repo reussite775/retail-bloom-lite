@@ -8,6 +8,13 @@
       "when": 1790956982634,
       "tag": "0000_migration",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1790984462686,
+      "tag": "0001_credit_book",
+      "breakpoints": true
     }
   ]
 }
