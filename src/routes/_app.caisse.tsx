@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
-import { productsQuery, todaySalesQuery } from "@/lib/data";
+import { customersQuery, productsQuery, todaySalesQuery } from "@/lib/data";
 import { money } from "@/lib/format";
 
 export const Route = createFileRoute("/_app/caisse")({
@@ -27,6 +27,12 @@ function Caisse() {
   const { data: today = [] } = useQuery(todaySalesQuery);
   const [q, setQ] = useState("");
   const [cart, setCart] = useState<Record<string, number>>({});
+  const { data: customers = [] } = useQuery(customersQuery);
+  const [credit, setCredit] = useState(false);
+  const [customerId, setCustomerId] = useState("");
+  const [newMode, setNewMode] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [newPhone, setNewPhone] = useState("");
 
   const byId: Record<string, (typeof products)[number]> = Object.fromEntries(products.map((p) => [p.id, p]));
   const lines = Object.entries(cart).filter(([id]) => byId[id]).map(([id, qty]) => ({ p: byId[id]!, qty }));
@@ -48,14 +54,29 @@ function Caisse() {
   const checkout = useMutation({
     mutationFn: async () => {
       const items = lines.map((l) => ({ product_id: l.p.id, quantity: l.qty }));
-      const { error } = await supabase.rpc("create_sale", { _items: items });
+      if (!credit) {
+        const { error } = await supabase.rpc("create_sale", { _items: items });
+        if (error) throw error;
+        return;
+      }
+      let cid = customerId;
+      if (newMode) {
+        if (!newName.trim()) throw new Error("Indiquez le nom du client");
+        const { data, error } = await supabase.from("customers").insert({ name: newName.trim(), phone: newPhone.trim() }).select("id").single();
+        if (error) throw error;
+        cid = data.id;
+      }
+      if (!cid) throw new Error("Choisissez un client");
+      const { error } = await supabase.rpc("create_credit_sale", { _items: items, _customer_id: cid });
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success(`Vente enregistrée : ${money(total)}`);
+      toast.success(credit ? `Vente à crédit enregistrée : ${money(total)}` : `Vente enregistrée : ${money(total)}`);
       setCart({});
+      setCredit(false); setCustomerId(""); setNewMode(false); setNewName(""); setNewPhone("");
       qc.invalidateQueries({ queryKey: ["products"] });
       qc.invalidateQueries({ queryKey: ["sales"] });
+      qc.invalidateQueries({ queryKey: ["customers"] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -118,8 +139,30 @@ function Caisse() {
             <span className="text-muted-foreground">Total</span>
             <span className="font-display text-3xl font-extrabold tabular">{money(total)}</span>
           </div>
+          <label className="flex items-center gap-2 text-sm font-medium">
+            <input type="checkbox" checked={credit} onChange={(e) => setCredit(e.target.checked)} /> Vente à crédit
+          </label>
+          {credit && (
+            <div className="space-y-2 rounded-lg bg-muted p-3">
+              {!newMode ? (
+                <>
+                  <select className="h-10 w-full rounded-md border bg-background px-3 text-sm" value={customerId} onChange={(e) => setCustomerId(e.target.value)}>
+                    <option value="">Choisir un client…</option>
+                    {customers.map((c) => <option key={c.id} value={c.id}>{c.name}{c.phone ? ` · ${c.phone}` : ""}{c.owed > 0 ? ` (doit ${money(c.owed)})` : ""}</option>)}
+                  </select>
+                  <Button variant="link" className="h-auto p-0" onClick={() => setNewMode(true)}>+ Nouveau client</Button>
+                </>
+              ) : (
+                <>
+                  <Input placeholder="Nom du client" value={newName} onChange={(e) => setNewName(e.target.value)} />
+                  <Input placeholder="Téléphone" type="tel" value={newPhone} onChange={(e) => setNewPhone(e.target.value)} />
+                  <Button variant="link" className="h-auto p-0" onClick={() => setNewMode(false)}>Choisir un client existant</Button>
+                </>
+              )}
+            </div>
+          )}
           <Button size="lg" className="h-12 w-full text-base" disabled={lines.length === 0 || checkout.isPending} onClick={() => checkout.mutate()}>
-            Encaisser
+            {credit ? "Enregistrer à crédit" : "Encaisser"}
           </Button>
           {lines.length > 0 && <Button variant="ghost" className="w-full" onClick={() => setCart({})}>Annuler la vente</Button>}
         </div>
