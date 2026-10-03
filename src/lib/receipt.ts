@@ -7,7 +7,7 @@ export type Receipt = {
   lines: { name: string; qty: number; price: number }[];
   total: number;
   payment: string;
-  customer?: string;
+  customer?: string | undefined;
 };
 
 const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
