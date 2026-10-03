@@ -15,6 +15,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AppCaisseRouteImport } from './routes/_app.caisse'
 import { Route as AppCreditsRouteImport } from './routes/_app.credits'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
+import { Route as AppParametresRouteImport } from './routes/_app.parametres'
 import { Route as AppProduitsRouteImport } from './routes/_app.produits'
 
 const IndexRoute = IndexRouteImport.update({
@@ -46,6 +47,11 @@ const AppDashboardRoute = AppDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AppRoute,
 } as any)
+const AppParametresRoute = AppParametresRouteImport.update({
+  id: '/parametres',
+  path: '/parametres',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppProduitsRoute = AppProduitsRouteImport.update({
   id: '/produits',
   path: '/produits',
@@ -58,6 +64,7 @@ export interface FileRoutesByFullPath {
   '/caisse': typeof AppCaisseRoute
   '/credits': typeof AppCreditsRoute
   '/dashboard': typeof AppDashboardRoute
+  '/parametres': typeof AppParametresRoute
   '/produits': typeof AppProduitsRoute
 }
 export interface FileRoutesByTo {
@@ -66,6 +73,7 @@ export interface FileRoutesByTo {
   '/caisse': typeof AppCaisseRoute
   '/credits': typeof AppCreditsRoute
   '/dashboard': typeof AppDashboardRoute
+  '/parametres': typeof AppParametresRoute
   '/produits': typeof AppProduitsRoute
 }
 export interface FileRoutesById {
@@ -76,13 +84,28 @@ export interface FileRoutesById {
   '/_app/caisse': typeof AppCaisseRoute
   '/_app/credits': typeof AppCreditsRoute
   '/_app/dashboard': typeof AppDashboardRoute
+  '/_app/parametres': typeof AppParametresRoute
   '/_app/produits': typeof AppProduitsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/caisse' | '/credits' | '/dashboard' | '/produits'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/caisse'
+    | '/credits'
+    | '/dashboard'
+    | '/parametres'
+    | '/produits'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/caisse' | '/credits' | '/dashboard' | '/produits'
+  to:
+    | '/'
+    | '/auth'
+    | '/caisse'
+    | '/credits'
+    | '/dashboard'
+    | '/parametres'
+    | '/produits'
   id:
     | '__root__'
     | '/'
@@ -91,6 +114,7 @@ export interface FileRouteTypes {
     | '/_app/caisse'
     | '/_app/credits'
     | '/_app/dashboard'
+    | '/_app/parametres'
     | '/_app/produits'
   fileRoutesById: FileRoutesById
 }
@@ -144,6 +168,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppDashboardRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/parametres': {
+      id: '/_app/parametres'
+      path: '/parametres'
+      fullPath: '/parametres'
+      preLoaderRoute: typeof AppParametresRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/produits': {
       id: '/_app/produits'
       path: '/produits'
@@ -158,6 +189,7 @@ interface AppRouteChildren {
   AppCaisseRoute: typeof AppCaisseRoute
   AppCreditsRoute: typeof AppCreditsRoute
   AppDashboardRoute: typeof AppDashboardRoute
+  AppParametresRoute: typeof AppParametresRoute
   AppProduitsRoute: typeof AppProduitsRoute
 }
 
@@ -165,6 +197,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppCaisseRoute: AppCaisseRoute,
   AppCreditsRoute: AppCreditsRoute,
   AppDashboardRoute: AppDashboardRoute,
+  AppParametresRoute: AppParametresRoute,
   AppProduitsRoute: AppProduitsRoute,
 }
 

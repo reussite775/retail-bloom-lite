@@ -81,13 +81,7 @@ export async function receiptBlob(shop: Shop, r: Receipt): Promise<Blob> {
   sep();
   text("Merci de votre visite !", "center");
 
-  // measure height
-  let y = pad;
-  const measure = document.createElement("canvas").getContext("2d")!;
-  const real = ctx;
-  (ctx as unknown) = measure;
-  void real;
-  y = pad + ops.length * lh + (logo ? 110 : 0) + 40;
+  const y = pad + ops.length * lh + (logo ? 110 : 0) + 40;
   c.width = W; c.height = y;
   ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, W, y);
   ctx.fillStyle = "#000"; ctx.strokeStyle = "#000";
