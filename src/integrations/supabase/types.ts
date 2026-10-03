@@ -102,23 +102,35 @@ export type Database = {
       }
       profiles: {
         Row: {
+          address: string
+          contact: string
           created_at: string
           id: string
+          logo_url: string
           shop_name: string
+          slogan: string
           subscription_active: boolean
           trial_ends_at: string
         }
         Insert: {
+          address?: string
+          contact?: string
           created_at?: string
           id: string
+          logo_url?: string
           shop_name?: string
+          slogan?: string
           subscription_active?: boolean
           trial_ends_at?: string
         }
         Update: {
+          address?: string
+          contact?: string
           created_at?: string
           id?: string
+          logo_url?: string
           shop_name?: string
+          slogan?: string
           subscription_active?: boolean
           trial_ends_at?: string
         }

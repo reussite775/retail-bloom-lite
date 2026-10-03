@@ -5,9 +5,12 @@ import { Minus, Plus, Search, ShoppingCart, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
-import { customersQuery, productsQuery, todaySalesQuery } from "@/lib/data";
+import { useAuth } from "@/lib/auth";
+import { customersQuery, productsQuery, profileQuery, todaySalesQuery } from "@/lib/data";
 import { money } from "@/lib/format";
+import { printReceipt, shareReceipt, type Receipt, type Shop } from "@/lib/receipt";
 
 export const Route = createFileRoute("/_app/caisse")({
   head: () => ({
@@ -23,6 +26,9 @@ export const Route = createFileRoute("/_app/caisse")({
 
 function Caisse() {
   const qc = useQueryClient();
+  const { session } = useAuth();
+  const { data: profile } = useQuery(profileQuery(session!.user.id));
+  const [receipt, setReceipt] = useState<Receipt | null>(null);
   const { data: products = [] } = useQuery(productsQuery);
   const { data: today = [] } = useQuery(todaySalesQuery);
   const [q, setQ] = useState("");
@@ -52,26 +58,34 @@ function Caisse() {
   };
 
   const checkout = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (): Promise<Receipt> => {
       const items = lines.map((l) => ({ product_id: l.p.id, quantity: l.qty }));
+      const base = {
+        date: new Date(),
+        lines: lines.map((l) => ({ name: l.p.name, qty: l.qty, price: Number(l.p.sale_price) })),
+        total,
+      };
       if (!credit) {
-        const { error } = await supabase.rpc("create_sale", { _items: items });
+        const { data, error } = await supabase.rpc("create_sale", { _items: items });
         if (error) throw error;
-        return;
+        return { ...base, number: String(data).slice(0, 8).toUpperCase(), payment: "Espèces" };
       }
       let cid = customerId;
+      let cname = customers.find((c) => c.id === cid)?.name;
       if (newMode) {
         if (!newName.trim()) throw new Error("Indiquez le nom du client");
         const { data, error } = await supabase.from("customers").insert({ name: newName.trim(), phone: newPhone.trim() }).select("id").single();
         if (error) throw error;
-        cid = data.id;
+        cid = data.id; cname = newName.trim();
       }
       if (!cid) throw new Error("Choisissez un client");
-      const { error } = await supabase.rpc("create_credit_sale", { _items: items, _customer_id: cid });
+      const { data, error } = await supabase.rpc("create_credit_sale", { _items: items, _customer_id: cid });
       if (error) throw error;
+      return { ...base, number: String(data).slice(0, 8).toUpperCase(), payment: "Crédit", customer: cname };
     },
-    onSuccess: () => {
+    onSuccess: (r) => {
       toast.success(credit ? `Vente à crédit enregistrée : ${money(total)}` : `Vente enregistrée : ${money(total)}`);
+      setReceipt(r);
       setCart({});
       setCredit(false); setCustomerId(""); setNewMode(false); setNewName(""); setNewPhone("");
       qc.invalidateQueries({ queryKey: ["products"] });
@@ -167,6 +181,50 @@ function Caisse() {
           {lines.length > 0 && <Button variant="ghost" className="w-full" onClick={() => setCart({})}>Annuler la vente</Button>}
         </div>
       </aside>
+      <ReceiptDialog receipt={receipt} shop={profile ? { shop_name: profile.shop_name, slogan: profile.slogan, contact: profile.contact, address: profile.address, logo_url: profile.logo_url } : null} onClose={() => setReceipt(null)} />
     </div>
+  );
+}
+
+function ReceiptDialog({ receipt: r, shop, onClose }: { receipt: Receipt | null; shop: Shop | null; onClose: () => void }) {
+  return (
+    <Dialog open={!!r} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-sm">
+        <DialogHeader><DialogTitle>Reçu de caisse</DialogTitle></DialogHeader>
+        {r && shop && (
+          <>
+            <div className="max-h-[60vh] overflow-y-auto rounded-lg border bg-background p-4 font-mono text-sm">
+              <div className="text-center">
+                {shop.logo_url && <img src={shop.logo_url} alt="" className="mx-auto mb-2 max-h-16" />}
+                <p className="text-base font-bold">{shop.shop_name}</p>
+                {shop.slogan && <p className="italic text-muted-foreground">{shop.slogan}</p>}
+                {shop.address && <p>{shop.address}</p>}
+                {shop.contact && <p>{shop.contact}</p>}
+              </div>
+              <div className="my-2 border-t border-dashed" />
+              <p>Reçu n° {r.number}</p>
+              <p>{r.date.toLocaleString("fr-FR", { dateStyle: "short", timeStyle: "short" })}</p>
+              <div className="my-2 border-t border-dashed" />
+              {r.lines.map((l, i) => (
+                <div key={i} className="flex justify-between gap-2">
+                  <span>{l.name}<br /><span className="text-xs text-muted-foreground">{l.qty} × {money(l.price)}</span></span>
+                  <span className="tabular">{money(l.qty * l.price)}</span>
+                </div>
+              ))}
+              <div className="my-2 border-t border-dashed" />
+              <div className="flex justify-between font-bold"><span>TOTAL</span><span>{money(r.total)}</span></div>
+              <div className="flex justify-between"><span>Paiement</span><span>{r.payment}</span></div>
+              {r.customer && <div className="flex justify-between"><span>Client</span><span>{r.customer}</span></div>}
+              <div className="my-2 border-t border-dashed" />
+              <p className="text-center">Merci de votre visite !</p>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <Button onClick={() => printReceipt(shop, r)}>Imprimer le reçu</Button>
+              <Button variant="outline" onClick={() => shareReceipt(shop, r)}>Partager / Télécharger</Button>
+            </div>
+          </>
+        )}
+      </DialogContent>
+    </Dialog>
   );
 }

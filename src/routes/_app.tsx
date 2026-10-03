@@ -1,7 +1,7 @@
 import { createFileRoute, Link, Outlet, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
-import { BarChart3, BookUser, Boxes, Clock, Lock, LogOut, ShoppingCart, Store } from "lucide-react";
+import { BarChart3, BookUser, Boxes, Clock, Lock, LogOut, Settings, ShoppingCart, Store } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
@@ -16,6 +16,7 @@ const nav = [
   { to: "/caisse", label: "Caisse", icon: ShoppingCart },
   { to: "/produits", label: "Produits & stocks", icon: Boxes },
   { to: "/credits", label: "Carnet de crédits", icon: BookUser },
+  { to: "/parametres", label: "Paramètres", icon: Settings },
 ] as const;
 
 function AppLayout() {
