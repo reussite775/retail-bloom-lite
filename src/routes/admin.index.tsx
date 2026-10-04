@@ -38,16 +38,16 @@ function Overview() {
     { label: "Produits enregistrés", value: data.products, icon: Boxes },
     { label: "Ventes enregistrées", value: data.sales, icon: Receipt },
   ];
-  const today = data.daily[data.daily.length - 1]?.count ?? 0;
-  const week = data.weekly[data.weekly.length - 1]?.count ?? 0;
-  const month = data.monthly[data.monthly.length - 1]?.count ?? 0;
+  const today = data.daily?.[data.daily.length - 1]?.count ?? 0;
+  const week = data.weekly?.[data.weekly.length - 1]?.count ?? 0;
+  const month = data.monthly?.[data.monthly.length - 1]?.count ?? 0;
   return (
     <div className="space-y-6">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {cards.map((c) => (
           <div key={c.label} className="rounded-xl border bg-card p-5">
             <div className="flex items-center justify-between"><p className="text-sm font-medium text-muted-foreground">{c.label}</p><c.icon className="h-5 w-5 text-primary" /></div>
-            <p className="mt-3 font-display text-3xl font-extrabold tabular">{c.value.toLocaleString("fr-FR")}</p>
+            <p className="mt-3 font-display text-3xl font-extrabold tabular">{Number(c.value ?? 0).toLocaleString("fr-FR")}</p>
             {c.sub && <p className="mt-1 text-xs text-muted-foreground">{c.sub}</p>}
           </div>
         ))}
