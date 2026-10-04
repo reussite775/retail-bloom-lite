@@ -64,3 +64,23 @@ export const customersQuery = queryOptions({
     });
   },
 });
+
+export const membershipQuery = (uid: string) =>
+  queryOptions({
+    queryKey: ["membership", uid],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("shop_members").select("shop_id, role").eq("user_id", uid).maybeSingle();
+      if (error) throw error;
+      return { shopId: data?.shop_id ?? uid, isAdmin: !data || data.role === "admin" };
+    },
+  });
+
+export const teamQuery = (uid: string) =>
+  queryOptions({
+    queryKey: ["team", uid],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("shop_members").select("*").eq("shop_id", uid).order("created_at");
+      if (error) throw error;
+      return data;
+    },
+  });
