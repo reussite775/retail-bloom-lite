@@ -71,6 +71,13 @@
       "when": 1791129106077,
       "tag": "0009_bkapay_checkouts",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1791129392306,
+      "tag": "0010_assistant_messages",
+      "breakpoints": true
     }
   ]
 }
