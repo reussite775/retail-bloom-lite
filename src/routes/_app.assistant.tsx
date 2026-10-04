@@ -88,7 +88,7 @@ function Chat({ initial, userId }: { initial: UIMessage[]; userId: string }) {
   const reset = async () => {
     if (!confirm("Effacer toute la conversation ?")) return;
     const { error } = await supabase.from("assistant_messages").delete().eq("user_id", userId);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     setMessages([]);
     qc.setQueryData(["assistant-history", userId], []);
   };
