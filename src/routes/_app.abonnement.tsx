@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { BadgeCheck, Check, Clock } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
 import { profileQuery } from "@/lib/data";
+import { ContactButtons, PlanPrice } from "@/components/plan-contact";
 
 export const Route = createFileRoute("/_app/abonnement")({
   head: () => ({
@@ -57,17 +57,15 @@ function Subscription() {
       )}
 
       <div className="rounded-2xl border bg-card p-6 md:p-8">
-        <p className="text-sm text-muted-foreground">Abonnement mensuel</p>
-        <p className="font-display text-3xl font-extrabold">Contactez-nous</p>
+        <p className="text-sm text-muted-foreground">Abonnement Boutik</p>
+        <PlanPrice className="font-display text-3xl font-extrabold" />
         <ul className="mt-6 space-y-3">
           {perks.map((x) => (
             <li key={x} className="flex items-start gap-3"><Check className="mt-0.5 h-5 w-5 shrink-0 text-primary" /> {x}</li>
           ))}
         </ul>
         {!p?.subscription_active && (
-          <Button asChild size="lg" className="mt-8 h-12 w-full text-base">
-            <a href={`mailto:contact@boutik.app?subject=Activation abonnement&body=Bonjour, je souhaite activer mon abonnement. Compte : ${email}`}>S'abonner</a>
-          </Button>
+          <div className="mt-8"><ContactButtons email={email} /></div>
         )}
         <p className="mt-3 text-center text-xs text-muted-foreground">Votre abonnement est activé dès réception du paiement.</p>
       </div>

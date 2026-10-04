@@ -5,6 +5,7 @@ import { BarChart3, BookUser, Receipt, Boxes, Crown, CloudOff, History, RefreshC
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { ContactButtons, PlanPrice } from "@/components/plan-contact";
 import { useOnline, usePendingSales } from "@/lib/offline";
 import { membershipQuery, profileQuery } from "@/lib/data";
 
@@ -126,6 +127,8 @@ function AppLayout() {
 }
 
 function Paywall({ isAdmin }: { isAdmin: boolean }) {
+  const { session } = useAuth();
+  const email = session?.user.email ?? "";
   return (
     <div className="grid min-h-screen place-items-center bg-background px-4">
       <div className="w-full max-w-md rounded-2xl border bg-card p-8 text-center shadow-sm">
@@ -135,9 +138,11 @@ function Paywall({ isAdmin }: { isAdmin: boolean }) {
           Vos 7 jours d'essai sont écoulés. La caisse, les stocks et le carnet de crédits sont bloqués. Vos données sont conservées — abonnez-vous pour continuer.
         </p>
         {isAdmin ? (
-          <Button asChild className="mt-6 w-full" size="lg">
-            <Link to="/abonnement">Voir l'abonnement</Link>
-          </Button>
+          <div className="mt-6 space-y-3">
+            <PlanPrice className="font-display text-2xl font-extrabold" />
+            <ContactButtons email={email} />
+            <Link to="/abonnement" className="block text-sm font-medium text-primary hover:underline">Voir les avantages de l'abonnement</Link>
+          </div>
         ) : (
           <p className="mt-6 rounded-lg bg-muted p-3 text-sm font-medium">Demandez au propriétaire de la boutique de renouveler l'abonnement.</p>
         )}

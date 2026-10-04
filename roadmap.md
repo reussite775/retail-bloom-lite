@@ -3,4 +3,4 @@
 - [x] /admin (overview, utilisateurs + suspension, statistiques, boutiques)
 - [x] Page Dépenses
 - [x] Admin: AI-generated follow-up priorities + personalized messages to merchants (AI Gateway)
-- [ ] Blocked: real price + contact (email/WhatsApp) for paywall
+- [x] Admin settings for price + contact (paywall, Abonnement)

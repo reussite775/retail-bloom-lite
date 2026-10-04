@@ -205,3 +205,22 @@ export const setUserSuspended = createServerFn({ method: "POST" })
     if (e2) throw new Error(e2.message);
     return { ok: true };
   });
+
+export const updatePlatformSettings = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) =>
+    z.object({
+      price_amount: z.number().min(0).max(100_000_000),
+      price_period: z.enum(["mois", "trimestre", "an"]),
+      contact_email: z.union([z.literal(""), z.string().trim().email("Email invalide").max(255)]),
+      contact_whatsapp: z.string().trim().max(30).regex(/^[+\d\s().-]*$/, "Numéro invalide"),
+      payment_instructions: z.string().trim().max(500),
+    }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    await assertSuperAdmin(context.supabase, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.from("platform_settings").update({ ...data, updated_at: new Date().toISOString() }).eq("id", true);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
