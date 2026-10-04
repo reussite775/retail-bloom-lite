@@ -57,10 +57,54 @@ function AuthPage() {
       });
       if (error) toast.error(error.message);
       else if (data.session) navigate({ to: "/dashboard" });
-      else toast.success("Vérifiez votre email pour confirmer votre compte.");
+      else { setVerifying(true); toast.success("Un code de vérification vient d'être envoyé par email."); }
     }
     setBusy(false);
   };
+
+  const [verifying, setVerifying] = useState(false);
+  const [code, setCode] = useState("");
+  const verify = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setBusy(true);
+    const { data, error } = await supabase.auth.verifyOtp({ email, token: code.trim(), type: "signup" });
+    setBusy(false);
+    if (error || !data.session) { toast.error("Code invalide ou expiré"); return; }
+    toast.success("Compte confirmé, bienvenue !");
+    navigate({ to: "/dashboard" });
+  };
+  const resend = async () => {
+    const { error } = await supabase.auth.resend({ type: "signup", email });
+    if (error) toast.error("Patientez une minute avant de redemander un code.");
+    else toast.success("Nouveau code envoyé.");
+  };
+
+  if (verifying) {
+    return (
+      <div className="grid min-h-screen place-items-center px-4">
+        <div className="w-full max-w-sm rounded-2xl border bg-card p-8 shadow-sm">
+          <div className="mb-6 flex items-center gap-2 font-display text-xl font-extrabold">
+            <span className="grid h-9 w-9 place-items-center rounded-lg bg-primary text-primary-foreground"><Store className="h-5 w-5" /></span>
+            Boutik
+          </div>
+          <h1 className="text-2xl font-bold">Vérifiez votre email</h1>
+          <p className="mt-1 text-sm text-muted-foreground">Saisissez le code reçu à l'adresse <strong>{email}</strong>.</p>
+          <form onSubmit={verify} className="mt-6 space-y-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="code">Code de vérification</Label>
+              <Input id="code" inputMode="numeric" autoComplete="one-time-code" required maxLength={10}
+                className="text-center text-lg tracking-[0.4em]" value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))} />
+            </div>
+            <Button type="submit" className="w-full" disabled={busy || code.length < 6}>Valider et me connecter</Button>
+          </form>
+          <div className="mt-5 flex justify-between text-sm">
+            <button onClick={resend} className="text-primary hover:underline">Renvoyer le code</button>
+            <button onClick={() => { setVerifying(false); setCode(""); }} className="text-muted-foreground hover:text-foreground">Changer d'email</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const forgot = async () => {
     if (!email) { toast.error("Saisissez d'abord votre email"); return; }
