@@ -1,7 +1,7 @@
 import { createFileRoute, Link, Outlet, useLocation, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
-import { BarChart3, BookUser, Receipt, Boxes, Crown, CloudOff, History, RefreshCw, UserCog, Clock, CreditCard, Lock, LogOut, Settings, ShoppingCart, Store , Lightbulb, Truck } from "lucide-react";
+import { BarChart3, BookUser, Receipt, Boxes, Crown, CloudOff, History, RefreshCw, UserCog, Clock, CreditCard, Lock, LogOut, Settings, ShoppingCart, Store , Lightbulb, Truck, Gift } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
@@ -26,6 +26,7 @@ const nav = [
   { to: "/abonnement", label: "Abonnement", icon: CreditCard, admin: true },
   { to: "/parametres", label: "Paramètres", icon: Settings, admin: true },
   { to: "/equipe", label: "Équipe & accès", icon: UserCog, admin: true },
+  { to: "/parrainage", label: "Parrainage", icon: Gift, admin: true },
 ] as const;
 
 function AppLayout() {
@@ -50,6 +51,12 @@ function AppLayout() {
   useEffect(() => {
     if (forbidden) navigate({ to: "/caisse", replace: true });
   }, [forbidden, navigate]);
+
+  useEffect(() => {
+    const ref = typeof window !== "undefined" ? localStorage.getItem("boutik_ref") : null;
+    if (!session || !ref) return;
+    supabase.rpc("claim_referral", { _code: ref }).then(() => localStorage.removeItem("boutik_ref"));
+  }, [session]);
 
   useEffect(() => {
     if (!loading && !session) navigate({ to: "/auth" });

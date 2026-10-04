@@ -29,6 +29,12 @@ function AuthPage() {
   const { session } = useAuth();
   const navigate = useNavigate();
 
+  const [refCode, setRefCode] = useState("");
+  useEffect(() => {
+    const ref = new URLSearchParams(window.location.search).get("ref")?.trim().toUpperCase().slice(0, 16);
+    if (ref && /^[A-Z0-9]+$/.test(ref)) { localStorage.setItem("boutik_ref", ref); setRefCode(ref); setMode("up"); }
+  }, []);
+
   useEffect(() => {
     if (session) navigate({ to: "/dashboard" });
   }, [session, navigate]);
