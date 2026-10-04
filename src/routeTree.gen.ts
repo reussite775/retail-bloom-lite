@@ -28,6 +28,7 @@ import { Route as AdminParametresRouteImport } from './routes/admin.parametres'
 import { Route as AdminRelancesRouteImport } from './routes/admin.relances'
 import { Route as AdminStatistiquesRouteImport } from './routes/admin.statistiques'
 import { Route as AdminUtilisateursRouteImport } from './routes/admin.utilisateurs'
+import { Route as ApiAssistantRouteImport } from './routes/api/assistant'
 import { Route as ApiPublicBkapayWebhookRouteImport } from './routes/api/public/bkapay/webhook'
 
 const IndexRoute = IndexRouteImport.update({
@@ -124,6 +125,11 @@ const AdminUtilisateursRoute = AdminUtilisateursRouteImport.update({
   path: '/utilisateurs',
   getParentRoute: () => AdminRoute,
 } as any)
+const ApiAssistantRoute = ApiAssistantRouteImport.update({
+  id: '/api/assistant',
+  path: '/api/assistant',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicBkapayWebhookRoute = ApiPublicBkapayWebhookRouteImport.update({
   id: '/api/public/bkapay/webhook',
   path: '/api/public/bkapay/webhook',
@@ -148,6 +154,7 @@ export interface FileRoutesByFullPath {
   '/admin/relances': typeof AdminRelancesRoute
   '/admin/statistiques': typeof AdminStatistiquesRoute
   '/admin/utilisateurs': typeof AdminUtilisateursRoute
+  '/api/assistant': typeof ApiAssistantRoute
   '/admin/': typeof AdminIndexRoute
   '/api/public/bkapay/webhook': typeof ApiPublicBkapayWebhookRoute
 }
@@ -168,6 +175,7 @@ export interface FileRoutesByTo {
   '/admin/relances': typeof AdminRelancesRoute
   '/admin/statistiques': typeof AdminStatistiquesRoute
   '/admin/utilisateurs': typeof AdminUtilisateursRoute
+  '/api/assistant': typeof ApiAssistantRoute
   '/admin': typeof AdminIndexRoute
   '/api/public/bkapay/webhook': typeof ApiPublicBkapayWebhookRoute
 }
@@ -191,6 +199,7 @@ export interface FileRoutesById {
   '/admin/relances': typeof AdminRelancesRoute
   '/admin/statistiques': typeof AdminStatistiquesRoute
   '/admin/utilisateurs': typeof AdminUtilisateursRoute
+  '/api/assistant': typeof ApiAssistantRoute
   '/admin/': typeof AdminIndexRoute
   '/api/public/bkapay/webhook': typeof ApiPublicBkapayWebhookRoute
 }
@@ -214,6 +223,7 @@ export interface FileRouteTypes {
     | '/admin/relances'
     | '/admin/statistiques'
     | '/admin/utilisateurs'
+    | '/api/assistant'
     | '/admin/'
     | '/api/public/bkapay/webhook'
   fileRoutesByTo: FileRoutesByTo
@@ -234,6 +244,7 @@ export interface FileRouteTypes {
     | '/admin/relances'
     | '/admin/statistiques'
     | '/admin/utilisateurs'
+    | '/api/assistant'
     | '/admin'
     | '/api/public/bkapay/webhook'
   id:
@@ -256,6 +267,7 @@ export interface FileRouteTypes {
     | '/admin/relances'
     | '/admin/statistiques'
     | '/admin/utilisateurs'
+    | '/api/assistant'
     | '/admin/'
     | '/api/public/bkapay/webhook'
   fileRoutesById: FileRoutesById
@@ -265,6 +277,7 @@ export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
   AdminRoute: typeof AdminRouteWithChildren
   AuthRoute: typeof AuthRoute
+  ApiAssistantRoute: typeof ApiAssistantRoute
   ApiPublicBkapayWebhookRoute: typeof ApiPublicBkapayWebhookRoute
 }
 
@@ -403,6 +416,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminUtilisateursRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/api/assistant': {
+      id: '/api/assistant'
+      path: '/api/assistant'
+      fullPath: '/api/assistant'
+      preLoaderRoute: typeof ApiAssistantRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/bkapay/webhook': {
       id: '/api/public/bkapay/webhook'
       path: '/api/public/bkapay/webhook'
@@ -464,6 +484,7 @@ const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
   AdminRoute: AdminRouteWithChildren,
   AuthRoute: AuthRoute,
+  ApiAssistantRoute: ApiAssistantRoute,
   ApiPublicBkapayWebhookRoute: ApiPublicBkapayWebhookRoute,
 }
 export const routeTree = rootRouteImport

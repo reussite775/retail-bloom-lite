@@ -20,6 +20,7 @@ const nav = [
   { to: "/produits", label: "Produits & stocks", icon: Boxes, admin: true },
   { to: "/credits", label: "Carnet de crédits", icon: BookUser, admin: false },
   { to: "/depenses", label: "Dépenses", icon: Receipt, admin: true },
+  { to: "/assistant", label: "Conseiller IA", icon: Lightbulb, admin: true },
   { to: "/abonnement", label: "Abonnement", icon: CreditCard, admin: true },
   { to: "/parametres", label: "Paramètres", icon: Settings, admin: true },
   { to: "/equipe", label: "Équipe & accès", icon: UserCog, admin: true },
