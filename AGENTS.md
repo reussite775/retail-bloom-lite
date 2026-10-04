@@ -12,3 +12,4 @@
 - Employee accounts are created/deleted only via owner-verified server functions in `src/lib/team.functions.ts` using the admin client. Why: auth admin API is server-only.
 - PWA: vite-plugin-pwa generateSW writes `sw.js` into `dist/client` (outDir/globDirectory) and is registered only via `src/lib/pwa.ts` (never in dev/preview/iframe). Why: SSR build has no index.html and preview must never be cached.
 - Offline: React Query cache persisted to localStorage; cash-register sales made offline are queued in `src/lib/offline.ts` and replayed through the same RPCs when back online. Why: no lost sales on unstable networks.
+- Platform super admin: role in `user_roles` (checked via `has_role`); all cross-shop reads/writes go through role-verified server functions in `src/lib/superadmin.functions.ts`. Subscription revenue = sum of `subscription_payments`. Why: merchants must never see each other's data.
