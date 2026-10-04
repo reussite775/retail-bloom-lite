@@ -11,16 +11,21 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppRouteImport } from './routes/_app'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AppAbonnementRouteImport } from './routes/_app.abonnement'
 import { Route as AppCaisseRouteImport } from './routes/_app.caisse'
 import { Route as AppCreditsRouteImport } from './routes/_app.credits'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
+import { Route as AppDepensesRouteImport } from './routes/_app.depenses'
 import { Route as AppEquipeRouteImport } from './routes/_app.equipe'
 import { Route as AppParametresRouteImport } from './routes/_app.parametres'
 import { Route as AppProduitsRouteImport } from './routes/_app.produits'
 import { Route as AppVentesRouteImport } from './routes/_app.ventes'
+import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminBoutiquesRouteImport } from './routes/admin.boutiques'
+import { Route as AdminStatistiquesRouteImport } from './routes/admin.statistiques'
+import { Route as AdminUtilisateursRouteImport } from './routes/admin.utilisateurs'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -29,6 +34,11 @@ const IndexRoute = IndexRouteImport.update({
 } as any)
 const AppRoute = AppRouteImport.update({
   id: '/_app',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -56,6 +66,11 @@ const AppDashboardRoute = AppDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AppRoute,
 } as any)
+const AppDepensesRoute = AppDepensesRouteImport.update({
+  id: '/depenses',
+  path: '/depenses',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppEquipeRoute = AppEquipeRouteImport.update({
   id: '/equipe',
   path: '/equipe',
@@ -76,24 +91,44 @@ const AppVentesRoute = AppVentesRouteImport.update({
   path: '/ventes',
   getParentRoute: () => AppRoute,
 } as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminBoutiquesRoute = AdminBoutiquesRouteImport.update({
-  id: '/admin/boutiques',
-  path: '/admin/boutiques',
-  getParentRoute: () => rootRouteImport,
+  id: '/boutiques',
+  path: '/boutiques',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminStatistiquesRoute = AdminStatistiquesRouteImport.update({
+  id: '/statistiques',
+  path: '/statistiques',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminUtilisateursRoute = AdminUtilisateursRouteImport.update({
+  id: '/utilisateurs',
+  path: '/utilisateurs',
+  getParentRoute: () => AdminRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
   '/auth': typeof AuthRoute
   '/abonnement': typeof AppAbonnementRoute
   '/caisse': typeof AppCaisseRoute
   '/credits': typeof AppCreditsRoute
   '/dashboard': typeof AppDashboardRoute
+  '/depenses': typeof AppDepensesRoute
   '/equipe': typeof AppEquipeRoute
   '/parametres': typeof AppParametresRoute
   '/produits': typeof AppProduitsRoute
   '/ventes': typeof AppVentesRoute
   '/admin/boutiques': typeof AdminBoutiquesRoute
+  '/admin/statistiques': typeof AdminStatistiquesRoute
+  '/admin/utilisateurs': typeof AdminUtilisateursRoute
+  '/admin/': typeof AdminIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -102,41 +137,55 @@ export interface FileRoutesByTo {
   '/caisse': typeof AppCaisseRoute
   '/credits': typeof AppCreditsRoute
   '/dashboard': typeof AppDashboardRoute
+  '/depenses': typeof AppDepensesRoute
   '/equipe': typeof AppEquipeRoute
   '/parametres': typeof AppParametresRoute
   '/produits': typeof AppProduitsRoute
   '/ventes': typeof AppVentesRoute
   '/admin/boutiques': typeof AdminBoutiquesRoute
+  '/admin/statistiques': typeof AdminStatistiquesRoute
+  '/admin/utilisateurs': typeof AdminUtilisateursRoute
+  '/admin': typeof AdminIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_app': typeof AppRouteWithChildren
+  '/admin': typeof AdminRouteWithChildren
   '/auth': typeof AuthRoute
   '/_app/abonnement': typeof AppAbonnementRoute
   '/_app/caisse': typeof AppCaisseRoute
   '/_app/credits': typeof AppCreditsRoute
   '/_app/dashboard': typeof AppDashboardRoute
+  '/_app/depenses': typeof AppDepensesRoute
   '/_app/equipe': typeof AppEquipeRoute
   '/_app/parametres': typeof AppParametresRoute
   '/_app/produits': typeof AppProduitsRoute
   '/_app/ventes': typeof AppVentesRoute
   '/admin/boutiques': typeof AdminBoutiquesRoute
+  '/admin/statistiques': typeof AdminStatistiquesRoute
+  '/admin/utilisateurs': typeof AdminUtilisateursRoute
+  '/admin/': typeof AdminIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/admin'
     | '/auth'
     | '/abonnement'
     | '/caisse'
     | '/credits'
     | '/dashboard'
+    | '/depenses'
     | '/equipe'
     | '/parametres'
     | '/produits'
     | '/ventes'
     | '/admin/boutiques'
+    | '/admin/statistiques'
+    | '/admin/utilisateurs'
+    | '/admin/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -145,32 +194,41 @@ export interface FileRouteTypes {
     | '/caisse'
     | '/credits'
     | '/dashboard'
+    | '/depenses'
     | '/equipe'
     | '/parametres'
     | '/produits'
     | '/ventes'
     | '/admin/boutiques'
+    | '/admin/statistiques'
+    | '/admin/utilisateurs'
+    | '/admin'
   id:
     | '__root__'
     | '/'
     | '/_app'
+    | '/admin'
     | '/auth'
     | '/_app/abonnement'
     | '/_app/caisse'
     | '/_app/credits'
     | '/_app/dashboard'
+    | '/_app/depenses'
     | '/_app/equipe'
     | '/_app/parametres'
     | '/_app/produits'
     | '/_app/ventes'
     | '/admin/boutiques'
+    | '/admin/statistiques'
+    | '/admin/utilisateurs'
+    | '/admin/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AppRoute: typeof AppRouteWithChildren
+  AdminRoute: typeof AdminRouteWithChildren
   AuthRoute: typeof AuthRoute
-  AdminBoutiquesRoute: typeof AdminBoutiquesRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -187,6 +245,13 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof AppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -224,6 +289,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppDashboardRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/depenses': {
+      id: '/_app/depenses'
+      path: '/depenses'
+      fullPath: '/depenses'
+      preLoaderRoute: typeof AppDepensesRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/equipe': {
       id: '/_app/equipe'
       path: '/equipe'
@@ -252,12 +324,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppVentesRouteImport
       parentRoute: typeof AppRoute
     }
+    '/admin/': {
+      id: '/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/boutiques': {
       id: '/admin/boutiques'
-      path: '/admin/boutiques'
+      path: '/boutiques'
       fullPath: '/admin/boutiques'
       preLoaderRoute: typeof AdminBoutiquesRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/statistiques': {
+      id: '/admin/statistiques'
+      path: '/statistiques'
+      fullPath: '/admin/statistiques'
+      preLoaderRoute: typeof AdminStatistiquesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/utilisateurs': {
+      id: '/admin/utilisateurs'
+      path: '/utilisateurs'
+      fullPath: '/admin/utilisateurs'
+      preLoaderRoute: typeof AdminUtilisateursRouteImport
+      parentRoute: typeof AdminRoute
     }
   }
 }
@@ -267,6 +360,7 @@ interface AppRouteChildren {
   AppCaisseRoute: typeof AppCaisseRoute
   AppCreditsRoute: typeof AppCreditsRoute
   AppDashboardRoute: typeof AppDashboardRoute
+  AppDepensesRoute: typeof AppDepensesRoute
   AppEquipeRoute: typeof AppEquipeRoute
   AppParametresRoute: typeof AppParametresRoute
   AppProduitsRoute: typeof AppProduitsRoute
@@ -278,6 +372,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppCaisseRoute: AppCaisseRoute,
   AppCreditsRoute: AppCreditsRoute,
   AppDashboardRoute: AppDashboardRoute,
+  AppDepensesRoute: AppDepensesRoute,
   AppEquipeRoute: AppEquipeRoute,
   AppParametresRoute: AppParametresRoute,
   AppProduitsRoute: AppProduitsRoute,
@@ -286,11 +381,27 @@ const AppRouteChildren: AppRouteChildren = {
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
+interface AdminRouteChildren {
+  AdminBoutiquesRoute: typeof AdminBoutiquesRoute
+  AdminStatistiquesRoute: typeof AdminStatistiquesRoute
+  AdminUtilisateursRoute: typeof AdminUtilisateursRoute
+  AdminIndexRoute: typeof AdminIndexRoute
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminBoutiquesRoute: AdminBoutiquesRoute,
+  AdminStatistiquesRoute: AdminStatistiquesRoute,
+  AdminUtilisateursRoute: AdminUtilisateursRoute,
+  AdminIndexRoute: AdminIndexRoute,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRoute: AppRouteWithChildren,
+  AdminRoute: AdminRouteWithChildren,
   AuthRoute: AuthRoute,
-  AdminBoutiquesRoute: AdminBoutiquesRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
