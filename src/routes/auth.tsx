@@ -35,9 +35,12 @@ function AuthPage() {
     if (ref && /^[A-Z0-9]+$/.test(ref)) { localStorage.setItem("boutik_ref", ref); setRefCode(ref); setMode("up"); }
   }, []);
 
+  const invited = !!refCode;
   useEffect(() => {
-    if (session) navigate({ to: "/dashboard" });
+    // An invitation link opened by someone already signed in must not jump into that account.
+    if (session && !new URLSearchParams(window.location.search).get("ref")) navigate({ to: "/dashboard" });
   }, [session, navigate]);
+  const switchAccount = async () => { await supabase.auth.signOut(); toast.success("Vous pouvez créer votre compte."); };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -80,7 +83,16 @@ function AuthPage() {
         <p className="mt-1 text-sm text-muted-foreground">
           {mode === "in" ? "Connectez-vous à votre boutique." : "7 jours d'essai gratuit, sans engagement."}
         </p>
-        {refCode && <p className="mt-3 rounded-lg bg-primary-soft p-2 text-sm text-accent-foreground">Vous êtes invité par un commerçant Boutik (code {refCode}).</p>}
+        {invited && <p className="mt-3 rounded-lg bg-primary-soft p-2 text-sm text-accent-foreground">Vous êtes invité par un commerçant Boutik (code de parrainage {refCode}).</p>}
+        {invited && session && (
+          <div className="mt-3 rounded-lg border p-3 text-sm">
+            Vous êtes déjà connecté avec {session.user.email}. Pour créer une nouvelle boutique avec cette invitation, déconnectez-vous d'abord.
+            <div className="mt-2 flex gap-2">
+              <Button size="sm" onClick={switchAccount}>Se déconnecter</Button>
+              <Button size="sm" variant="outline" onClick={() => navigate({ to: "/dashboard" })}>Aller à ma boutique</Button>
+            </div>
+          </div>
+        )}
         <Button variant="outline" className="mt-6 w-full" onClick={google}>Continuer avec Google</Button>
         <div className="my-5 flex items-center gap-3 text-xs text-muted-foreground"><div className="h-px flex-1 bg-border" />ou<div className="h-px flex-1 bg-border" /></div>
         <form onSubmit={submit} className="space-y-4">
