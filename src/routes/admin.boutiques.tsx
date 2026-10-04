@@ -75,6 +75,9 @@ function Shops() {
           ))}
         </div>
 
+        <CheckoutsPanel />
+
+
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex gap-1 overflow-x-auto rounded-lg bg-muted p-1 text-sm">
             {([["all", "Tous"], ["trial", "Essai"], ["active", "Actifs"], ["expired", "Expirés"]] as const).map(([k, l]) => (

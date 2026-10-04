@@ -28,6 +28,7 @@ import { Route as AdminParametresRouteImport } from './routes/admin.parametres'
 import { Route as AdminRelancesRouteImport } from './routes/admin.relances'
 import { Route as AdminStatistiquesRouteImport } from './routes/admin.statistiques'
 import { Route as AdminUtilisateursRouteImport } from './routes/admin.utilisateurs'
+import { Route as ApiPublicBkapayWebhookRouteImport } from './routes/api/public/bkapay/webhook'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -123,6 +124,11 @@ const AdminUtilisateursRoute = AdminUtilisateursRouteImport.update({
   path: '/utilisateurs',
   getParentRoute: () => AdminRoute,
 } as any)
+const ApiPublicBkapayWebhookRoute = ApiPublicBkapayWebhookRouteImport.update({
+  id: '/api/public/bkapay/webhook',
+  path: '/api/public/bkapay/webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -143,6 +149,7 @@ export interface FileRoutesByFullPath {
   '/admin/statistiques': typeof AdminStatistiquesRoute
   '/admin/utilisateurs': typeof AdminUtilisateursRoute
   '/admin/': typeof AdminIndexRoute
+  '/api/public/bkapay/webhook': typeof ApiPublicBkapayWebhookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -162,6 +169,7 @@ export interface FileRoutesByTo {
   '/admin/statistiques': typeof AdminStatistiquesRoute
   '/admin/utilisateurs': typeof AdminUtilisateursRoute
   '/admin': typeof AdminIndexRoute
+  '/api/public/bkapay/webhook': typeof ApiPublicBkapayWebhookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -184,6 +192,7 @@ export interface FileRoutesById {
   '/admin/statistiques': typeof AdminStatistiquesRoute
   '/admin/utilisateurs': typeof AdminUtilisateursRoute
   '/admin/': typeof AdminIndexRoute
+  '/api/public/bkapay/webhook': typeof ApiPublicBkapayWebhookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -206,6 +215,7 @@ export interface FileRouteTypes {
     | '/admin/statistiques'
     | '/admin/utilisateurs'
     | '/admin/'
+    | '/api/public/bkapay/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -225,6 +235,7 @@ export interface FileRouteTypes {
     | '/admin/statistiques'
     | '/admin/utilisateurs'
     | '/admin'
+    | '/api/public/bkapay/webhook'
   id:
     | '__root__'
     | '/'
@@ -246,6 +257,7 @@ export interface FileRouteTypes {
     | '/admin/statistiques'
     | '/admin/utilisateurs'
     | '/admin/'
+    | '/api/public/bkapay/webhook'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -253,6 +265,7 @@ export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
   AdminRoute: typeof AdminRouteWithChildren
   AuthRoute: typeof AuthRoute
+  ApiPublicBkapayWebhookRoute: typeof ApiPublicBkapayWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -390,6 +403,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminUtilisateursRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/api/public/bkapay/webhook': {
+      id: '/api/public/bkapay/webhook'
+      path: '/api/public/bkapay/webhook'
+      fullPath: '/api/public/bkapay/webhook'
+      preLoaderRoute: typeof ApiPublicBkapayWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -444,6 +464,7 @@ const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
   AdminRoute: AdminRouteWithChildren,
   AuthRoute: AuthRoute,
+  ApiPublicBkapayWebhookRoute: ApiPublicBkapayWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
