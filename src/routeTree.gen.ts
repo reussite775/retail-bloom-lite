@@ -12,7 +12,6 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as AuthRouteImport } from './routes/auth'
-import { Route as SuperAdminRouteImport } from './routes/super-admin'
 import { Route as AppAbonnementRouteImport } from './routes/_app.abonnement'
 import { Route as AppCaisseRouteImport } from './routes/_app.caisse'
 import { Route as AppCreditsRouteImport } from './routes/_app.credits'
@@ -21,6 +20,7 @@ import { Route as AppEquipeRouteImport } from './routes/_app.equipe'
 import { Route as AppParametresRouteImport } from './routes/_app.parametres'
 import { Route as AppProduitsRouteImport } from './routes/_app.produits'
 import { Route as AppVentesRouteImport } from './routes/_app.ventes'
+import { Route as AdminBoutiquesRouteImport } from './routes/admin.boutiques'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -34,11 +34,6 @@ const AppRoute = AppRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SuperAdminRoute = SuperAdminRouteImport.update({
-  id: '/super-admin',
-  path: '/super-admin',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppAbonnementRoute = AppAbonnementRouteImport.update({
@@ -81,11 +76,15 @@ const AppVentesRoute = AppVentesRouteImport.update({
   path: '/ventes',
   getParentRoute: () => AppRoute,
 } as any)
+const AdminBoutiquesRoute = AdminBoutiquesRouteImport.update({
+  id: '/admin/boutiques',
+  path: '/admin/boutiques',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
-  '/super-admin': typeof SuperAdminRoute
   '/abonnement': typeof AppAbonnementRoute
   '/caisse': typeof AppCaisseRoute
   '/credits': typeof AppCreditsRoute
@@ -94,11 +93,11 @@ export interface FileRoutesByFullPath {
   '/parametres': typeof AppParametresRoute
   '/produits': typeof AppProduitsRoute
   '/ventes': typeof AppVentesRoute
+  '/admin/boutiques': typeof AdminBoutiquesRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
-  '/super-admin': typeof SuperAdminRoute
   '/abonnement': typeof AppAbonnementRoute
   '/caisse': typeof AppCaisseRoute
   '/credits': typeof AppCreditsRoute
@@ -107,13 +106,13 @@ export interface FileRoutesByTo {
   '/parametres': typeof AppParametresRoute
   '/produits': typeof AppProduitsRoute
   '/ventes': typeof AppVentesRoute
+  '/admin/boutiques': typeof AdminBoutiquesRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_app': typeof AppRouteWithChildren
   '/auth': typeof AuthRoute
-  '/super-admin': typeof SuperAdminRoute
   '/_app/abonnement': typeof AppAbonnementRoute
   '/_app/caisse': typeof AppCaisseRoute
   '/_app/credits': typeof AppCreditsRoute
@@ -122,13 +121,13 @@ export interface FileRoutesById {
   '/_app/parametres': typeof AppParametresRoute
   '/_app/produits': typeof AppProduitsRoute
   '/_app/ventes': typeof AppVentesRoute
+  '/admin/boutiques': typeof AdminBoutiquesRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/auth'
-    | '/super-admin'
     | '/abonnement'
     | '/caisse'
     | '/credits'
@@ -137,11 +136,11 @@ export interface FileRouteTypes {
     | '/parametres'
     | '/produits'
     | '/ventes'
+    | '/admin/boutiques'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth'
-    | '/super-admin'
     | '/abonnement'
     | '/caisse'
     | '/credits'
@@ -150,12 +149,12 @@ export interface FileRouteTypes {
     | '/parametres'
     | '/produits'
     | '/ventes'
+    | '/admin/boutiques'
   id:
     | '__root__'
     | '/'
     | '/_app'
     | '/auth'
-    | '/super-admin'
     | '/_app/abonnement'
     | '/_app/caisse'
     | '/_app/credits'
@@ -164,13 +163,14 @@ export interface FileRouteTypes {
     | '/_app/parametres'
     | '/_app/produits'
     | '/_app/ventes'
+    | '/admin/boutiques'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AppRoute: typeof AppRouteWithChildren
   AuthRoute: typeof AuthRoute
-  SuperAdminRoute: typeof SuperAdminRoute
+  AdminBoutiquesRoute: typeof AdminBoutiquesRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -194,13 +194,6 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/super-admin': {
-      id: '/super-admin'
-      path: '/super-admin'
-      fullPath: '/super-admin'
-      preLoaderRoute: typeof SuperAdminRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_app/abonnement': {
@@ -259,6 +252,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppVentesRouteImport
       parentRoute: typeof AppRoute
     }
+    '/admin/boutiques': {
+      id: '/admin/boutiques'
+      path: '/admin/boutiques'
+      fullPath: '/admin/boutiques'
+      preLoaderRoute: typeof AdminBoutiquesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -290,7 +290,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRoute: AppRouteWithChildren,
   AuthRoute: AuthRoute,
-  SuperAdminRoute: SuperAdminRoute,
+  AdminBoutiquesRoute: AdminBoutiquesRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
