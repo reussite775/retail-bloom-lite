@@ -924,6 +924,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_platform_user: { Args: { _uid: string }; Returns: boolean }
       is_shop_admin: { Args: never; Returns: boolean }
       mark_checkout_paid: {
         Args: {
