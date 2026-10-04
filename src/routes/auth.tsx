@@ -80,6 +80,7 @@ function AuthPage() {
         <p className="mt-1 text-sm text-muted-foreground">
           {mode === "in" ? "Connectez-vous à votre boutique." : "7 jours d'essai gratuit, sans engagement."}
         </p>
+        {refCode && <p className="mt-3 rounded-lg bg-primary-soft p-2 text-sm text-accent-foreground">Vous êtes invité par un commerçant Boutik (code {refCode}).</p>}
         <Button variant="outline" className="mt-6 w-full" onClick={google}>Continuer avec Google</Button>
         <div className="my-5 flex items-center gap-3 text-xs text-muted-foreground"><div className="h-px flex-1 bg-border" />ou<div className="h-px flex-1 bg-border" /></div>
         <form onSubmit={submit} className="space-y-4">
