@@ -11,6 +11,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { membershipQuery, profileQuery } from "@/lib/data";
 import { hasPremium } from "@/lib/plans";
+import type { TablesUpdate } from "@/integrations/supabase/types";
+type Patch = TablesUpdate<"online_orders">;
 
 export const Route = createFileRoute("/_app/commandes")({
   head: () => ({
@@ -94,7 +96,7 @@ function Orders() {
   });
 
   const updateOrder = useMutation({
-    mutationFn: async ({ id, patch }: { id: string; patch: Record<string, unknown> }) => {
+    mutationFn: async ({ id, patch }: { id: string; patch: Patch }) => {
       const { error } = await supabase.from("online_orders").update(patch).eq("id", id);
       if (error) throw error;
     },
@@ -204,8 +206,8 @@ function Orders() {
               <div className="flex flex-wrap items-center gap-2 text-sm">
                 <select className={selectCls} value={o.status} onChange={(e) => {
                   const status = e.target.value as Status;
-                  const patch: Record<string, unknown> = { status };
-                  if (status === "delivered" && o.courier_id && Number(o.cash_collected) === 0) patch.cash_collected = o.amount;
+                  const patch: Patch = { status };
+                  if (status === "delivered" && o.courier_id && Number(o.cash_collected) === 0) patch.cash_collected = Number(o.amount);
                   updateOrder.mutate({ id: o.id, patch });
                 }}>
                   {Object.entries(STATUS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
