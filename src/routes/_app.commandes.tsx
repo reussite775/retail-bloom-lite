@@ -87,7 +87,7 @@ function Orders() {
   const addOrder = useMutation({
     mutationFn: async () => {
       const r = orderSchema.safeParse(form);
-      if (!r.success) throw new Error(r.error.issues[0].message);
+      if (!r.success) throw new Error(r.error.issues[0]?.message ?? "Champs invalides");
       const { error } = await supabase.from("online_orders").insert(r.data);
       if (error) throw error;
     },
