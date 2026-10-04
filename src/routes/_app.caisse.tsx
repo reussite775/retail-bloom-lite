@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Minus, Plus, Search, ShoppingCart, X } from "lucide-react";
+import { matches, stockBadge, stockLevel } from "@/lib/stock";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -95,7 +96,7 @@ function Caisse() {
     onError: (e: Error) => toast.error(e.message),
   });
 
-  const list = products.filter((p) => p.name.toLowerCase().includes(q.toLowerCase()));
+  const list = products.filter((p) => matches(p.name, q));
 
   return (
     <div className="mx-auto grid max-w-7xl gap-6 lg:grid-cols-[1fr_380px]">
@@ -105,23 +106,38 @@ function Caisse() {
             <h1 className="text-3xl font-extrabold">Caisse</h1>
             <p className="text-muted-foreground">Encaissé aujourd'hui : <span className="font-semibold text-primary tabular">{money(todayTotal)}</span></p>
           </div>
-          <div className="relative w-full max-w-xs">
+          <div className="relative w-full sm:max-w-xs">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input placeholder="Rechercher un produit…" className="pl-9" value={q} onChange={(e) => setQ(e.target.value)} />
+            <Input autoFocus placeholder="Rechercher… (Entrée pour ajouter)" className="h-11 pl-9 pr-9" value={q}
+              onChange={(e) => setQ(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  const first = list.find((p) => p.stock > 0);
+                  if (first) { add(first.id, 1); setQ(""); }
+                } else if (e.key === "Escape") setQ("");
+              }} />
+            {q && <button aria-label="Effacer" onClick={() => setQ("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"><X className="h-4 w-4" /></button>}
           </div>
         </div>
         {products.length === 0 ? (
           <div className="rounded-xl border border-dashed bg-card p-10 text-center text-muted-foreground">Ajoutez d'abord des produits dans « Produits & stocks ».</div>
+        ) : list.length === 0 ? (
+          <div className="rounded-xl border border-dashed bg-card p-10 text-center text-muted-foreground">Aucun produit ne correspond à « {q} ».</div>
         ) : (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
             {list.map((p) => {
-              const out = p.stock === 0;
+              const lvl = stockLevel(p.stock);
+              const out = lvl === "out";
               return (
                 <button key={p.id} disabled={out} onClick={() => add(p.id, 1)}
                   className="group rounded-xl border bg-card p-4 text-left transition-all hover:border-primary hover:shadow-sm disabled:cursor-not-allowed disabled:opacity-50">
                   <p className="line-clamp-2 min-h-10 font-semibold">{p.name}</p>
                   <p className="mt-2 font-display text-lg font-extrabold text-primary tabular">{money(p.sale_price)}</p>
-                  <p className="text-xs text-muted-foreground">{out ? "Rupture" : `Stock : ${p.stock}`}{cart[p.id] ? ` · ${cart[p.id]} au panier` : ""}</p>
+                  <p className="mt-1 flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
+                    <span className={`rounded-full px-2 py-0.5 font-semibold ${stockBadge[lvl]}`}>{out ? "Rupture" : `Stock : ${p.stock}`}</span>
+                    {cart[p.id] ? <span>· {cart[p.id]} au panier</span> : null}
+                  </p>
+
                 </button>
               );
             })}

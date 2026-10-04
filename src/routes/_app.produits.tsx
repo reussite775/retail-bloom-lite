@@ -67,7 +67,11 @@ function Products() {
     setOpen(true);
   };
 
-  const list = data.filter((p) => p.name.toLowerCase().includes(q.toLowerCase()));
+  const outCount = data.filter((p) => stockLevel(p.stock) === "out").length;
+  const lowCount = data.filter((p) => stockLevel(p.stock) === "low").length;
+  const list = data
+    .filter((p) => matches(p.name, q))
+    .filter((p) => filter === "all" || (filter === "alert" ? stockLevel(p.stock) !== "ok" : true));
   const margin = (Number(form.sale_price) || 0) - (Number(form.purchase_price) || 0);
 
   return (
@@ -79,33 +83,65 @@ function Products() {
         </div>
         <Button onClick={openNew}><Plus className="h-4 w-4" /> Ajouter un produit</Button>
       </div>
-      <div className="relative max-w-sm">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <Input placeholder="Rechercher…" className="pl-9" value={q} onChange={(e) => setQ(e.target.value)} />
+      {(outCount > 0 || lowCount > 0) && (
+        <div className="grid gap-3 sm:grid-cols-2">
+          {outCount > 0 && (
+            <button onClick={() => setFilter("alert")} className="flex items-center gap-3 rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-left text-destructive">
+              <AlertOctagon className="h-5 w-5 shrink-0" />
+              <span><b>{outCount} produit(s) en rupture</b><br /><span className="text-sm">À réapprovisionner d'urgence</span></span>
+            </button>
+          )}
+          {lowCount > 0 && (
+            <button onClick={() => setFilter("alert")} className="flex items-center gap-3 rounded-xl border border-warning/50 bg-warning/15 p-4 text-left text-warning-foreground">
+              <AlertTriangle className="h-5 w-5 shrink-0" />
+              <span><b>{lowCount} produit(s) en stock faible</b><br /><span className="text-sm">{LOW_STOCK} unités ou moins</span></span>
+            </button>
+          )}
+        </div>
+      )}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div className="relative w-full sm:max-w-sm">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input placeholder="Rechercher un article…" className="h-11 pl-9 pr-9" value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => e.key === "Escape" && setQ("")} />
+          {q && <button aria-label="Effacer" onClick={() => setQ("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"><X className="h-4 w-4" /></button>}
+        </div>
+        <div className="flex gap-1 rounded-lg bg-muted p-1 text-sm">
+          {([["all", "Tous"], ["alert", "Alertes stock"]] as const).map(([k, l]) => (
+            <button key={k} onClick={() => setFilter(k)} className={`rounded-md px-3 py-1.5 font-medium ${filter === k ? "bg-card shadow-sm" : "text-muted-foreground"}`}>{l}</button>
+          ))}
+        </div>
       </div>
       <div className="overflow-x-auto rounded-xl border bg-card">
         <table className="w-full text-sm">
           <thead className="bg-muted text-left text-muted-foreground">
             <tr>
               <th className="px-4 py-3 font-semibold">Produit</th>
-              <th className="px-4 py-3 text-right font-semibold">Prix d'achat</th>
+              <th className="hidden px-4 py-3 text-right font-semibold sm:table-cell">Prix d'achat</th>
               <th className="px-4 py-3 text-right font-semibold">Prix de vente</th>
-              <th className="px-4 py-3 text-right font-semibold">Marge</th>
+              <th className="hidden px-4 py-3 text-right font-semibold sm:table-cell">Marge</th>
               <th className="px-4 py-3 text-right font-semibold">Stock</th>
               <th className="w-24 px-4 py-3" />
             </tr>
           </thead>
           <tbody className="divide-y">
             {isLoading && <tr><td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">Chargement…</td></tr>}
-            {!isLoading && list.length === 0 && <tr><td colSpan={6} className="px-4 py-10 text-center text-muted-foreground">Aucun produit. Ajoutez votre premier article.</td></tr>}
-            {list.map((p) => (
-              <tr key={p.id} className="hover:bg-muted/50">
-                <td className="px-4 py-3 font-medium">{p.name}</td>
-                <td className="px-4 py-3 text-right tabular">{money(p.purchase_price)}</td>
+            {!isLoading && list.length === 0 && <tr><td colSpan={6} className="px-4 py-10 text-center text-muted-foreground">{data.length ? "Aucun produit ne correspond." : "Aucun produit. Ajoutez votre premier article."}</td></tr>}
+            {list.map((p) => {
+              const lvl = stockLevel(p.stock);
+              return (
+              <tr key={p.id} className={`hover:bg-muted/50 ${lvl === "out" ? "bg-destructive/5" : lvl === "low" ? "bg-warning/5" : ""}`}>
+                <td className="px-4 py-3 font-medium">
+                  <span className="flex items-center gap-2">
+                    {lvl === "out" && <AlertOctagon className="h-4 w-4 shrink-0 text-destructive" />}
+                    {lvl === "low" && <AlertTriangle className="h-4 w-4 shrink-0 text-warning" />}
+                    {p.name}
+                  </span>
+                </td>
+                <td className="hidden px-4 py-3 text-right tabular sm:table-cell">{money(p.purchase_price)}</td>
                 <td className="px-4 py-3 text-right tabular">{money(p.sale_price)}</td>
-                <td className="px-4 py-3 text-right tabular text-primary">{money(Number(p.sale_price) - Number(p.purchase_price))}</td>
+                <td className="hidden px-4 py-3 text-right tabular text-primary sm:table-cell">{money(Number(p.sale_price) - Number(p.purchase_price))}</td>
                 <td className="px-4 py-3 text-right">
-                  <span className={`inline-block min-w-10 rounded-full px-2 py-0.5 text-center font-semibold tabular ${p.stock === 0 ? "bg-destructive/10 text-destructive" : p.stock <= 5 ? "bg-warning/20 text-warning-foreground" : "bg-primary-soft text-accent-foreground"}`}>{p.stock}</span>
+                  <span className={`inline-block min-w-10 whitespace-nowrap rounded-full px-2 py-0.5 text-center font-semibold tabular ${stockBadge[lvl]}`}>{lvl === "out" ? "Rupture" : p.stock}</span>
                 </td>
                 <td className="px-4 py-3">
                   <div className="flex justify-end gap-1">
