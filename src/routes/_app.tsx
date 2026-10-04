@@ -1,7 +1,7 @@
 import { createFileRoute, Link, Outlet, useLocation, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
-import { BarChart3, BookUser, Receipt, Boxes, Crown, CloudOff, History, RefreshCw, UserCog, Clock, CreditCard, Lock, LogOut, Settings, ShoppingCart, Store } from "lucide-react";
+import { BarChart3, BookUser, Receipt, Boxes, Crown, CloudOff, History, RefreshCw, UserCog, Clock, CreditCard, Lock, LogOut, Settings, ShoppingCart, Store , Lightbulb } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
@@ -20,6 +20,7 @@ const nav = [
   { to: "/produits", label: "Produits & stocks", icon: Boxes, admin: true },
   { to: "/credits", label: "Carnet de crédits", icon: BookUser, admin: false },
   { to: "/depenses", label: "Dépenses", icon: Receipt, admin: true },
+  { to: "/assistant", label: "Conseiller IA", icon: Lightbulb, admin: true },
   { to: "/abonnement", label: "Abonnement", icon: CreditCard, admin: true },
   { to: "/parametres", label: "Paramètres", icon: Settings, admin: true },
   { to: "/equipe", label: "Équipe & accès", icon: UserCog, admin: true },

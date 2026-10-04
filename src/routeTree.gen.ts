@@ -14,6 +14,7 @@ import { Route as AppRouteImport } from './routes/_app'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AppAbonnementRouteImport } from './routes/_app.abonnement'
+import { Route as AppAssistantRouteImport } from './routes/_app.assistant'
 import { Route as AppCaisseRouteImport } from './routes/_app.caisse'
 import { Route as AppCreditsRouteImport } from './routes/_app.credits'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
@@ -28,6 +29,7 @@ import { Route as AdminParametresRouteImport } from './routes/admin.parametres'
 import { Route as AdminRelancesRouteImport } from './routes/admin.relances'
 import { Route as AdminStatistiquesRouteImport } from './routes/admin.statistiques'
 import { Route as AdminUtilisateursRouteImport } from './routes/admin.utilisateurs'
+import { Route as ApiAssistantRouteImport } from './routes/api/assistant'
 import { Route as ApiPublicBkapayWebhookRouteImport } from './routes/api/public/bkapay/webhook'
 
 const IndexRoute = IndexRouteImport.update({
@@ -52,6 +54,11 @@ const AuthRoute = AuthRouteImport.update({
 const AppAbonnementRoute = AppAbonnementRouteImport.update({
   id: '/abonnement',
   path: '/abonnement',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAssistantRoute = AppAssistantRouteImport.update({
+  id: '/assistant',
+  path: '/assistant',
   getParentRoute: () => AppRoute,
 } as any)
 const AppCaisseRoute = AppCaisseRouteImport.update({
@@ -124,6 +131,11 @@ const AdminUtilisateursRoute = AdminUtilisateursRouteImport.update({
   path: '/utilisateurs',
   getParentRoute: () => AdminRoute,
 } as any)
+const ApiAssistantRoute = ApiAssistantRouteImport.update({
+  id: '/api/assistant',
+  path: '/api/assistant',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicBkapayWebhookRoute = ApiPublicBkapayWebhookRouteImport.update({
   id: '/api/public/bkapay/webhook',
   path: '/api/public/bkapay/webhook',
@@ -135,6 +147,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRouteWithChildren
   '/auth': typeof AuthRoute
   '/abonnement': typeof AppAbonnementRoute
+  '/assistant': typeof AppAssistantRoute
   '/caisse': typeof AppCaisseRoute
   '/credits': typeof AppCreditsRoute
   '/dashboard': typeof AppDashboardRoute
@@ -148,6 +161,7 @@ export interface FileRoutesByFullPath {
   '/admin/relances': typeof AdminRelancesRoute
   '/admin/statistiques': typeof AdminStatistiquesRoute
   '/admin/utilisateurs': typeof AdminUtilisateursRoute
+  '/api/assistant': typeof ApiAssistantRoute
   '/admin/': typeof AdminIndexRoute
   '/api/public/bkapay/webhook': typeof ApiPublicBkapayWebhookRoute
 }
@@ -155,6 +169,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/abonnement': typeof AppAbonnementRoute
+  '/assistant': typeof AppAssistantRoute
   '/caisse': typeof AppCaisseRoute
   '/credits': typeof AppCreditsRoute
   '/dashboard': typeof AppDashboardRoute
@@ -168,6 +183,7 @@ export interface FileRoutesByTo {
   '/admin/relances': typeof AdminRelancesRoute
   '/admin/statistiques': typeof AdminStatistiquesRoute
   '/admin/utilisateurs': typeof AdminUtilisateursRoute
+  '/api/assistant': typeof ApiAssistantRoute
   '/admin': typeof AdminIndexRoute
   '/api/public/bkapay/webhook': typeof ApiPublicBkapayWebhookRoute
 }
@@ -178,6 +194,7 @@ export interface FileRoutesById {
   '/admin': typeof AdminRouteWithChildren
   '/auth': typeof AuthRoute
   '/_app/abonnement': typeof AppAbonnementRoute
+  '/_app/assistant': typeof AppAssistantRoute
   '/_app/caisse': typeof AppCaisseRoute
   '/_app/credits': typeof AppCreditsRoute
   '/_app/dashboard': typeof AppDashboardRoute
@@ -191,6 +208,7 @@ export interface FileRoutesById {
   '/admin/relances': typeof AdminRelancesRoute
   '/admin/statistiques': typeof AdminStatistiquesRoute
   '/admin/utilisateurs': typeof AdminUtilisateursRoute
+  '/api/assistant': typeof ApiAssistantRoute
   '/admin/': typeof AdminIndexRoute
   '/api/public/bkapay/webhook': typeof ApiPublicBkapayWebhookRoute
 }
@@ -201,6 +219,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/auth'
     | '/abonnement'
+    | '/assistant'
     | '/caisse'
     | '/credits'
     | '/dashboard'
@@ -214,6 +233,7 @@ export interface FileRouteTypes {
     | '/admin/relances'
     | '/admin/statistiques'
     | '/admin/utilisateurs'
+    | '/api/assistant'
     | '/admin/'
     | '/api/public/bkapay/webhook'
   fileRoutesByTo: FileRoutesByTo
@@ -221,6 +241,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/abonnement'
+    | '/assistant'
     | '/caisse'
     | '/credits'
     | '/dashboard'
@@ -234,6 +255,7 @@ export interface FileRouteTypes {
     | '/admin/relances'
     | '/admin/statistiques'
     | '/admin/utilisateurs'
+    | '/api/assistant'
     | '/admin'
     | '/api/public/bkapay/webhook'
   id:
@@ -243,6 +265,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/auth'
     | '/_app/abonnement'
+    | '/_app/assistant'
     | '/_app/caisse'
     | '/_app/credits'
     | '/_app/dashboard'
@@ -256,6 +279,7 @@ export interface FileRouteTypes {
     | '/admin/relances'
     | '/admin/statistiques'
     | '/admin/utilisateurs'
+    | '/api/assistant'
     | '/admin/'
     | '/api/public/bkapay/webhook'
   fileRoutesById: FileRoutesById
@@ -265,6 +289,7 @@ export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
   AdminRoute: typeof AdminRouteWithChildren
   AuthRoute: typeof AuthRoute
+  ApiAssistantRoute: typeof ApiAssistantRoute
   ApiPublicBkapayWebhookRoute: typeof ApiPublicBkapayWebhookRoute
 }
 
@@ -303,6 +328,13 @@ declare module '@tanstack/react-router' {
       path: '/abonnement'
       fullPath: '/abonnement'
       preLoaderRoute: typeof AppAbonnementRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/assistant': {
+      id: '/_app/assistant'
+      path: '/assistant'
+      fullPath: '/assistant'
+      preLoaderRoute: typeof AppAssistantRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/caisse': {
@@ -403,6 +435,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminUtilisateursRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/api/assistant': {
+      id: '/api/assistant'
+      path: '/api/assistant'
+      fullPath: '/api/assistant'
+      preLoaderRoute: typeof ApiAssistantRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/bkapay/webhook': {
       id: '/api/public/bkapay/webhook'
       path: '/api/public/bkapay/webhook'
@@ -415,6 +454,7 @@ declare module '@tanstack/react-router' {
 
 interface AppRouteChildren {
   AppAbonnementRoute: typeof AppAbonnementRoute
+  AppAssistantRoute: typeof AppAssistantRoute
   AppCaisseRoute: typeof AppCaisseRoute
   AppCreditsRoute: typeof AppCreditsRoute
   AppDashboardRoute: typeof AppDashboardRoute
@@ -427,6 +467,7 @@ interface AppRouteChildren {
 
 const AppRouteChildren: AppRouteChildren = {
   AppAbonnementRoute: AppAbonnementRoute,
+  AppAssistantRoute: AppAssistantRoute,
   AppCaisseRoute: AppCaisseRoute,
   AppCreditsRoute: AppCreditsRoute,
   AppDashboardRoute: AppDashboardRoute,
@@ -464,6 +505,7 @@ const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
   AdminRoute: AdminRouteWithChildren,
   AuthRoute: AuthRoute,
+  ApiAssistantRoute: ApiAssistantRoute,
   ApiPublicBkapayWebhookRoute: ApiPublicBkapayWebhookRoute,
 }
 export const routeTree = rootRouteImport
