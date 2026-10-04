@@ -2,7 +2,7 @@ import { isNetworkError, queueOp } from "@/lib/offline";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { HandCoins, Phone, Plus, Search } from "lucide-react";
+import { HandCoins, MessageCircle, Phone, Plus, Search } from "lucide-react";
 import { z } from "zod";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { supabase } from "@/integrations/supabase/client";
 import { customersQuery } from "@/lib/data";
 import { money } from "@/lib/format";
+import { useAuth } from "@/lib/auth";
+import { membershipQuery, profileQuery } from "@/lib/data";
+import { buildDebtReminder, waLink } from "@/lib/order-receipt";
 
 export const Route = createFileRoute("/_app/credits")({
   head: () => ({
@@ -29,6 +32,10 @@ const dt = (s: string) => new Date(s).toLocaleString("fr-FR", { dateStyle: "shor
 
 function Credits() {
   const qc = useQueryClient();
+  const { user } = useAuth();
+  const uid = user?.id ?? "";
+  const member = useQuery({ ...membershipQuery(uid), enabled: !!uid });
+  const { data: shop } = useQuery({ ...profileQuery(member.data?.shopId ?? uid), enabled: !!uid });
   const { data = [], isLoading } = useQuery(customersQuery);
   const [q, setQ] = useState("");
   const [showAll, setShowAll] = useState(false);
@@ -111,7 +118,8 @@ function Credits() {
         ) : (
           <div className="divide-y">
             {list.map((c) => (
-              <button key={c.id} onClick={() => setSelId(c.id)} className="flex w-full items-center gap-4 p-4 text-left hover:bg-muted/50">
+              <div key={c.id} className="flex items-center gap-2 pr-4 hover:bg-muted/50">
+              <button onClick={() => setSelId(c.id)} className="flex min-w-0 flex-1 items-center gap-4 p-4 text-left">
                 <div className="min-w-0 flex-1">
                   <p className="font-semibold">{c.name}</p>
                   <p className="flex items-center gap-1 text-sm text-muted-foreground"><Phone className="h-3 w-3" /> {c.phone || "—"}</p>
@@ -121,6 +129,12 @@ function Credits() {
                   <p className="text-xs text-muted-foreground">{c.owed > 0 ? "à payer" : "soldé"}</p>
                 </div>
               </button>
+              {c.owed > 0 && c.phone && (
+                <Button size="sm" variant="outline" asChild>
+                  <a href={waLink(c.phone, buildDebtReminder(c.name, c.owed, shop))} target="_blank" rel="noreferrer" title="Envoyer un rappel WhatsApp"><MessageCircle className="h-4 w-4" /><span className="hidden sm:inline">Envoyer un rappel WhatsApp</span></a>
+                </Button>
+              )}
+              </div>
             ))}
           </div>
         )}
