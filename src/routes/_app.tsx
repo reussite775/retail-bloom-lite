@@ -1,10 +1,11 @@
 import { createFileRoute, Link, Outlet, useLocation, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
-import { BarChart3, BookUser, Boxes, History, UserCog, Clock, CreditCard, Lock, LogOut, Settings, ShoppingCart, Store } from "lucide-react";
+import { BarChart3, BookUser, Boxes, CloudOff, History, RefreshCw, UserCog, Clock, CreditCard, Lock, LogOut, Settings, ShoppingCart, Store } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { useOnline, usePendingSales } from "@/lib/offline";
 import { membershipQuery, profileQuery } from "@/lib/data";
 
 export const Route = createFileRoute("/_app")({
@@ -31,6 +32,8 @@ function AppLayout() {
   const shopId = member.data?.shopId;
   const isAdmin = member.data?.isAdmin ?? false;
   const profile = useQuery({ ...profileQuery(shopId ?? ""), enabled: !!shopId });
+  const online = useOnline();
+  const pending = usePendingSales();
   const allowed = nav.filter((n) => isAdmin || !n.admin);
   const forbidden = !!member.data && !isAdmin && !allowed.some((n) => pathname.startsWith(n.to));
 
@@ -95,6 +98,14 @@ function AppLayout() {
             </Link>
           ))}
         </nav>
+        {(!online || pending.length > 0) && (
+          <div className={`flex items-center justify-center gap-2 px-3 py-2 text-center text-sm font-medium ${online ? "bg-primary-soft text-accent-foreground" : "bg-warning/25 text-warning-foreground"}`}>
+            {online ? <RefreshCw className="h-4 w-4 animate-spin" /> : <CloudOff className="h-4 w-4" />}
+            {online
+              ? `Envoi de ${pending.length} vente(s) enregistrée(s) hors ligne…`
+              : `Hors ligne — les ventes sont enregistrées sur l'appareil${pending.length ? ` (${pending.length} en attente)` : ""} et envoyées au retour du réseau.`}
+          </div>
+        )}
         <main className="flex-1 p-4 md:p-8"><Outlet /></main>
       </div>
     </div>

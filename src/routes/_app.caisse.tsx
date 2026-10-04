@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Minus, Plus, Search, ShoppingCart, X } from "lucide-react";
 import { useRole } from "@/lib/role";
+import { isNetworkError, queueSale } from "@/lib/offline";
 import { matches, stockBadge, levelOf } from "@/lib/stock";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -68,26 +69,38 @@ function Caisse() {
         lines: lines.map((l) => ({ name: l.p.name, qty: l.qty, price: Number(l.p.sale_price) })),
         total,
       };
+      const offline = (cid?: string, cname?: string): Receipt => {
+        const q = queueSale({ items, customerId: cid, total });
+        qc.setQueryData(productsQuery.queryKey, (old) =>
+          old?.map((p) => { const l = lines.find((x) => x.p.id === p.id); return l ? { ...p, stock: p.stock - l.qty } : p; }));
+        return { ...base, number: "HL-" + q.id.slice(0, 6).toUpperCase(), payment: (cid ? "Crédit" : "Espèces") + " (hors ligne)", customer: cname };
+      };
       if (!credit) {
+        if (!navigator.onLine) return offline();
         const { data, error } = await supabase.rpc("create_sale", { _items: items });
+        if (error && isNetworkError(error)) return offline();
         if (error) throw error;
         return { ...base, number: String(data).slice(0, 8).toUpperCase(), payment: "Espèces" };
       }
       let cid = customerId;
       let cname = customers.find((c) => c.id === cid)?.name;
       if (newMode) {
+        if (!navigator.onLine) throw new Error("Pas de connexion : choisissez un client existant ou attendez le retour du réseau.");
         if (!newName.trim()) throw new Error("Indiquez le nom du client");
         const { data, error } = await supabase.from("customers").insert({ name: newName.trim(), phone: newPhone.trim() }).select("id").single();
         if (error) throw error;
         cid = data.id; cname = newName.trim();
       }
       if (!cid) throw new Error("Choisissez un client");
+      if (!navigator.onLine) return offline(cid, cname);
       const { data, error } = await supabase.rpc("create_credit_sale", { _items: items, _customer_id: cid });
+      if (error && isNetworkError(error)) return offline(cid, cname);
       if (error) throw error;
       return { ...base, number: String(data).slice(0, 8).toUpperCase(), payment: "Crédit", customer: cname };
     },
     onSuccess: (r) => {
-      toast.success(credit ? `Vente à crédit enregistrée : ${money(total)}` : `Vente enregistrée : ${money(total)}`);
+      if (r.number.startsWith("HL-")) toast.warning("Pas de connexion : vente enregistrée sur l'appareil. Elle sera envoyée automatiquement au retour du réseau.", { duration: 8000 });
+      else toast.success(credit ? `Vente à crédit enregistrée : ${money(total)}` : `Vente enregistrée : ${money(total)}`);
       setReceipt(r);
       setCart({});
       setCredit(false); setCustomerId(""); setNewMode(false); setNewName(""); setNewPhone("");

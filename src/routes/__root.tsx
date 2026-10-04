@@ -14,6 +14,10 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AuthProvider } from "@/lib/auth";
 import { Toaster } from "@/components/ui/sonner";
+import { persistQueryClient } from "@tanstack/react-query-persist-client";
+import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
+import { setupServiceWorker } from "@/lib/pwa";
+import { syncPendingSales } from "@/lib/offline";
 
 function NotFoundComponent() {
   return (
@@ -79,7 +83,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   head: () => ({
     meta: [
       { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
+      { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
+      { name: "theme-color", content: "#2e9e5b" },
+      { name: "apple-mobile-web-app-capable", content: "yes" },
+      { name: "mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-title", content: "Boutik" },
+      { name: "apple-mobile-web-app-status-bar-style", content: "default" },
       { title: "Boutik — Gestion de commerce" },
       { name: "description", content: "Caisse, stocks et tableau de bord pour commerçants." },
       { property: "og:type", content: "website" },
@@ -93,7 +102,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         href: "https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap",
       },
       { rel: "stylesheet", href: appCss },
-      { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "icon", href: "/favicon.png", type: "image/png" },
+      { rel: "manifest", href: "/manifest.webmanifest" },
+      { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
     ],
   }),
   shellComponent: RootShell,
@@ -118,6 +129,16 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  useEffect(() => {
+    setupServiceWorker();
+    const persister = createSyncStoragePersister({ storage: window.localStorage, key: "boutik-cache" });
+    const [unsub] = persistQueryClient({ queryClient, persister, maxAge: 1000 * 60 * 60 * 24 * 7 });
+    const sync = () => syncPendingSales(queryClient);
+    sync();
+    window.addEventListener("online", sync);
+    const t = setInterval(sync, 30000);
+    return () => { unsub(); window.removeEventListener("online", sync); clearInterval(t); };
+  }, [queryClient]);
 
   return (
     <QueryClientProvider client={queryClient}>
