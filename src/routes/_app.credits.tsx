@@ -52,7 +52,7 @@ function Credits() {
       setAddOpen(false); setForm({ name: "", phone: "", items: "", amount: "" });
       qc.invalidateQueries({ queryKey: ["customers"] });
     },
-    onError: (e: Error) => toast.error(e instanceof z.ZodError ? e.issues[0].message : e.message),
+    onError: (e: Error) => toast.error(e instanceof z.ZodError ? (e.issues[0]?.message ?? "Formulaire invalide") : e.message),
   });
   const sel = data.find((c) => c.id === selId) ?? null;
 
