@@ -74,6 +74,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          low_stock_threshold: number
           name: string
           purchase_price: number
           sale_price: number
@@ -83,6 +84,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          low_stock_threshold?: number
           name: string
           purchase_price?: number
           sale_price?: number
@@ -92,6 +94,7 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          low_stock_threshold?: number
           name?: string
           purchase_price?: number
           sale_price?: number

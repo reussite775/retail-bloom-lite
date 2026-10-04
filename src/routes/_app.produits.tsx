@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { AlertOctagon, AlertTriangle, Pencil, Plus, Search, Trash2, X } from "lucide-react";
-import { LOW_STOCK, matches, stockBadge, stockLevel } from "@/lib/stock";
+import { matches, stockBadge, levelOf } from "@/lib/stock";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,8 +26,8 @@ export const Route = createFileRoute("/_app/produits")({
 });
 
 type Product = Tables<"products">;
-type Form = { name: string; purchase_price: string; sale_price: string; stock: string };
-const empty: Form = { name: "", purchase_price: "", sale_price: "", stock: "" };
+type Form = { name: string; purchase_price: string; sale_price: string; stock: string; threshold: string };
+const empty: Form = { name: "", purchase_price: "", sale_price: "", stock: "", threshold: "5" };
 
 function Products() {
   const qc = useQueryClient();
@@ -45,6 +45,7 @@ function Products() {
         purchase_price: Number(form.purchase_price) || 0,
         sale_price: Number(form.sale_price) || 0,
         stock: Math.max(0, parseInt(form.stock) || 0),
+        low_stock_threshold: Math.max(0, parseInt(form.threshold) || 0),
       };
       if (!row.name) throw new Error("Le nom est requis");
       const { error } = editing
@@ -65,15 +66,15 @@ function Products() {
   const openNew = () => { setEditing(null); setForm(empty); setOpen(true); };
   const openEdit = (p: Product) => {
     setEditing(p);
-    setForm({ name: p.name, purchase_price: String(p.purchase_price), sale_price: String(p.sale_price), stock: String(p.stock) });
+    setForm({ name: p.name, purchase_price: String(p.purchase_price), sale_price: String(p.sale_price), stock: String(p.stock), threshold: String(p.low_stock_threshold) });
     setOpen(true);
   };
 
-  const outCount = data.filter((p) => stockLevel(p.stock) === "out").length;
-  const lowCount = data.filter((p) => stockLevel(p.stock) === "low").length;
+  const outCount = data.filter((p) => levelOf(p) === "out").length;
+  const lowCount = data.filter((p) => levelOf(p) === "low").length;
   const list = data
     .filter((p) => matches(p.name, q))
-    .filter((p) => filter === "all" || (filter === "alert" ? stockLevel(p.stock) !== "ok" : true));
+    .filter((p) => filter === "all" || (filter === "alert" ? levelOf(p) !== "ok" : true));
   const margin = (Number(form.sale_price) || 0) - (Number(form.purchase_price) || 0);
 
   return (
@@ -96,7 +97,7 @@ function Products() {
           {lowCount > 0 && (
             <button onClick={() => setFilter("alert")} className="flex items-center gap-3 rounded-xl border border-warning/50 bg-warning/15 p-4 text-left text-warning-foreground">
               <AlertTriangle className="h-5 w-5 shrink-0" />
-              <span><b>{lowCount} produit(s) en stock faible</b><br /><span className="text-sm">{LOW_STOCK} unités ou moins</span></span>
+              <span><b>{lowCount} produit(s) en stock bas</b><br /><span className="text-sm">Sous le seuil d'alerte</span></span>
             </button>
           )}
         </div>
@@ -129,7 +130,7 @@ function Products() {
             {isLoading && <tr><td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">Chargement…</td></tr>}
             {!isLoading && list.length === 0 && <tr><td colSpan={6} className="px-4 py-10 text-center text-muted-foreground">{data.length ? "Aucun produit ne correspond." : "Aucun produit. Ajoutez votre premier article."}</td></tr>}
             {list.map((p) => {
-              const lvl = stockLevel(p.stock);
+              const lvl = levelOf(p);
               return (
               <tr key={p.id} className={`hover:bg-muted/50 ${lvl === "out" ? "bg-destructive/5" : lvl === "low" ? "bg-warning/5" : ""}`}>
                 <td className="px-4 py-3 font-medium">
@@ -143,7 +144,9 @@ function Products() {
                 <td className="px-4 py-3 text-right tabular">{money(p.sale_price)}</td>
                 <td className="hidden px-4 py-3 text-right tabular text-primary sm:table-cell">{money(Number(p.sale_price) - Number(p.purchase_price))}</td>
                 <td className="px-4 py-3 text-right">
-                  <span className={`inline-block min-w-10 whitespace-nowrap rounded-full px-2 py-0.5 text-center font-semibold tabular ${stockBadge[lvl]}`}>{lvl === "out" ? "Rupture" : p.stock}</span>
+                  <span className={`inline-block min-w-10 whitespace-nowrap rounded-full px-2 py-0.5 text-center font-semibold tabular ${stockBadge[lvl]}`}>{p.stock}</span>
+                  {lvl !== "ok" && <span className={`ml-1 hidden whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-semibold sm:inline-block ${stockBadge[lvl]}`}>{lvl === "out" ? "Rupture" : "Stock bas"}</span>}
+                  <span className="block text-xs text-muted-foreground">seuil {p.low_stock_threshold}</span>
                 </td>
                 <td className="px-4 py-3">
                   <div className="flex justify-end gap-1">
@@ -167,7 +170,11 @@ function Products() {
               <div className="space-y-1.5"><Label>Prix d'achat (FCFA)</Label><Input type="number" min="0" step="any" value={form.purchase_price} onChange={(e) => setForm({ ...form, purchase_price: e.target.value })} /></div>
               <div className="space-y-1.5"><Label>Prix de vente (FCFA)</Label><Input type="number" min="0" step="any" value={form.sale_price} onChange={(e) => setForm({ ...form, sale_price: e.target.value })} /></div>
             </div>
-            <div className="space-y-1.5"><Label>Quantité en stock</Label><Input type="number" min="0" value={form.stock} onChange={(e) => setForm({ ...form, stock: e.target.value })} /></div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5"><Label>Quantité en stock</Label><Input type="number" min="0" value={form.stock} onChange={(e) => setForm({ ...form, stock: e.target.value })} /></div>
+              <div className="space-y-1.5"><Label>Seuil d'alerte</Label><Input type="number" min="0" value={form.threshold} onChange={(e) => setForm({ ...form, threshold: e.target.value })} /></div>
+            </div>
+            <p className="text-xs text-muted-foreground">Alerte « Stock bas » quand la quantité est égale ou inférieure au seuil.</p>
             <p className="text-sm text-muted-foreground">Marge unitaire : <span className={margin < 0 ? "font-semibold text-destructive" : "font-semibold text-primary"}>{money(margin)}</span></p>
             <Button type="submit" className="w-full" disabled={save.isPending}>Enregistrer</Button>
           </form>
