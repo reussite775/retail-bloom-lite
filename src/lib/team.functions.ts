@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { hasPremium } from "@/lib/plans";
 
 async function assertOwner(supabase: any, userId: string) {
   const { data, error } = await supabase.from("organization_members").select("role, organization_id").eq("user_id", userId).maybeSingle();
@@ -20,6 +21,8 @@ export const createEmployee = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertOwner(context.supabase, context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: org } = await supabaseAdmin.from("organizations").select("plan, trial_ends_at, subscription_active, subscription_ends_at").eq("id", context.userId).single();
+    if (!hasPremium(org)) throw new Error("L'ajout de caissiers est réservé à l'offre Premium.");
     const { data: created, error } = await supabaseAdmin.auth.admin.createUser({
       email: data.email,
       password: data.password,

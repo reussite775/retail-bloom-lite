@@ -1,17 +1,21 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { BadgeCheck, Check, Clock } from "lucide-react";
+import { useState } from "react";
+import { BadgeCheck, Check, Clock, Crown, Sparkles } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
 import { profileQuery } from "@/lib/data";
-import { ContactButtons, PlanPrice } from "@/components/plan-contact";
+import { money } from "@/lib/format";
+import { BILLING_LABEL, PLANS, type Billing, type PlanId } from "@/lib/plans";
+import { ContactButtons } from "@/components/plan-contact";
 
 export const Route = createFileRoute("/_app/abonnement")({
   head: () => ({
     meta: [
       { title: "Abonnement — Boutik" },
-      { name: "description", content: "Activez votre abonnement Boutik pour continuer à gérer votre boutique." },
+      { name: "description", content: "Offres Standard et Premium de Boutik : caisse, stocks, crédits, multi-utilisateurs et statistiques." },
       { property: "og:title", content: "Abonnement — Boutik" },
-      { property: "og:description", content: "Les avantages de l'abonnement Boutik." },
+      { property: "og:description", content: "Choisissez l'offre Standard ou Premium de Boutik." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -19,56 +23,82 @@ export const Route = createFileRoute("/_app/abonnement")({
   component: Subscription,
 });
 
-const perks = [
-  "Caisse rapide et reçus personnalisés illimités",
-  "Gestion des produits et des stocks",
-  "Carnet de crédits clients et remboursements",
-  "Tableau de bord : chiffre d'affaires et bénéfices",
-  "Vos données sauvegardées en sécurité",
-  "Assistance par téléphone et WhatsApp",
-];
-
 function Subscription() {
   const { session } = useAuth();
   const { data: p } = useQuery(profileQuery(session!.user.id));
   const email = session!.user.email ?? "";
-  const daysLeft = p ? Math.ceil((new Date(p.trial_ends_at).getTime() - Date.now()) / 86400000) : 0;
+  const [billing, setBilling] = useState<Billing>("month");
+  const [chosen, setChosen] = useState<PlanId | null>(null);
+  const now = Date.now();
+  const active = !!p?.subscription_active && (!p.subscription_ends_at || new Date(p.subscription_ends_at).getTime() > now);
+  const daysLeft = p ? Math.ceil((new Date(p.trial_ends_at).getTime() - now) / 86400000) : 0;
+  const currentPlan = active ? (p?.plan === "premium" ? "premium" : "standard") : null;
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
+    <div className="mx-auto max-w-4xl space-y-6">
       <div>
         <h1 className="text-3xl font-extrabold">Abonnement</h1>
-        <p className="text-muted-foreground">Tout ce qu'il faut pour gérer votre boutique au quotidien.</p>
+        <p className="text-muted-foreground">Choisissez la formule adaptée à votre boutique.</p>
       </div>
 
-      {p?.subscription_active ? (
+      {active ? (
         <div className="flex items-center gap-3 rounded-xl border bg-primary-soft p-4 font-semibold text-accent-foreground">
-          <BadgeCheck className="h-6 w-6 text-primary" /> Votre abonnement est actif. Merci !
+          <BadgeCheck className="h-6 w-6 shrink-0 text-primary" />
+          Offre {PLANS[currentPlan!].name} active{p?.subscription_ends_at ? ` jusqu'au ${new Date(p.subscription_ends_at).toLocaleDateString("fr-FR")}` : ""}. Merci !
         </div>
       ) : (
         <div className="flex items-center gap-3 rounded-xl border bg-card p-4">
-          <Clock className="h-6 w-6 text-primary" />
+          <Clock className="h-6 w-6 shrink-0 text-primary" />
           <p className="font-medium">
             {daysLeft > 0
-              ? `Essai gratuit : ${daysLeft} jour${daysLeft > 1 ? "s" : ""} restant${daysLeft > 1 ? "s" : ""}`
-              : "Votre essai gratuit est terminé."}
+              ? `Essai gratuit : ${daysLeft} jour${daysLeft > 1 ? "s" : ""} restant${daysLeft > 1 ? "s" : ""} — accès à toutes les fonctionnalités.`
+              : "Votre essai gratuit de 7 jours est terminé. Choisissez une offre pour continuer."}
           </p>
         </div>
       )}
 
-      <div className="rounded-2xl border bg-card p-6 md:p-8">
-        <p className="text-sm text-muted-foreground">Abonnement Boutik</p>
-        <PlanPrice className="font-display text-3xl font-extrabold" />
-        <ul className="mt-6 space-y-3">
-          {perks.map((x) => (
-            <li key={x} className="flex items-start gap-3"><Check className="mt-0.5 h-5 w-5 shrink-0 text-primary" /> {x}</li>
+      <div className="flex justify-center">
+        <div className="flex gap-1 rounded-lg bg-muted p-1 text-sm">
+          {(["month", "quarter"] as const).map((b) => (
+            <button key={b} onClick={() => setBilling(b)} className={`rounded-md px-4 py-2 font-medium ${billing === b ? "bg-card shadow-sm" : "text-muted-foreground"}`}>
+              {b === "month" ? "Mensuel" : "3 mois"}
+            </button>
           ))}
-        </ul>
-        {!p?.subscription_active && (
-          <div className="mt-8"><ContactButtons email={email} /></div>
-        )}
-        <p className="mt-3 text-center text-xs text-muted-foreground">Votre abonnement est activé dès réception du paiement.</p>
+        </div>
       </div>
+
+      <div className="grid gap-4 md:grid-cols-2">
+        {(["standard", "premium"] as const).map((id) => {
+          const plan = PLANS[id];
+          const premium = id === "premium";
+          const isCurrent = currentPlan === id;
+          return (
+            <div key={id} className={`relative flex flex-col rounded-2xl border bg-card p-6 ${premium ? "border-primary ring-1 ring-primary" : ""} ${chosen === id ? "ring-2 ring-primary" : ""}`}>
+              {premium && <span className="absolute -top-3 left-6 flex items-center gap-1 rounded-full bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground"><Sparkles className="h-3 w-3" /> Le plus complet</span>}
+              <p className="flex items-center gap-2 text-lg font-bold">{premium && <Crown className="h-5 w-5 text-primary" />} {plan.name}</p>
+              <p className="mt-2 font-display text-3xl font-extrabold tabular">{money(plan.prices[billing])}</p>
+              <p className="text-sm text-muted-foreground">pour {BILLING_LABEL[billing]}{billing === "quarter" ? ` · soit ${money(Math.round(plan.prices.quarter / 3))} / mois` : ` · ou ${money(plan.prices.quarter)} pour 3 mois`}</p>
+              {plan.extraTitle && <p className="mt-5 text-sm font-semibold">{plan.extraTitle}</p>}
+              <ul className={`${plan.extraTitle ? "mt-2" : "mt-5"} flex-1 space-y-2.5`}>
+                {plan.perks.map((x) => (
+                  <li key={x} className="flex items-start gap-2.5"><Check className="mt-0.5 h-5 w-5 shrink-0 text-primary" /> {x}</li>
+                ))}
+              </ul>
+              <Button className="mt-6 h-12 w-full text-base" variant={premium ? "default" : "outline"} disabled={isCurrent} onClick={() => setChosen(id)}>
+                {isCurrent ? "Votre offre actuelle" : chosen === id ? "Offre sélectionnée" : `Choisir ${plan.name}`}
+              </Button>
+            </div>
+          );
+        })}
+      </div>
+
+      {chosen && (
+        <div className="space-y-3 rounded-2xl border bg-card p-6">
+          <p className="font-bold">Offre {PLANS[chosen].name} · {BILLING_LABEL[billing]} · {money(PLANS[chosen].prices[billing])}</p>
+          <p className="text-sm text-muted-foreground">Envoyez votre paiement (Mobile Money) puis contactez-nous : votre abonnement est activé dès validation du paiement.</p>
+          <ContactButtons email={email} choice={`offre ${PLANS[chosen].name}, ${BILLING_LABEL[billing]} (${PLANS[chosen].prices[billing].toLocaleString("fr-FR")} FCFA)`} />
+        </div>
+      )}
     </div>
   );
 }
