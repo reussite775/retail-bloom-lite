@@ -32,8 +32,8 @@ const dt = (s: string) => new Date(s).toLocaleString("fr-FR", { dateStyle: "shor
 
 function Credits() {
   const qc = useQueryClient();
-  const { user } = useAuth();
-  const uid = user?.id ?? "";
+  const { session } = useAuth();
+  const uid = session?.user.id ?? "";
   const member = useQuery({ ...membershipQuery(uid), enabled: !!uid });
   const { data: shop } = useQuery({ ...profileQuery(member.data?.shopId ?? uid), enabled: !!uid });
   const { data = [], isLoading } = useQuery(customersQuery);
