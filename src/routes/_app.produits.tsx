@@ -1,3 +1,4 @@
+import { isNetworkError, queueOp } from "@/lib/offline";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
@@ -48,12 +49,25 @@ function Products() {
         low_stock_threshold: Math.max(0, parseInt(form.threshold) || 0),
       };
       if (!row.name) throw new Error("Le nom est requis");
+      const queue = () => {
+        if (editing) {
+          queueOp("product_update", { id: editing.id, ...row }, `Modification de ${row.name}`);
+          qc.setQueriesData({ queryKey: ["products"] }, (old: unknown) => Array.isArray(old) ? old.map((p: Product) => p.id === editing.id ? { ...p, ...row } : p) : old);
+        } else queueOp("product_insert", row, `Ajout de ${row.name}`);
+        return true;
+      };
+      if (!navigator.onLine) return queue();
       const { error } = editing
         ? await supabase.from("products").update(row).eq("id", editing.id)
         : await supabase.from("products").insert(row);
+      if (error && isNetworkError(error)) return queue();
       if (error) throw error;
+      return false;
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["products"] }); setOpen(false); toast.success(editing ? "Produit modifié" : "Produit ajouté"); },
+    onSuccess: (queued) => {
+      if (queued) { setOpen(false); toast.success("Hors ligne : modification enregistrée sur l'appareil, envoi au retour du réseau"); return; }
+      qc.invalidateQueries({ queryKey: ["products"] }); setOpen(false); toast.success(editing ? "Produit modifié" : "Produit ajouté");
+    },
     onError: (e: Error) => toast.error(e.message),
   });
 
