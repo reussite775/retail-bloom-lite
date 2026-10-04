@@ -29,12 +29,20 @@ const STATUS = {
   expired: { label: "Expiré", cls: "bg-muted text-muted-foreground" },
 } as const;
 
+// Invitation links must point at the public app, never at the private editor preview.
+const PUBLIC_URL = "https://project--bb68070d-c399-447e-81aa-52bb414648db.lovable.app";
+function publicOrigin() {
+  const h = window.location.hostname;
+  const internal = h === "localhost" || h.startsWith("id-preview--") || h.startsWith("preview--") || h.endsWith("-dev.lovable.app") || h.endsWith("lovableproject.com") || h.endsWith("lovableproject-dev.com");
+  return internal ? PUBLIC_URL : window.location.origin;
+}
+
 function Referral() {
   const { session } = useAuth();
   const uid = session!.user.id;
   const { data: p } = useQuery(profileQuery(uid));
   const [origin, setOrigin] = useState("");
-  useEffect(() => setOrigin(window.location.origin), []);
+  useEffect(() => setOrigin(publicOrigin()), []);
   const code = p?.referral_code ?? "";
   const link = code && origin ? `${origin}/auth?ref=${code}` : "";
 
