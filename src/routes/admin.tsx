@@ -2,7 +2,7 @@ import { createFileRoute, Link, Outlet, useNavigate } from "@tanstack/react-rout
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect } from "react";
-import { ArrowLeft, BarChart3, Crown, LayoutDashboard, Store, Users } from "lucide-react";
+import { ArrowLeft, BarChart3, Sparkles, Crown, LayoutDashboard, Store, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
 import { checkSuperAdmin } from "@/lib/superadmin.functions";
@@ -28,6 +28,7 @@ const tabs = [
   { to: "/admin/utilisateurs", label: "Utilisateurs", icon: Users, exact: false },
   { to: "/admin/statistiques", label: "Statistiques", icon: BarChart3, exact: false },
   { to: "/admin/boutiques", label: "Boutiques & abonnements", icon: Store, exact: false },
+  { to: "/admin/relances", label: "Relances IA", icon: Sparkles, exact: false },
 ] as const;
 
 function AdminLayout() {
