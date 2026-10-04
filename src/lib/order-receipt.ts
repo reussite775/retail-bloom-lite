@@ -1,0 +1,34 @@
+type Order = { id: string; created_at: string; customer_name: string; customer_phone: string; items: string; amount: number; delivery_zone: string; delivery_fee: number; order_items: unknown };
+type Shop = { name?: string; shop_name?: string; slogan?: string; contact?: string; address?: string } | null | undefined;
+
+const fcfa = (n: number) => `${Math.round(n).toLocaleString("fr-FR").replace(/\u202f|\u00a0/g, " ")} FCFA`;
+
+export function buildOrderReceipt(o: Order, shop: Shop) {
+  const name = shop?.shop_name || shop?.name || "Ma boutique";
+  const total = Number(o.amount) + Number(o.delivery_fee);
+  const lines = [
+    `*${name.toUpperCase()}*`,
+    shop?.slogan ? `_${shop.slogan}_` : "",
+    "",
+    `🧾 *Reçu de commande* N° ${o.id.slice(0, 8).toUpperCase()}`,
+    `Date : ${new Date(o.created_at).toLocaleDateString("fr-FR")}`,
+    `Client : ${o.customer_name}`,
+    "",
+    "*Articles*",
+    ...o.items.split(/,\s*| — /).filter(Boolean).map((i) => `• ${i}`),
+    "",
+    `Sous-total articles : ${fcfa(Number(o.amount))}`,
+    `Livraison${o.delivery_zone ? ` (${o.delivery_zone})` : ""} : ${fcfa(Number(o.delivery_fee))}`,
+    `*TOTAL À PAYER : ${fcfa(total)}*`,
+    "",
+    shop?.contact ? `📞 ${shop.contact}` : "",
+    shop?.address ? `📍 ${shop.address}` : "",
+    "Merci pour votre confiance ! 🙏",
+  ];
+  return lines.filter((l, i, a) => l !== "" || (a[i - 1] ?? "") !== "").join("\n").trim();
+}
+
+export function waLink(phone: string, text: string) {
+  const digits = phone.replace(/\D/g, "");
+  return `https://wa.me/${digits}?text=${encodeURIComponent(text)}`;
+}

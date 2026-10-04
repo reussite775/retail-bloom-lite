@@ -3,13 +3,14 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
-import { Crown, Plus, Truck, Wallet } from "lucide-react";
+import { Copy, Crown, MessageCircle, Plus, Truck, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
-import { membershipQuery, productsQuery, profileQuery } from "@/lib/data";
+import { membershipQuery, productsQuery, profileQuery, zonesQuery } from "@/lib/data";
+import { buildOrderReceipt, waLink } from "@/lib/order-receipt";
 import { hasPremium } from "@/lib/plans";
 import type { TablesUpdate } from "@/integrations/supabase/types";
 type Patch = TablesUpdate<"online_orders">;
@@ -80,9 +81,12 @@ function Orders() {
   const refresh = () => { qc.invalidateQueries({ queryKey: ["online_orders"] }); qc.invalidateQueries({ queryKey: ["couriers"] }); qc.invalidateQueries({ queryKey: ["products"] }); };
   const onError = (e: Error) => toast.error(e.message);
 
-  const [form, setForm] = useState({ customer_name: "", customer_phone: "", channel: "whatsapp" as Channel, items: "", amount: "" });
+  const [form, setForm] = useState({ customer_name: "", customer_phone: "", channel: "whatsapp" as Channel, items: "", amount: "", zone: "" });
   const [showForm, setShowForm] = useState(false);
   const products = useQuery(productsQuery);
+  const zones = useQuery(zonesQuery);
+  const zone = zones.data?.find((z) => z.id === form.zone);
+  const fee = zone ? Number(zone.fee) : 0;
   const [lines, setLines] = useState<{ product_id: string; quantity: number }[]>([]);
   const [pick, setPick] = useState({ product_id: "", quantity: "1" });
   const pname = (id: string) => products.data?.find((x) => x.id === id)?.name ?? "?";
@@ -102,10 +106,10 @@ function Orders() {
       const auto = lines.map((l) => `${l.quantity} × ${pname(l.product_id)}`).join(", ");
       const r = orderSchema.safeParse({ ...form, items: [auto, form.items.trim()].filter(Boolean).join(" — ") });
       if (!r.success) throw new Error(r.error.issues[0]?.message ?? "Champs invalides");
-      const { error } = await supabase.from("online_orders").insert({ ...r.data, order_items: lines });
+      const { error } = await supabase.from("online_orders").insert({ ...r.data, order_items: lines, delivery_zone: zone?.name ?? "", delivery_fee: fee });
       if (error) throw error;
     },
-    onSuccess: () => { toast.success("Commande ajoutée"); setForm({ customer_name: "", customer_phone: "", channel: "whatsapp", items: "", amount: "" }); setLines([]); setShowForm(false); refresh(); },
+    onSuccess: () => { toast.success("Commande ajoutée"); setForm({ customer_name: "", customer_phone: "", channel: "whatsapp", items: "", amount: "", zone: "" }); setLines([]); setShowForm(false); refresh(); },
     onError,
   });
 
@@ -184,7 +188,15 @@ function Orders() {
           <select className={selectCls + " h-10"} value={form.channel} onChange={(e) => setForm({ ...form, channel: e.target.value as Channel })}>
             {Object.entries(CHANNELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
           </select>
-          <Input type="number" placeholder="Montant (FCFA)" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} />
+          <Input type="number" placeholder="Montant des articles (FCFA)" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} />
+          <select className={selectCls + " h-10"} value={form.zone} onChange={(e) => setForm({ ...form, zone: e.target.value })}>
+            <option value="">— Zone de livraison (sans frais) —</option>
+            {(zones.data ?? []).map((z) => <option key={z.id} value={z.id}>{z.name} — {fcfa(Number(z.fee))}</option>)}
+          </select>
+          <div className="flex items-center justify-end rounded-md bg-muted px-3 text-sm">
+            Total client : <strong className="ml-1">{fcfa((Number(form.amount) || 0) + fee)}</strong>
+          </div>
+          {isAdmin && (zones.data ?? []).length === 0 && <p className="text-xs text-muted-foreground sm:col-span-2">Ajoutez vos zones et tarifs de livraison dans <Link to="/parametres" className="text-primary underline">Paramètres</Link>.</p>}
           <div className="space-y-2 sm:col-span-2">
             <div className="text-sm font-medium">Articles du stock (retirés du stock à la livraison)</div>
             <div className="flex flex-wrap gap-2">
@@ -230,7 +242,8 @@ function Orders() {
                   <div className="text-sm text-muted-foreground">{o.items}</div>
                 </div>
                 <div className="text-right">
-                  <div className="font-display text-lg font-bold">{fcfa(Number(o.amount))}</div>
+                  <div className="font-display text-lg font-bold">{fcfa(Number(o.amount) + Number(o.delivery_fee))}</div>
+                  {Number(o.delivery_fee) > 0 && <div className="text-xs text-muted-foreground">dont livraison {o.delivery_zone} {fcfa(Number(o.delivery_fee))}</div>}
                   <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${STATUS[o.status as Status].cls}`}>{STATUS[o.status as Status].label}</span>
                 </div>
               </div>
@@ -238,7 +251,7 @@ function Orders() {
                 <select className={selectCls} value={o.status} onChange={(e) => {
                   const status = e.target.value as Status;
                   const patch: Patch = { status };
-                  if (status === "delivered" && o.courier_id && Number(o.cash_collected) === 0) patch.cash_collected = Number(o.amount);
+                  if (status === "delivered" && o.courier_id && Number(o.cash_collected) === 0) patch.cash_collected = Number(o.amount) + Number(o.delivery_fee);
                   updateOrder.mutate({ id: o.id, patch });
                 }}>
                   {Object.entries(STATUS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
@@ -254,6 +267,12 @@ function Orders() {
                       onBlur={(e) => { const v = Math.max(0, Number(e.target.value) || 0); if (v !== Number(o.cash_collected)) updateOrder.mutate({ id: o.id, patch: { cash_collected: v } }); }} />
                   </label>
                 )}
+                <Button size="sm" asChild>
+                  <a href={waLink(o.customer_phone, buildOrderReceipt(o, p))} target="_blank" rel="noreferrer"><MessageCircle className="h-4 w-4" /> Partager sur WhatsApp</a>
+                </Button>
+                <Button size="sm" variant="outline" onClick={async () => {
+                  try { await navigator.clipboard.writeText(buildOrderReceipt(o, p)); toast.success("Reçu copié"); } catch { toast.error("Copie impossible"); }
+                }}><Copy className="h-4 w-4" /> Copier le reçu</Button>
                 {o.remitted_at && <span className="text-xs font-medium text-primary">Reversé le {new Date(o.remitted_at).toLocaleDateString("fr-FR")}</span>}
               </div>
             </div>

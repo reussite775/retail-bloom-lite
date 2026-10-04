@@ -93,3 +93,12 @@ export const expensesQuery = queryOptions({
     return data;
   },
 });
+
+export const zonesQuery = queryOptions({
+  queryKey: ["delivery_zones"],
+  queryFn: async () => {
+    const { data, error } = await supabase.from("delivery_zones").select("*").order("name");
+    if (error) throw error;
+    return data;
+  },
+});
