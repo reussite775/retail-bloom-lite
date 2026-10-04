@@ -113,6 +113,7 @@ export type Database = {
           shop_name: string
           slogan: string
           subscription_active: boolean
+          subscription_ends_at: string | null
           trial_ends_at: string
         }
         Insert: {
@@ -124,6 +125,7 @@ export type Database = {
           shop_name?: string
           slogan?: string
           subscription_active?: boolean
+          subscription_ends_at?: string | null
           trial_ends_at?: string
         }
         Update: {
@@ -135,6 +137,7 @@ export type Database = {
           shop_name?: string
           slogan?: string
           subscription_active?: boolean
+          subscription_ends_at?: string | null
           trial_ends_at?: string
         }
         Relationships: []
@@ -266,6 +269,62 @@ export type Database = {
           },
         ]
       }
+      subscription_payments: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          method: string
+          note: string
+          recorded_by: string | null
+          shop_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          method?: string
+          note?: string
+          recorded_by?: string | null
+          shop_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          method?: string
+          note?: string
+          recorded_by?: string | null
+          shop_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscription_payments_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -279,6 +338,13 @@ export type Database = {
       current_shop: { Args: never; Returns: string }
       customer_debt: { Args: { _cid: string }; Returns: number }
       has_access: { Args: { _uid: string }; Returns: boolean }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       is_shop_admin: { Args: never; Returns: boolean }
       record_payment: {
         Args: { _amount: number; _customer_id: string }
@@ -286,6 +352,7 @@ export type Database = {
       }
     }
     Enums: {
+      app_role: "super_admin"
       shop_role: "admin" | "cashier"
     }
     CompositeTypes: {
@@ -414,6 +481,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      app_role: ["super_admin"],
       shop_role: ["admin", "cashier"],
     },
   },
