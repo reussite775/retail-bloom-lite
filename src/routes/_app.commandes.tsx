@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
-import { membershipQuery, profileQuery } from "@/lib/data";
+import { membershipQuery, productsQuery, profileQuery } from "@/lib/data";
 import { hasPremium } from "@/lib/plans";
 import type { TablesUpdate } from "@/integrations/supabase/types";
 type Patch = TablesUpdate<"online_orders">;
@@ -44,7 +44,7 @@ const orderSchema = z.object({
   customer_name: z.string().trim().min(1, "Nom du client obligatoire").max(100),
   customer_phone: z.string().trim().max(30),
   channel: z.enum(["whatsapp", "tiktok", "instagram"]),
-  items: z.string().trim().min(1, "Indiquez les articles").max(500),
+  items: z.string().trim().min(1, "Ajoutez au moins un article").max(500),
   amount: z.coerce.number().positive("Montant invalide").max(100000000),
 });
 
@@ -77,21 +77,35 @@ function Orders() {
     },
   });
 
-  const refresh = () => { qc.invalidateQueries({ queryKey: ["online_orders"] }); qc.invalidateQueries({ queryKey: ["couriers"] }); };
+  const refresh = () => { qc.invalidateQueries({ queryKey: ["online_orders"] }); qc.invalidateQueries({ queryKey: ["couriers"] }); qc.invalidateQueries({ queryKey: ["products"] }); };
   const onError = (e: Error) => toast.error(e.message);
 
   const [form, setForm] = useState({ customer_name: "", customer_phone: "", channel: "whatsapp" as Channel, items: "", amount: "" });
   const [showForm, setShowForm] = useState(false);
+  const products = useQuery(productsQuery);
+  const [lines, setLines] = useState<{ product_id: string; quantity: number }[]>([]);
+  const [pick, setPick] = useState({ product_id: "", quantity: "1" });
+  const pname = (id: string) => products.data?.find((x) => x.id === id)?.name ?? "?";
+  const addLine = () => {
+    const q = Math.floor(Number(pick.quantity));
+    if (!pick.product_id || !(q > 0)) { toast.error("Choisissez un produit et une quantité"); return; }
+    const next = [...lines.filter((l) => l.product_id !== pick.product_id), { product_id: pick.product_id, quantity: (lines.find((l) => l.product_id === pick.product_id)?.quantity ?? 0) + q }];
+    setLines(next);
+    const total = next.reduce((a, l) => a + l.quantity * Number(products.data?.find((x) => x.id === l.product_id)?.sale_price ?? 0), 0);
+    setForm((f) => ({ ...f, amount: String(total) }));
+    setPick({ product_id: "", quantity: "1" });
+  };
   const [filter, setFilter] = useState<Status | "all">("all");
 
   const addOrder = useMutation({
     mutationFn: async () => {
-      const r = orderSchema.safeParse(form);
+      const auto = lines.map((l) => `${l.quantity} × ${pname(l.product_id)}`).join(", ");
+      const r = orderSchema.safeParse({ ...form, items: [auto, form.items.trim()].filter(Boolean).join(" — ") });
       if (!r.success) throw new Error(r.error.issues[0]?.message ?? "Champs invalides");
-      const { error } = await supabase.from("online_orders").insert(r.data);
+      const { error } = await supabase.from("online_orders").insert({ ...r.data, order_items: lines });
       if (error) throw error;
     },
-    onSuccess: () => { toast.success("Commande ajoutée"); setForm({ customer_name: "", customer_phone: "", channel: "whatsapp", items: "", amount: "" }); setShowForm(false); refresh(); },
+    onSuccess: () => { toast.success("Commande ajoutée"); setForm({ customer_name: "", customer_phone: "", channel: "whatsapp", items: "", amount: "" }); setLines([]); setShowForm(false); refresh(); },
     onError,
   });
 
@@ -171,7 +185,24 @@ function Orders() {
             {Object.entries(CHANNELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
           </select>
           <Input type="number" placeholder="Montant (FCFA)" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} />
-          <Input className="sm:col-span-2" placeholder="Articles (ex : 2 robes taille M, 1 sac)" value={form.items} onChange={(e) => setForm({ ...form, items: e.target.value })} />
+          <div className="space-y-2 sm:col-span-2">
+            <div className="text-sm font-medium">Articles du stock (retirés du stock à la livraison)</div>
+            <div className="flex flex-wrap gap-2">
+              <select className={selectCls + " h-10 flex-1"} value={pick.product_id} onChange={(e) => setPick({ ...pick, product_id: e.target.value })}>
+                <option value="">— Choisir un produit —</option>
+                {(products.data ?? []).map((x) => <option key={x.id} value={x.id}>{x.name} ({x.stock} en stock)</option>)}
+              </select>
+              <Input type="number" min={1} className="w-24" value={pick.quantity} onChange={(e) => setPick({ ...pick, quantity: e.target.value })} />
+              <Button type="button" variant="outline" onClick={addLine}>Ajouter</Button>
+            </div>
+            {lines.map((l) => (
+              <div key={l.product_id} className="flex items-center justify-between rounded-md bg-muted px-3 py-1.5 text-sm">
+                <span>{l.quantity} × {pname(l.product_id)}</span>
+                <button type="button" className="text-muted-foreground hover:text-foreground" onClick={() => setLines(lines.filter((x) => x.product_id !== l.product_id))}>Retirer</button>
+              </div>
+            ))}
+          </div>
+          <Input className="sm:col-span-2" placeholder="Autres articles ou précisions (facultatif)" value={form.items} onChange={(e) => setForm({ ...form, items: e.target.value })} />
           <Button className="sm:col-span-2" disabled={addOrder.isPending} onClick={() => addOrder.mutate()}>Enregistrer la commande</Button>
         </div>
       )}
