@@ -1,3 +1,4 @@
+import { isNetworkError, queueOp } from "@/lib/offline";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
@@ -43,12 +44,15 @@ function Credits() {
         items: z.string().trim().min(1, "Indiquez les articles concernés").max(500),
         amount: z.coerce.number().positive("Montant invalide").max(100_000_000),
       }).parse(form);
-      const { error } = await supabase.rpc("add_manual_debt", { _name: v.name, _phone: v.phone, _items: v.items, _amount: v.amount });
+      const args = { _name: v.name, _phone: v.phone, _items: v.items, _amount: v.amount };
+      if (!navigator.onLine) { queueOp("manual_debt", args, "Dette", v.amount); return { ...v, queued: true }; }
+      const { error } = await supabase.rpc("add_manual_debt", args);
+      if (error && isNetworkError(error)) { queueOp("manual_debt", args, "Dette", v.amount); return { ...v, queued: true }; }
       if (error) throw error;
-      return v;
+      return { ...v, queued: false };
     },
     onSuccess: (v) => {
-      toast.success(`Dette de ${money(v.amount)} ajoutée pour ${v.name}`);
+      toast.success(v.queued ? `Hors ligne : dette de ${money(v.amount)} pour ${v.name} enregistrée sur l'appareil, envoi au retour du réseau` : `Dette de ${money(v.amount)} ajoutée pour ${v.name}`);
       setAddOpen(false); setForm({ name: "", phone: "", items: "", amount: "" });
       qc.invalidateQueries({ queryKey: ["customers"] });
     },
@@ -60,11 +64,14 @@ function Credits() {
     mutationFn: async () => {
       const n = Number(amount);
       if (!sel || !n || n <= 0) throw new Error("Montant invalide");
-      const { error } = await supabase.rpc("record_payment", { _customer_id: sel.id, _amount: n });
+      const args = { _customer_id: sel.id, _amount: n };
+      if (!navigator.onLine) { queueOp("debt_payment", args, "Remboursement", n); return { n, queued: true }; }
+      const { error } = await supabase.rpc("record_payment", args);
+      if (error && isNetworkError(error)) { queueOp("debt_payment", args, "Remboursement", n); return { n, queued: true }; }
       if (error) throw error;
-      return n;
+      return { n, queued: false };
     },
-    onSuccess: (n) => { toast.success(`Remboursement de ${money(n)} enregistré`); setAmount(""); qc.invalidateQueries({ queryKey: ["customers"] }); },
+    onSuccess: ({ n, queued }) => { toast.success(queued ? `Hors ligne : remboursement de ${money(n)} enregistré sur l'appareil` : `Remboursement de ${money(n)} enregistré`); setAmount(""); qc.invalidateQueries({ queryKey: ["customers"] }); },
     onError: (e: Error) => toast.error(e.message),
   });
 

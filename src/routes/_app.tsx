@@ -127,10 +127,14 @@ function AppLayout() {
           <div className={`flex items-center justify-center gap-2 px-3 py-2 text-center text-sm font-medium ${online ? "bg-primary-soft text-accent-foreground" : "bg-warning/25 text-warning-foreground"}`}>
             {online ? <RefreshCw className="h-4 w-4 animate-spin" /> : <CloudOff className="h-4 w-4" />}
             {online
-              ? `Envoi de ${pending.length} vente(s) enregistrée(s) hors ligne…`
-              : `Hors ligne — les ventes sont enregistrées sur l'appareil${pending.length ? ` (${pending.length} en attente)` : ""} et envoyées au retour du réseau.`}
+              ? `Synchronisation de ${pending.length} opération(s) enregistrée(s) hors ligne…`
+              : `Hors ligne — ventes, stock et dettes sont enregistrés sur l'appareil${pending.length ? ` (${pending.length} en attente)` : ""} et envoyées au retour du réseau.`}
           </div>
         )}
+        <div role="status" aria-live="polite" className="pointer-events-none fixed bottom-3 right-3 z-50 flex items-center gap-1.5 rounded-full border bg-card/90 px-2.5 py-1 text-xs font-medium text-muted-foreground shadow-sm backdrop-blur">
+          <span className={`h-2 w-2 rounded-full ${online ? "bg-primary" : "bg-warning"}`} />
+          {online ? "En ligne" : "Hors ligne"}
+        </div>
         <main className="flex-1 p-4 md:p-8"><Outlet /></main>
       </div>
     </div>
