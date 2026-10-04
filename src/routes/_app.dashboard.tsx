@@ -1,4 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { LOW_STOCK, stockBadge, stockLevel } from "@/lib/stock";
 import { useQuery } from "@tanstack/react-query";
 import { AlertTriangle, Package, Receipt, TrendingUp, Wallet } from "lucide-react";
 import { money, startOfToday } from "@/lib/format";
@@ -25,7 +26,7 @@ function Dashboard() {
   const revenue = sales.reduce((s, x) => s + Number(x.total), 0);
   const profit = sales.reduce((s, x) => s + Number(x.profit), 0);
   const prods = products.data ?? [];
-  const low = prods.filter((p) => p.stock <= 5);
+  const low = prods.filter((p) => p.stock <= LOW_STOCK);
   const stockValue = prods.reduce((s, p) => s + p.stock * Number(p.purchase_price), 0);
 
   const days = Array.from({ length: 7 }, (_, i) => {
