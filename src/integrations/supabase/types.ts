@@ -155,6 +155,38 @@ export type Database = {
           },
         ]
       }
+      delivery_zones: {
+        Row: {
+          created_at: string
+          fee: number
+          id: string
+          name: string
+          organization_id: string
+        }
+        Insert: {
+          created_at?: string
+          fee?: number
+          id?: string
+          name: string
+          organization_id?: string
+        }
+        Update: {
+          created_at?: string
+          fee?: number
+          id?: string
+          name?: string
+          organization_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "delivery_zones_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       expenses: {
         Row: {
           amount: number
@@ -206,6 +238,8 @@ export type Database = {
           created_by: string | null
           customer_name: string
           customer_phone: string
+          delivery_fee: number
+          delivery_zone: string
           id: string
           items: string
           order_items: Json
@@ -224,6 +258,8 @@ export type Database = {
           created_by?: string | null
           customer_name: string
           customer_phone?: string
+          delivery_fee?: number
+          delivery_zone?: string
           id?: string
           items: string
           order_items?: Json
@@ -242,6 +278,8 @@ export type Database = {
           created_by?: string | null
           customer_name?: string
           customer_phone?: string
+          delivery_fee?: number
+          delivery_zone?: string
           id?: string
           items?: string
           order_items?: Json
