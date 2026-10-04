@@ -10,3 +10,5 @@
 <!-- LOVABLE:END -->
 - Multi-user shops: data rows are owned by the shop (owner's user id); employees map to a shop via `shop_members`, and RLS/RPCs resolve it with `current_shop()` / `is_shop_admin()` — never `auth.uid()` directly for shop data. Why: lets cashiers work on the owner's data with restricted rights.
 - Employee accounts are created/deleted only via owner-verified server functions in `src/lib/team.functions.ts` using the admin client. Why: auth admin API is server-only.
+- PWA: vite-plugin-pwa generateSW writes `sw.js` into `dist/client` (outDir/globDirectory) and is registered only via `src/lib/pwa.ts` (never in dev/preview/iframe). Why: SSR build has no index.html and preview must never be cached.
+- Offline: React Query cache persisted to localStorage; cash-register sales made offline are queued in `src/lib/offline.ts` and replayed through the same RPCs when back online. Why: no lost sales on unstable networks.
