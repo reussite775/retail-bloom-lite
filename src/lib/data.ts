@@ -6,9 +6,9 @@ export const profileQuery = (uid: string) =>
   queryOptions({
     queryKey: ["profile", uid],
     queryFn: async () => {
-      const { data, error } = await supabase.from("profiles").select("*").eq("id", uid).maybeSingle();
+      const { data, error } = await supabase.from("organizations").select("*").eq("id", uid).maybeSingle();
       if (error) throw error;
-      return data;
+      return data ? { ...data, shop_name: data.name } : null;
     },
   });
 
@@ -69,9 +69,9 @@ export const membershipQuery = (uid: string) =>
   queryOptions({
     queryKey: ["membership", uid],
     queryFn: async () => {
-      const { data, error } = await supabase.from("shop_members").select("shop_id, role").eq("user_id", uid).maybeSingle();
+      const { data, error } = await supabase.from("organization_members").select("organization_id, role").eq("user_id", uid).maybeSingle();
       if (error) throw error;
-      return { shopId: data?.shop_id ?? uid, isAdmin: !data || data.role === "admin" };
+      return { shopId: data?.organization_id ?? uid, isAdmin: !data || data.role === "admin" };
     },
   });
 
@@ -79,8 +79,17 @@ export const teamQuery = (uid: string) =>
   queryOptions({
     queryKey: ["team", uid],
     queryFn: async () => {
-      const { data, error } = await supabase.from("shop_members").select("*").eq("shop_id", uid).order("created_at");
+      const { data, error } = await supabase.from("organization_members").select("*").eq("organization_id", uid).eq("role", "cashier").order("created_at");
       if (error) throw error;
       return data;
     },
   });
+
+export const expensesQuery = queryOptions({
+  queryKey: ["expenses"],
+  queryFn: async () => {
+    const { data, error } = await supabase.from("expenses").select("*").order("spent_on", { ascending: false }).order("created_at", { ascending: false });
+    if (error) throw error;
+    return data;
+  },
+});
