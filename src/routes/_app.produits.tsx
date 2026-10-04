@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { AlertOctagon, AlertTriangle, Pencil, Plus, Search, Trash2, X } from "lucide-react";
+import { LOW_STOCK, matches, stockBadge, stockLevel } from "@/lib/stock";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,6 +33,7 @@ function Products() {
   const qc = useQueryClient();
   const { data = [], isLoading } = useQuery(productsQuery);
   const [q, setQ] = useState("");
+  const [filter, setFilter] = useState<"all" | "alert">("all");
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Product | null>(null);
   const [form, setForm] = useState<Form>(empty);
@@ -150,7 +152,8 @@ function Products() {
                   </div>
                 </td>
               </tr>
-            ))}
+              );
+            })}
           </tbody>
         </table>
       </div>
