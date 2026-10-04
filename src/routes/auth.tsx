@@ -48,6 +48,7 @@ function AuthPage() {
     if (mode === "in") {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) toast.error("Email ou mot de passe incorrect");
+      else navigate({ to: "/dashboard" });
     } else {
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -55,7 +56,8 @@ function AuthPage() {
         options: { emailRedirectTo: `${window.location.origin}/dashboard` },
       });
       if (error) toast.error(error.message);
-      else if (!data.session) toast.success("Vérifiez votre email pour confirmer votre compte.");
+      else if (data.session) navigate({ to: "/dashboard" });
+      else toast.success("Vérifiez votre email pour confirmer votre compte.");
     }
     setBusy(false);
   };
