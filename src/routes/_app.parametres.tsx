@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { profileQuery } from "@/lib/data";
+import { hasPremium } from "@/lib/plans";
 
 export const Route = createFileRoute("/_app/parametres")({
   head: () => ({
@@ -58,6 +59,16 @@ function Settings() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const setMode = useMutation({
+    mutationFn: async (mode: "physical" | "online") => {
+      const { error } = await supabase.from("organizations").update({ business_mode: mode }).eq("id", uid);
+      if (error) throw error;
+    },
+    onSuccess: () => { toast.success("Type d'activité enregistré"); qc.invalidateQueries({ queryKey: ["profile"] }); },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+
   const field = (k: keyof typeof f, label: string, ph = "") => (
     <label className="block space-y-1">
       <span className="text-sm font-medium">{label}</span>
@@ -89,6 +100,27 @@ function Settings() {
         {field("contact", "Contact", "Téléphone, email…")}
         {field("address", "Adresse", "Quartier, ville")}
         <Button className="w-full" size="lg" disabled={save.isPending} onClick={() => save.mutate()}>Enregistrer</Button>
+      </div>
+      <div className="space-y-4 rounded-xl border bg-card p-6">
+        <div>
+          <h2 className="text-lg font-bold">Type d'activité</h2>
+          <p className="text-sm text-muted-foreground">Le mode Vendeur en ligne ajoute la gestion des commandes et le suivi des livreurs (offre Premium).</p>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2">
+          {([
+            ["physical", "Boutique physique", "Caisse + Carnet de dettes classique"],
+            ["online", "Vendeur en ligne / E-commerce", "Commandes digitales et suivi des livreurs"],
+          ] as const).map(([v, t, d]) => (
+            <button key={v} type="button" disabled={setMode.isPending} onClick={() => setMode.mutate(v)}
+              className={`rounded-lg border p-4 text-left transition-colors ${p?.business_mode === v ? "border-primary bg-primary-soft" : "hover:bg-muted"}`}>
+              <div className="font-semibold">{t}</div>
+              <div className="text-sm text-muted-foreground">{d}</div>
+            </button>
+          ))}
+        </div>
+        {p?.business_mode === "online" && !hasPremium(p) && (
+          <p className="rounded-lg bg-warning/20 p-3 text-sm">Le module Commandes en ligne nécessite l'offre Premium. Passez à Premium depuis la page Abonnement.</p>
+        )}
       </div>
     </div>
   );
