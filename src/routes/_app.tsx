@@ -1,24 +1,25 @@
 import { createFileRoute, Link, Outlet, useLocation, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
-import { BarChart3, BookUser, Boxes, History, Clock, CreditCard, Lock, LogOut, Settings, ShoppingCart, Store } from "lucide-react";
+import { BarChart3, BookUser, Boxes, History, UserCog, Clock, CreditCard, Lock, LogOut, Settings, ShoppingCart, Store } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
-import { profileQuery } from "@/lib/data";
+import { membershipQuery, profileQuery } from "@/lib/data";
 
 export const Route = createFileRoute("/_app")({
   component: AppLayout,
 });
 
 const nav = [
-  { to: "/dashboard", label: "Tableau de bord", icon: BarChart3 },
-  { to: "/caisse", label: "Caisse", icon: ShoppingCart },
-  { to: "/ventes", label: "Historique des ventes", icon: History },
-  { to: "/produits", label: "Produits & stocks", icon: Boxes },
-  { to: "/credits", label: "Carnet de crédits", icon: BookUser },
-  { to: "/abonnement", label: "Abonnement", icon: CreditCard },
-  { to: "/parametres", label: "Paramètres", icon: Settings },
+  { to: "/dashboard", label: "Tableau de bord", icon: BarChart3, admin: true },
+  { to: "/caisse", label: "Caisse", icon: ShoppingCart, admin: false },
+  { to: "/ventes", label: "Historique des ventes", icon: History, admin: true },
+  { to: "/produits", label: "Produits & stocks", icon: Boxes, admin: true },
+  { to: "/credits", label: "Carnet de crédits", icon: BookUser, admin: false },
+  { to: "/abonnement", label: "Abonnement", icon: CreditCard, admin: true },
+  { to: "/parametres", label: "Paramètres", icon: Settings, admin: true },
+  { to: "/equipe", label: "Équipe & accès", icon: UserCog, admin: true },
 ] as const;
 
 function AppLayout() {
@@ -26,13 +27,22 @@ function AppLayout() {
   const navigate = useNavigate();
   const pathname = useLocation({ select: (l) => l.pathname });
   const uid = session?.user.id;
-  const profile = useQuery({ ...profileQuery(uid ?? ""), enabled: !!uid });
+  const member = useQuery({ ...membershipQuery(uid ?? ""), enabled: !!uid });
+  const shopId = member.data?.shopId;
+  const isAdmin = member.data?.isAdmin ?? false;
+  const profile = useQuery({ ...profileQuery(shopId ?? ""), enabled: !!shopId });
+  const allowed = nav.filter((n) => isAdmin || !n.admin);
+  const forbidden = !!member.data && !isAdmin && !allowed.some((n) => pathname.startsWith(n.to));
+
+  useEffect(() => {
+    if (forbidden) navigate({ to: "/caisse", replace: true });
+  }, [forbidden, navigate]);
 
   useEffect(() => {
     if (!loading && !session) navigate({ to: "/auth" });
   }, [loading, session, navigate]);
 
-  if (loading || !session || profile.isLoading) {
+  if (loading || !session || member.isLoading || profile.isLoading || forbidden) {
     return <div className="grid min-h-screen place-items-center text-muted-foreground">Chargement…</div>;
   }
 
@@ -41,7 +51,7 @@ function AppLayout() {
   const daysLeft = Math.ceil((trialEnd.getTime() - Date.now()) / 86400000);
   const hasAccess = !!p && (p.subscription_active || daysLeft > 0);
 
-  if (!hasAccess && pathname !== "/abonnement") return <Paywall />;
+  if (!hasAccess && (!isAdmin || pathname !== "/abonnement")) return <Paywall isAdmin={isAdmin} />;
 
   return (
     <div className="flex min-h-screen">
@@ -51,7 +61,7 @@ function AppLayout() {
           Boutik
         </div>
         <nav className="space-y-1">
-          {nav.map((n) => (
+          {allowed.map((n) => (
             <Link key={n.to} to={n.to} className="flex items-center gap-3 rounded-lg px-3 py-2.5 font-medium transition-colors hover:bg-sidebar-accent"
               activeProps={{ className: "bg-sidebar-accent text-sidebar-accent-foreground" }}>
               <n.icon className="h-5 w-5" /> {n.label}
@@ -59,25 +69,26 @@ function AppLayout() {
           ))}
         </nav>
         <div className="mt-auto space-y-3">
-          {!p!.subscription_active && (
+          {isAdmin && !p!.subscription_active && (
             <div className="rounded-lg border border-sidebar-border p-3 text-sm">
               <div className="flex items-center gap-2 font-semibold text-sidebar-accent-foreground"><Clock className="h-4 w-4 text-sidebar-primary" /> Essai gratuit</div>
               <p className="mt-1">{daysLeft} jour{daysLeft > 1 ? "s" : ""} restant{daysLeft > 1 ? "s" : ""}</p>
             </div>
           )}
+          <div className="truncate px-3 text-xs opacity-70">{session.user.email} · {isAdmin ? "Administrateur" : "Caissier"}</div>
           <button onClick={() => supabase.auth.signOut()} className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm hover:bg-sidebar-accent">
             <LogOut className="h-4 w-4" /> Déconnexion
           </button>
         </div>
       </aside>
       <div className="flex min-w-0 flex-1 flex-col">
-        {!p!.subscription_active && (
+        {isAdmin && !p!.subscription_active && (
           <Link to="/abonnement" className="flex items-center justify-center gap-2 bg-primary-soft px-3 py-2 text-sm font-medium text-accent-foreground md:hidden">
             <Clock className="h-4 w-4" /> {daysLeft > 0 ? `Essai gratuit : ${daysLeft} jour${daysLeft > 1 ? "s" : ""} restant${daysLeft > 1 ? "s" : ""}` : "Essai terminé — s'abonner"}
           </Link>
         )}
         <nav className="flex gap-1 overflow-x-auto border-b bg-card p-2 md:hidden">
-          {nav.map((n) => (
+          {allowed.map((n) => (
             <Link key={n.to} to={n.to} className="flex items-center gap-2 whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium"
               activeProps={{ className: "bg-primary-soft text-accent-foreground" }}>
               <n.icon className="h-4 w-4" /> {n.label}
@@ -90,7 +101,7 @@ function AppLayout() {
   );
 }
 
-function Paywall() {
+function Paywall({ isAdmin }: { isAdmin: boolean }) {
   return (
     <div className="grid min-h-screen place-items-center bg-background px-4">
       <div className="w-full max-w-md rounded-2xl border bg-card p-8 text-center shadow-sm">
@@ -99,9 +110,13 @@ function Paywall() {
         <p className="mt-2 text-muted-foreground">
           Vos 7 jours d'essai sont écoulés. La caisse, les stocks et le carnet de crédits sont bloqués. Vos données sont conservées — abonnez-vous pour continuer.
         </p>
-        <Button asChild className="mt-6 w-full" size="lg">
-          <Link to="/abonnement">Voir l'abonnement</Link>
-        </Button>
+        {isAdmin ? (
+          <Button asChild className="mt-6 w-full" size="lg">
+            <Link to="/abonnement">Voir l'abonnement</Link>
+          </Button>
+        ) : (
+          <p className="mt-6 rounded-lg bg-muted p-3 text-sm font-medium">Demandez au propriétaire de la boutique de renouveler l'abonnement.</p>
+        )}
         <button onClick={() => supabase.auth.signOut()} className="mt-4 text-sm text-muted-foreground hover:text-foreground">Se déconnecter</button>
       </div>
     </div>
