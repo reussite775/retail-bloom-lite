@@ -28,6 +28,7 @@ export const Route = createFileRoute("/super-admin")({
 });
 
 type Merchant = Awaited<ReturnType<typeof listMerchants>>["merchants"][number];
+type SubInput = { shopId: string; action: "activate" | "deactivate" | "extend_trial"; months?: number; days?: number; amount?: number; method?: string; note?: string };
 type Status = "trial" | "active" | "expired";
 
 function statusOf(m: Merchant): Status {
@@ -165,7 +166,7 @@ function ManageDialog({ merchant, onClose }: { merchant: Merchant | null; onClos
   const [days, setDays] = useState("7");
 
   const mut = useMutation({
-    mutationFn: (input: Parameters<typeof update>[0]["data"]) => update({ data: input }),
+    mutationFn: (input: SubInput) => update({ data: input }),
     onSuccess: () => { toast.success("Abonnement mis à jour"); qc.invalidateQueries({ queryKey: ["sa-merchants"] }); setAmount(""); setNote(""); onClose(); },
     onError: (e: Error) => toast.error(e.message.startsWith("[") ? "Valeurs invalides" : e.message),
   });

@@ -76,7 +76,7 @@ export const updateSubscription = createServerFn({ method: "POST" })
     const { data: p, error } = await supabaseAdmin.from("profiles").select("trial_ends_at, subscription_ends_at, subscription_active").eq("id", data.shopId).single();
     if (error) throw new Error("Boutique introuvable");
     const now = Date.now();
-    let patch: Record<string, unknown> = {};
+    let patch: { subscription_active?: boolean; subscription_ends_at?: string | null; trial_ends_at?: string } = {};
     if (data.action === "activate") {
       let ends: string | null = null;
       if (data.months && data.months > 0) {
