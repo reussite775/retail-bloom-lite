@@ -16,3 +16,4 @@
 - Shops are `organizations` (id = owner user id) with `organization_members` for roles; business rows reference the org via `user_id`/`organization_id` and RLS uses `current_shop()` (NULL when suspended). Why: strict tenant isolation without breaking existing columns.
 - Platform admin lives under `/admin/*`, every action via has_role-checked server functions (`superadmin.functions.ts`, `relances.functions.ts`). Why: admin access never decided client-side.
 - AI follow-ups call the Lovable AI Gateway Responses API server-side with streaming, parsed into JSON. Why: keep the key server-only.
+- Subscription payments: `payment_checkouts` rows created by `startCheckout` (price computed server-side); activation only via service-role `mark_checkout_paid` RPC, called by the signed Bkapay webhook (`/api/public/bkapay/webhook`) or admin `validateCheckout`. Why: one idempotent activation path for automatic and manual validation.
