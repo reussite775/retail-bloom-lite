@@ -1,7 +1,7 @@
-import { createFileRoute, Link, Outlet, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useLocation, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
-import { BarChart3, BookUser, Boxes, Clock, Lock, LogOut, Settings, ShoppingCart, Store } from "lucide-react";
+import { BarChart3, BookUser, Boxes, Clock, CreditCard, Lock, LogOut, Settings, ShoppingCart, Store } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
@@ -16,12 +16,14 @@ const nav = [
   { to: "/caisse", label: "Caisse", icon: ShoppingCart },
   { to: "/produits", label: "Produits & stocks", icon: Boxes },
   { to: "/credits", label: "Carnet de crédits", icon: BookUser },
+  { to: "/abonnement", label: "Abonnement", icon: CreditCard },
   { to: "/parametres", label: "Paramètres", icon: Settings },
 ] as const;
 
 function AppLayout() {
   const { session, loading } = useAuth();
   const navigate = useNavigate();
+  const pathname = useLocation({ select: (l) => l.pathname });
   const uid = session?.user.id;
   const profile = useQuery({ ...profileQuery(uid ?? ""), enabled: !!uid });
 
@@ -38,7 +40,7 @@ function AppLayout() {
   const daysLeft = Math.ceil((trialEnd.getTime() - Date.now()) / 86400000);
   const hasAccess = !!p && (p.subscription_active || daysLeft > 0);
 
-  if (!hasAccess) return <Paywall email={session.user.email ?? ""} />;
+  if (!hasAccess && pathname !== "/abonnement") return <Paywall />;
 
   return (
     <div className="flex min-h-screen">
@@ -68,6 +70,11 @@ function AppLayout() {
         </div>
       </aside>
       <div className="flex min-w-0 flex-1 flex-col">
+        {!p!.subscription_active && (
+          <Link to="/abonnement" className="flex items-center justify-center gap-2 bg-primary-soft px-3 py-2 text-sm font-medium text-accent-foreground md:hidden">
+            <Clock className="h-4 w-4" /> {daysLeft > 0 ? `Essai gratuit : ${daysLeft} jour${daysLeft > 1 ? "s" : ""} restant${daysLeft > 1 ? "s" : ""}` : "Essai terminé — s'abonner"}
+          </Link>
+        )}
         <nav className="flex gap-1 overflow-x-auto border-b bg-card p-2 md:hidden">
           {nav.map((n) => (
             <Link key={n.to} to={n.to} className="flex items-center gap-2 whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium"
@@ -82,21 +89,17 @@ function AppLayout() {
   );
 }
 
-function Paywall({ email }: { email: string }) {
+function Paywall() {
   return (
     <div className="grid min-h-screen place-items-center bg-background px-4">
       <div className="w-full max-w-md rounded-2xl border bg-card p-8 text-center shadow-sm">
         <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-primary-soft text-primary"><Lock className="h-7 w-7" /></div>
         <h1 className="mt-5 text-2xl font-bold">Votre essai gratuit est terminé</h1>
         <p className="mt-2 text-muted-foreground">
-          Vos 7 jours d'essai sont écoulés. Vos produits et ventes sont conservés — activez votre abonnement pour continuer à utiliser Boutik.
+          Vos 7 jours d'essai sont écoulés. La caisse, les stocks et le carnet de crédits sont bloqués. Vos données sont conservées — abonnez-vous pour continuer.
         </p>
-        <div className="mt-6 rounded-xl bg-muted p-4">
-          <p className="text-sm text-muted-foreground">Abonnement mensuel</p>
-          <p className="font-display text-3xl font-extrabold">Contactez-nous</p>
-        </div>
         <Button asChild className="mt-6 w-full" size="lg">
-          <a href={`mailto:contact@boutik.app?subject=Activation abonnement&body=Compte : ${email}`}>Activer mon abonnement</a>
+          <Link to="/abonnement">Voir l'abonnement</Link>
         </Button>
         <button onClick={() => supabase.auth.signOut()} className="mt-4 text-sm text-muted-foreground hover:text-foreground">Se déconnecter</button>
       </div>
