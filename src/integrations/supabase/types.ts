@@ -711,6 +711,10 @@ export type Database = {
       }
     }
     Functions: {
+      add_manual_debt: {
+        Args: { _amount: number; _items: string; _name: string; _phone: string }
+        Returns: string
+      }
       create_credit_sale: {
         Args: { _customer_id: string; _items: Json }
         Returns: string
