@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
-import { profileQuery } from "@/lib/data";
+import { profileQuery, zonesQuery } from "@/lib/data";
 import { hasPremium } from "@/lib/plans";
 
 export const Route = createFileRoute("/_app/parametres")({
@@ -56,6 +56,25 @@ function Settings() {
       if (error) throw error;
     },
     onSuccess: () => { toast.success("Paramètres enregistrés"); qc.invalidateQueries({ queryKey: ["profile"] }); },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const zones = useQuery(zonesQuery);
+  const [zf, setZf] = useState({ name: "", fee: "" });
+  const addZone = useMutation({
+    mutationFn: async () => {
+      const name = zf.name.trim(); const fee = Number(zf.fee);
+      if (!name || name.length > 80) throw new Error("Nom de zone invalide");
+      if (!(fee >= 0) || zf.fee === "") throw new Error("Tarif invalide");
+      const { error } = await supabase.from("delivery_zones").insert({ name, fee });
+      if (error) throw error;
+    },
+    onSuccess: () => { toast.success("Zone ajoutée"); setZf({ name: "", fee: "" }); qc.invalidateQueries({ queryKey: ["delivery_zones"] }); },
+    onError: (e: Error) => toast.error(e.message),
+  });
+  const delZone = useMutation({
+    mutationFn: async (id: string) => { const { error } = await supabase.from("delivery_zones").delete().eq("id", id); if (error) throw error; },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["delivery_zones"] }),
     onError: (e: Error) => toast.error(e.message),
   });
 
@@ -122,6 +141,27 @@ function Settings() {
           <p className="rounded-lg bg-warning/20 p-3 text-sm">Le module Commandes en ligne nécessite l'offre Premium. Passez à Premium depuis la page Abonnement.</p>
         )}
       </div>
+      {p?.business_mode === "online" && (
+        <div className="space-y-4 rounded-xl border bg-card p-6">
+          <div>
+            <h2 className="text-lg font-bold">Zones de livraison</h2>
+            <p className="text-sm text-muted-foreground">Le tarif de la zone choisie s'ajoute automatiquement au total de la commande.</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Input className="flex-1" placeholder="Zone (ex : Cotonou)" value={zf.name} onChange={(e) => setZf({ ...zf, name: e.target.value })} />
+            <Input className="w-36" type="number" min={0} placeholder="Tarif FCFA" value={zf.fee} onChange={(e) => setZf({ ...zf, fee: e.target.value })} />
+            <Button disabled={addZone.isPending} onClick={() => addZone.mutate()}>Ajouter</Button>
+          </div>
+          {(zones.data ?? []).length === 0 && <p className="text-sm text-muted-foreground">Aucune zone pour l'instant.</p>}
+          {(zones.data ?? []).map((z) => (
+            <div key={z.id} className="flex items-center justify-between rounded-md bg-muted px-3 py-2 text-sm">
+              <span className="font-medium">{z.name}</span>
+              <span className="flex items-center gap-3">{Math.round(Number(z.fee)).toLocaleString("fr-FR")} FCFA
+                <button className="text-muted-foreground hover:text-destructive" onClick={() => delZone.mutate(z.id)}>Supprimer</button></span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
