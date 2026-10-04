@@ -21,7 +21,7 @@ export const listMerchants = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const [users, profiles, members, payments] = await Promise.all([
       supabaseAdmin.auth.admin.listUsers({ perPage: 1000 }),
-      supabaseAdmin.from("organizations").select("id, owner_id, name, trial_ends_at, subscription_active, subscription_ends_at, created_at"),
+      supabaseAdmin.from("organizations").select("id, owner_id, name, plan, trial_ends_at, subscription_active, subscription_ends_at, created_at"),
       supabaseAdmin.from("organization_members").select("user_id").eq("role", "cashier"),
       supabaseAdmin.from("subscription_payments").select("id, shop_id, amount, method, note, created_at").order("created_at", { ascending: false }),
     ]);
@@ -40,6 +40,7 @@ export const listMerchants = createServerFn({ method: "GET" })
           name: String(meta["full_name"] ?? meta["name"] ?? meta["display_name"] ?? ""),
           email: u?.email ?? "",
           shop_name: p.name,
+          plan: p.plan,
           created_at: u?.created_at ?? p.created_at,
           trial_ends_at: p.trial_ends_at,
           subscription_active: p.subscription_active,
@@ -62,6 +63,7 @@ export const updateSubscription = createServerFn({ method: "POST" })
     z.object({
       shopId: z.string().uuid(),
       action: z.enum(["activate", "deactivate", "extend_trial"]),
+      plan: z.enum(["standard", "premium"]).optional(),
       months: z.number().int().min(0).max(36).optional(),
       days: z.number().int().min(1).max(365).optional(),
       amount: z.number().min(0).max(100_000_000).optional(),
@@ -75,7 +77,7 @@ export const updateSubscription = createServerFn({ method: "POST" })
     const { data: p, error } = await supabaseAdmin.from("organizations").select("trial_ends_at, subscription_ends_at, subscription_active").eq("id", data.shopId).single();
     if (error) throw new Error("Boutique introuvable");
     const now = Date.now();
-    let patch: { subscription_active?: boolean; subscription_ends_at?: string | null; trial_ends_at?: string } = {};
+    let patch: { subscription_active?: boolean; subscription_ends_at?: string | null; trial_ends_at?: string; plan?: string } = {};
     if (data.action === "activate") {
       let ends: string | null = null;
       if (data.months && data.months > 0) {
@@ -83,7 +85,7 @@ export const updateSubscription = createServerFn({ method: "POST" })
         base.setMonth(base.getMonth() + data.months);
         ends = base.toISOString();
       }
-      patch = { subscription_active: true, subscription_ends_at: ends };
+      patch = { subscription_active: true, subscription_ends_at: ends, plan: data.plan ?? "standard" };
     } else if (data.action === "deactivate") {
       patch = { subscription_active: false, subscription_ends_at: null };
     } else {
@@ -94,7 +96,7 @@ export const updateSubscription = createServerFn({ method: "POST" })
     if (e2) throw new Error(e2.message);
     if (data.action === "activate" && data.amount && data.amount > 0) {
       const { error: e3 } = await supabaseAdmin.from("subscription_payments").insert({
-        shop_id: data.shopId, amount: data.amount, method: data.method || "Mobile Money", note: data.note ?? "", recorded_by: context.userId,
+        shop_id: data.shopId, amount: data.amount, method: data.method || "Mobile Money", note: `${data.plan === "premium" ? "Premium" : "Standard"}${data.note ? " · " + data.note : ""}`, recorded_by: context.userId,
       });
       if (e3) throw new Error(e3.message);
     }
@@ -210,8 +212,6 @@ export const updatePlatformSettings = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) =>
     z.object({
-      price_amount: z.number().min(0).max(100_000_000),
-      price_period: z.enum(["mois", "trimestre", "an"]),
       contact_email: z.union([z.literal(""), z.string().trim().email("Email invalide").max(255)]),
       contact_whatsapp: z.string().trim().max(30).regex(/^[+\d\s().-]*$/, "Numéro invalide"),
       payment_instructions: z.string().trim().max(500),

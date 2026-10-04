@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { useAuth } from "@/lib/auth";
 import { money } from "@/lib/format";
 import { matches } from "@/lib/stock";
+import { PLANS, type PlanId } from "@/lib/plans";
 import { listMerchants, updateSubscription } from "@/lib/superadmin.functions";
 
 export const Route = createFileRoute("/admin/boutiques")({
@@ -27,7 +28,7 @@ export const Route = createFileRoute("/admin/boutiques")({
 });
 
 type Merchant = Awaited<ReturnType<typeof listMerchants>>["merchants"][number];
-type SubInput = { shopId: string; action: "activate" | "deactivate" | "extend_trial"; months?: number; days?: number; amount?: number; method?: string; note?: string };
+type SubInput = { shopId: string; action: "activate" | "deactivate" | "extend_trial"; plan?: PlanId; months?: number; days?: number; amount?: number; method?: string; note?: string };
 type Status = "trial" | "active" | "expired";
 
 function statusOf(m: Merchant): Status {
@@ -104,7 +105,7 @@ function Shops() {
                     </p>
                   </div>
                   <div className="flex shrink-0 items-center gap-2">
-                    <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${statusUi[st].cls}`}>{statusUi[st].label}</span>
+                    <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${statusUi[st].cls}`}>{statusUi[st].label}{st === "active" ? ` · ${m.plan === "premium" ? "Premium" : "Standard"}` : ""}</span>
                     <Button size="sm" variant="outline" onClick={() => setEdit(m)}>Gérer</Button>
                   </div>
                 </li>
@@ -136,7 +137,9 @@ function ManageDialog({ merchant, onClose }: { merchant: Merchant | null; onClos
   const qc = useQueryClient();
   const update = useServerFn(updateSubscription);
   const [months, setMonths] = useState("1");
-  const [amount, setAmount] = useState("");
+  const [amount, setAmount] = useState("3000");
+  const [plan, setPlan] = useState<PlanId>("standard");
+  const pick = (p: PlanId, m: number) => { setPlan(p); setMonths(String(m)); setAmount(String(PLANS[p].prices[m === 3 ? "quarter" : "month"])); };
   const [method, setMethod] = useState("Mobile Money");
   const [note, setNote] = useState("");
   const [days, setDays] = useState("7");
@@ -155,8 +158,16 @@ function ManageDialog({ merchant, onClose }: { merchant: Merchant | null; onClos
         <DialogHeader><DialogTitle>{merchant.shop_name}</DialogTitle></DialogHeader>
         <p className="text-sm text-muted-foreground">{merchant.email} · <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${statusUi[st].cls}`}>{statusUi[st].label}</span></p>
 
-        <form className="space-y-3 rounded-lg border p-4" onSubmit={(e) => { e.preventDefault(); mut.mutate({ shopId: merchant.id, action: "activate", months: parseInt(months) || 0, amount: Number(amount) || 0, method, note }); }}>
+        <form className="space-y-3 rounded-lg border p-4" onSubmit={(e) => { e.preventDefault(); mut.mutate({ shopId: merchant.id, action: "activate", plan, months: parseInt(months) || 0, amount: Number(amount) || 0, method, note }); }}>
           <p className="flex items-center gap-2 font-semibold"><CheckCircle2 className="h-4 w-4 text-primary" /> Activer / renouveler l'abonnement</p>
+          <div className="grid grid-cols-2 gap-2">
+            {(["standard", "premium"] as const).flatMap((p) => [1, 3].map((m) => (
+              <button type="button" key={p + m} onClick={() => pick(p, m)}
+                className={`rounded-lg border p-2 text-left text-sm ${plan === p && months === String(m) ? "border-primary bg-primary-soft" : ""}`}>
+                <span className="font-semibold">{PLANS[p].name}</span> · {m} mois<br /><span className="text-muted-foreground">{PLANS[p].prices[m === 3 ? "quarter" : "month"].toLocaleString("fr-FR")} FCFA</span>
+              </button>
+            )))}
+          </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5"><Label>Durée (mois)</Label><Input type="number" min="0" max="36" value={months} onChange={(e) => setMonths(e.target.value)} /><p className="text-xs text-muted-foreground">0 = sans limite</p></div>
             <div className="space-y-1.5"><Label>Montant reçu (FCFA)</Label><Input type="number" min="0" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0" /></div>
