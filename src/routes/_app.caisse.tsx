@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Minus, Plus, Search, ShoppingCart, X } from "lucide-react";
+import { useRole } from "@/lib/role";
 import { matches, stockBadge, levelOf } from "@/lib/stock";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -28,7 +29,8 @@ export const Route = createFileRoute("/_app/caisse")({
 function Caisse() {
   const qc = useQueryClient();
   const { session } = useAuth();
-  const { data: profile } = useQuery(profileQuery(session!.user.id));
+  const { shopId, isAdmin } = useRole();
+  const { data: profile } = useQuery({ ...profileQuery(shopId), enabled: !!shopId });
   const [receipt, setReceipt] = useState<Receipt | null>(null);
   const { data: products = [] } = useQuery(productsQuery);
   const { data: today = [] } = useQuery(todaySalesQuery);
@@ -104,7 +106,7 @@ function Caisse() {
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
             <h1 className="text-3xl font-extrabold">Caisse</h1>
-            <p className="text-muted-foreground">Encaissé aujourd'hui : <span className="font-semibold text-primary tabular">{money(todayTotal)}</span></p>
+            {isAdmin && <p className="text-muted-foreground">Encaissé aujourd'hui : <span className="font-semibold text-primary tabular">{money(todayTotal)}</span></p>}
           </div>
           <div className="relative w-full sm:max-w-xs">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
