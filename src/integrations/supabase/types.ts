@@ -52,6 +52,38 @@ export type Database = {
           },
         ]
       }
+      couriers: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          organization_id: string
+          phone: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          organization_id?: string
+          phone?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          organization_id?: string
+          phone?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "couriers_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       credit_payments: {
         Row: {
           amount: number
@@ -164,6 +196,72 @@ export type Database = {
           },
         ]
       }
+      online_orders: {
+        Row: {
+          amount: number
+          cash_collected: number
+          channel: string
+          courier_id: string | null
+          created_at: string
+          created_by: string | null
+          customer_name: string
+          customer_phone: string
+          id: string
+          items: string
+          organization_id: string
+          remitted_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          cash_collected?: number
+          channel?: string
+          courier_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          customer_name: string
+          customer_phone?: string
+          id?: string
+          items: string
+          organization_id?: string
+          remitted_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          cash_collected?: number
+          channel?: string
+          courier_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          customer_name?: string
+          customer_phone?: string
+          id?: string
+          items?: string
+          organization_id?: string
+          remitted_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "online_orders_courier_id_fkey"
+            columns: ["courier_id"]
+            isOneToOne: false
+            referencedRelation: "couriers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "online_orders_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organization_members: {
         Row: {
           created_at: string
@@ -202,6 +300,7 @@ export type Database = {
       organizations: {
         Row: {
           address: string
+          business_mode: string
           contact: string
           created_at: string
           id: string
@@ -217,6 +316,7 @@ export type Database = {
         }
         Insert: {
           address?: string
+          business_mode?: string
           contact?: string
           created_at?: string
           id?: string
@@ -232,6 +332,7 @@ export type Database = {
         }
         Update: {
           address?: string
+          business_mode?: string
           contact?: string
           created_at?: string
           id?: string
@@ -747,6 +848,7 @@ export type Database = {
         Args: { _amount: number; _customer_id: string }
         Returns: string
       }
+      shop_has_premium: { Args: { _org: string }; Returns: boolean }
     }
     Enums: {
       app_role: "super_admin"
