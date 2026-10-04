@@ -212,6 +212,7 @@ export type Database = {
           slogan: string
           subscription_active: boolean
           subscription_ends_at: string | null
+          subscription_started_at: string | null
           trial_ends_at: string
         }
         Insert: {
@@ -226,6 +227,7 @@ export type Database = {
           slogan?: string
           subscription_active?: boolean
           subscription_ends_at?: string | null
+          subscription_started_at?: string | null
           trial_ends_at?: string
         }
         Update: {
@@ -240,6 +242,7 @@ export type Database = {
           slogan?: string
           subscription_active?: boolean
           subscription_ends_at?: string | null
+          subscription_started_at?: string | null
           trial_ends_at?: string
         }
         Relationships: []

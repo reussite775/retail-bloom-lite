@@ -51,6 +51,13 @@ function AuthPage() {
     setBusy(false);
   };
 
+  const forgot = async () => {
+    if (!email) { toast.error("Saisissez d'abord votre email"); return; }
+    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${window.location.origin}/reset-password` });
+    if (error) toast.error(error.message);
+    else toast.success("Si un compte existe, un email de réinitialisation vient d'être envoyé.");
+  };
+
   const google = async () => {
     const r = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
     if (r.error) toast.error("Connexion Google impossible");
@@ -72,6 +79,7 @@ function AuthPage() {
         <form onSubmit={submit} className="space-y-4">
           <div className="space-y-1.5"><Label htmlFor="email">Email</Label><Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} /></div>
           <div className="space-y-1.5"><Label htmlFor="pw">Mot de passe</Label><Input id="pw" type="password" minLength={6} required value={password} onChange={(e) => setPassword(e.target.value)} /></div>
+          {mode === "in" && <button type="button" onClick={forgot} className="-mt-2 text-sm text-primary hover:underline">Mot de passe oublié ?</button>}
           <Button type="submit" className="w-full" disabled={busy}>{mode === "in" ? "Se connecter" : "Démarrer l'essai"}</Button>
         </form>
         <button className="mt-5 w-full text-center text-sm text-muted-foreground hover:text-foreground" onClick={() => setMode(mode === "in" ? "up" : "in")}>
