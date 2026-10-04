@@ -7,7 +7,7 @@ export type PendingSale = {
   id: string;
   createdAt: string;
   items: { product_id: string; quantity: number }[];
-  customerId?: string;
+  customerId?: string | undefined;
   total: number;
 };
 
