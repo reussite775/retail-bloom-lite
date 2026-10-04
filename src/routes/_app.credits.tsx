@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { HandCoins, Phone, Search } from "lucide-react";
+import { HandCoins, Phone, Plus, Search } from "lucide-react";
+import { z } from "zod";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,6 +33,27 @@ function Credits() {
   const [showAll, setShowAll] = useState(false);
   const [selId, setSelId] = useState<string | null>(null);
   const [amount, setAmount] = useState("");
+  const [addOpen, setAddOpen] = useState(false);
+  const [form, setForm] = useState({ name: "", phone: "", items: "", amount: "" });
+  const addDebt = useMutation({
+    mutationFn: async () => {
+      const v = z.object({
+        name: z.string().trim().min(1, "Indiquez le nom du client").max(100),
+        phone: z.string().trim().max(30).regex(/^[+\d\s-]*$/, "Téléphone invalide"),
+        items: z.string().trim().min(1, "Indiquez les articles concernés").max(500),
+        amount: z.coerce.number().positive("Montant invalide").max(100_000_000),
+      }).parse(form);
+      const { error } = await supabase.rpc("add_manual_debt", { _name: v.name, _phone: v.phone, _items: v.items, _amount: v.amount });
+      if (error) throw error;
+      return v;
+    },
+    onSuccess: (v) => {
+      toast.success(`Dette de ${money(v.amount)} ajoutée pour ${v.name}`);
+      setAddOpen(false); setForm({ name: "", phone: "", items: "", amount: "" });
+      qc.invalidateQueries({ queryKey: ["customers"] });
+    },
+    onError: (e: Error) => toast.error(e instanceof z.ZodError ? e.issues[0].message : e.message),
+  });
   const sel = data.find((c) => c.id === selId) ?? null;
 
   const pay = useMutation({
@@ -66,6 +88,7 @@ function Credits() {
           <h1 className="text-3xl font-extrabold">Carnet de crédits</h1>
           <p className="text-muted-foreground">Total dû par vos clients : <span className="font-semibold text-destructive tabular">{money(totalOwed)}</span></p>
         </div>
+        <Button onClick={() => setAddOpen(true)}><Plus className="h-4 w-4" /> Ajouter une dette</Button>
         <div className="relative w-full max-w-xs">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input placeholder="Nom ou téléphone…" className="pl-9" value={q} onChange={(e) => setQ(e.target.value)} />
@@ -95,6 +118,24 @@ function Credits() {
           </div>
         )}
       </div>
+
+      <Dialog open={addOpen} onOpenChange={setAddOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader><DialogTitle>Nouvelle dette</DialogTitle></DialogHeader>
+          <form className="space-y-3" onSubmit={(e) => { e.preventDefault(); addDebt.mutate(); }}>
+            <div className="space-y-1"><Label htmlFor="d-name">Nom et prénom du client</Label>
+              <Input id="d-name" maxLength={100} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required /></div>
+            <div className="space-y-1"><Label htmlFor="d-phone">Téléphone</Label>
+              <Input id="d-phone" type="tel" maxLength={30} value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></div>
+            <div className="space-y-1"><Label htmlFor="d-items">Articles concernés</Label>
+              <textarea id="d-items" maxLength={500} rows={3} required className="w-full rounded-md border bg-background px-3 py-2 text-sm" placeholder="Ex. : 2 sacs de riz, 1 bidon d'huile" value={form.items} onChange={(e) => setForm({ ...form, items: e.target.value })} /></div>
+            <div className="space-y-1"><Label htmlFor="d-amount">Montant total (FCFA)</Label>
+              <Input id="d-amount" type="number" min="1" required value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} /></div>
+            <p className="text-xs text-muted-foreground">Si un client avec ce téléphone existe déjà, la dette s'ajoute à son compte.</p>
+            <Button type="submit" className="w-full" disabled={addDebt.isPending}>Enregistrer la dette</Button>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={!!sel} onOpenChange={(o) => { if (!o) { setSelId(null); setAmount(""); } }}>
         <DialogContent className="max-w-lg">
