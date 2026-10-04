@@ -112,6 +112,7 @@ function Orders() {
       const { error } = await supabase.from("online_orders").insert(row);
       if (error && isNetworkError(error)) { queueOp("order_insert", row, "Commande"); return true; }
       if (error) throw error;
+      return false;
     },
     onSuccess: (queued) => { toast.success(queued === true ? "Hors ligne : commande enregistrée sur l'appareil, envoi au retour du réseau" : "Commande ajoutée"); setForm({ customer_name: "", customer_phone: "", channel: "whatsapp", items: "", amount: "", zone: "" }); setLines([]); setShowForm(false); refresh(); },
     onError,
