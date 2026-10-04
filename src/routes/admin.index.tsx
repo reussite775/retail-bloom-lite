@@ -32,6 +32,9 @@ function Overview() {
     { label: "Nouveaux utilisateurs", value: data.newUsers, sub: "ces 7 derniers jours", icon: UserPlus },
     { label: "Comptes suspendus", value: data.suspendedUsers, icon: UserX },
     { label: "Boutiques", value: data.organizations, icon: Store },
+    { label: "Abonnements actifs", value: data.subscribedShops, sub: "boutiques avec abonnement payé", icon: Store },
+    { label: "En période d'essai", value: data.trialShops, icon: Store },
+    { label: "Abonnements expirés", value: data.expiredShops, sub: "essai ou abonnement terminé", icon: Store },
     { label: "Produits enregistrés", value: data.products, icon: Boxes },
     { label: "Ventes enregistrées", value: data.sales, icon: Receipt },
   ];

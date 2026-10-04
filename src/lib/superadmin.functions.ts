@@ -20,15 +20,14 @@ export const listMerchants = createServerFn({ method: "GET" })
     await assertSuperAdmin(context.supabase, context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const [users, profiles, members, payments] = await Promise.all([
-      supabaseAdmin.auth.admin.listUsers({ perPage: 1000 }),
-      supabaseAdmin.from("organizations").select("id, owner_id, name, plan, trial_ends_at, subscription_active, subscription_ends_at, created_at"),
+      loadUsers(supabaseAdmin),
+      supabaseAdmin.from("organizations").select("id, owner_id, name, plan, trial_ends_at, subscription_active, subscription_ends_at, subscription_started_at, created_at"),
       supabaseAdmin.from("organization_members").select("user_id").eq("role", "cashier"),
       supabaseAdmin.from("subscription_payments").select("id, shop_id, amount, method, note, created_at").order("created_at", { ascending: false }),
     ]);
-    if (users.error) throw new Error(users.error.message);
     if (profiles.error) throw new Error(profiles.error.message);
     const employees = new Set((members.data ?? []).map((m) => m.user_id));
-    const byId = new Map(users.data.users.map((u) => [u.id, u]));
+    const byId = new Map(users.map((u) => [u.id, u]));
     const pays = payments.data ?? [];
     const merchants = (profiles.data ?? [])
       .map((p) => {
@@ -45,6 +44,7 @@ export const listMerchants = createServerFn({ method: "GET" })
           trial_ends_at: p.trial_ends_at,
           subscription_active: p.subscription_active,
           subscription_ends_at: p.subscription_ends_at,
+          subscription_started_at: p.subscription_started_at,
           paid_total: mine.reduce((a, x) => a + Number(x.amount), 0),
         };
       })
@@ -74,10 +74,10 @@ export const updateSubscription = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertSuperAdmin(context.supabase, context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: p, error } = await supabaseAdmin.from("organizations").select("trial_ends_at, subscription_ends_at, subscription_active").eq("id", data.shopId).single();
+    const { data: p, error } = await supabaseAdmin.from("organizations").select("trial_ends_at, subscription_ends_at, subscription_active, subscription_started_at").eq("id", data.shopId).single();
     if (error) throw new Error("Boutique introuvable");
     const now = Date.now();
-    let patch: { subscription_active?: boolean; subscription_ends_at?: string | null; trial_ends_at?: string; plan?: string } = {};
+    let patch: { subscription_active?: boolean; subscription_ends_at?: string | null; subscription_started_at?: string; trial_ends_at?: string; plan?: string } = {};
     if (data.action === "activate") {
       let ends: string | null = null;
       if (data.months && data.months > 0) {
@@ -85,7 +85,8 @@ export const updateSubscription = createServerFn({ method: "POST" })
         base.setMonth(base.getMonth() + data.months);
         ends = base.toISOString();
       }
-      patch = { subscription_active: true, subscription_ends_at: ends, plan: data.plan ?? "standard" };
+      const renewing = p.subscription_active && (!p.subscription_ends_at || new Date(p.subscription_ends_at).getTime() > now);
+      patch = { subscription_active: true, subscription_ends_at: ends, plan: data.plan ?? "standard", subscription_started_at: renewing && p.subscription_started_at ? p.subscription_started_at : new Date().toISOString() };
     } else if (data.action === "deactivate") {
       patch = { subscription_active: false, subscription_ends_at: null };
     } else {
@@ -145,7 +146,7 @@ export const getPlatformStats = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const [users, orgs, products, sales, suspended] = await Promise.all([
       loadUsers(supabaseAdmin),
-      supabaseAdmin.from("organizations").select("id", { count: "exact", head: true }),
+      supabaseAdmin.from("organizations").select("id, trial_ends_at, subscription_active, subscription_ends_at", { count: "exact" }),
       supabaseAdmin.from("products").select("id", { count: "exact", head: true }),
       supabaseAdmin.from("sales").select("id", { count: "exact", head: true }),
       supabaseAdmin.from("profiles").select("id").eq("is_suspended", true),
@@ -154,6 +155,12 @@ export const getPlatformStats = createServerFn({ method: "GET" })
     const now = Date.now();
     const DAY = 86400000;
     const active = users.filter((u) => !susp.has(u.id) && u.last_sign_in_at && now - new Date(u.last_sign_in_at).getTime() < 30 * DAY).length;
+    const subs = { active: 0, trial: 0, expired: 0 };
+    for (const o of orgs.data ?? []) {
+      if (o.subscription_active && (!o.subscription_ends_at || new Date(o.subscription_ends_at).getTime() > now)) subs.active++;
+      else if (new Date(o.trial_ends_at).getTime() > now) subs.trial++;
+      else subs.expired++;
+    }
     const fresh = users.filter((u) => now - new Date(u.created_at).getTime() < 7 * DAY).length;
     const key = (d: Date) => d.toISOString().slice(0, 10);
     const daily: { label: string; count: number }[] = [];
@@ -179,6 +186,7 @@ export const getPlatformStats = createServerFn({ method: "GET" })
       monthly.push({ label: d.toLocaleDateString("fr-FR", { month: "short", year: "2-digit" }), count: users.filter((u) => u.created_at.slice(0, 7) === ym).length });
     }
     return {
+      subscribedShops: subs.active, trialShops: subs.trial, expiredShops: subs.expired,
       totalUsers: users.length, activeUsers: active, newUsers: fresh, suspendedUsers: susp.size,
       organizations: orgs.count ?? 0, products: products.count ?? 0, sales: sales.count ?? 0,
       daily, weekly, monthly,
