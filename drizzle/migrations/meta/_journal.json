@@ -50,6 +50,13 @@
       "when": 1791127254051,
       "tag": "0006_super_admin",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1791127954841,
+      "tag": "0007_multi_tenant_organizations",
+      "breakpoints": true
     }
   ]
 }
