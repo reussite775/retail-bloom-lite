@@ -64,6 +64,13 @@
       "when": 1791128244799,
       "tag": "0008_platform_settings",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1791129106077,
+      "tag": "0009_bkapay_checkouts",
+      "breakpoints": true
     }
   ]
 }
