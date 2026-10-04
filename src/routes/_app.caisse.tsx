@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Minus, Plus, Search, ShoppingCart, X } from "lucide-react";
-import { matches, stockBadge, stockLevel } from "@/lib/stock";
+import { matches, stockBadge, levelOf } from "@/lib/stock";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -126,7 +126,7 @@ function Caisse() {
         ) : (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
             {list.map((p) => {
-              const lvl = stockLevel(p.stock);
+              const lvl = levelOf(p);
               const out = lvl === "out";
               return (
                 <button key={p.id} disabled={out} onClick={() => add(p.id, 1)}
