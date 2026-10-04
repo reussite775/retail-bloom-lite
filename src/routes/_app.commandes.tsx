@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { membershipQuery, productsQuery, profileQuery, zonesQuery } from "@/lib/data";
-import { buildOrderReceipt, waLink } from "@/lib/order-receipt";
+import { buildOrderMessage, buildOrderReceipt, ORDER_MSG_LABELS, waLink, type OrderMsgKind } from "@/lib/order-receipt";
 import { hasPremium } from "@/lib/plans";
 import type { TablesUpdate } from "@/integrations/supabase/types";
 type Patch = TablesUpdate<"online_orders">;
@@ -272,6 +272,11 @@ function Orders() {
                       onBlur={(e) => { const v = Math.max(0, Number(e.target.value) || 0); if (v !== Number(o.cash_collected)) updateOrder.mutate({ id: o.id, patch: { cash_collected: v } }); }} />
                   </label>
                 )}
+                {o.customer_phone && (["confirm", "delivering", "deposit"] as OrderMsgKind[]).map((k) => (
+                  <Button key={k} size="sm" variant="secondary" asChild>
+                    <a href={waLink(o.customer_phone, buildOrderMessage(k, o, p))} target="_blank" rel="noreferrer"><MessageCircle className="h-4 w-4" /> {ORDER_MSG_LABELS[k]}</a>
+                  </Button>
+                ))}
                 <Button size="sm" asChild>
                   <a href={waLink(o.customer_phone, buildOrderReceipt(o, p))} target="_blank" rel="noreferrer"><MessageCircle className="h-4 w-4" /> Partager sur WhatsApp</a>
                 </Button>
