@@ -9,7 +9,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useAuth } from "@/lib/auth";
-import { teamQuery } from "@/lib/data";
+import { profileQuery, teamQuery } from "@/lib/data";
+import { hasPremium } from "@/lib/plans";
+import { Link } from "@tanstack/react-router";
 import { createEmployee, deleteEmployee } from "@/lib/team.functions";
 
 export const Route = createFileRoute("/_app/equipe")({
@@ -28,6 +30,8 @@ function Team() {
   const { session } = useAuth();
   const qc = useQueryClient();
   const { data = [], isLoading } = useQuery(teamQuery(session!.user.id));
+  const { data: org } = useQuery(profileQuery(session!.user.id));
+  const premium = hasPremium(org);
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", password: "" });
   const create = useServerFn(createEmployee);
@@ -51,7 +55,11 @@ function Team() {
           <h1 className="text-3xl font-extrabold">Équipe & accès</h1>
           <p className="text-muted-foreground">Vos employés se connectent avec leur propre email et mot de passe.</p>
         </div>
-        <Button onClick={() => setOpen(true)}><UserPlus className="h-4 w-4" /> Ajouter un employé</Button>
+        {premium ? (
+          <Button onClick={() => setOpen(true)}><UserPlus className="h-4 w-4" /> Ajouter un employé</Button>
+        ) : (
+          <Button asChild variant="outline"><Link to="/abonnement">Passer à Premium pour ajouter des caissiers</Link></Button>
+        )}
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2">
