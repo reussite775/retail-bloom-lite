@@ -3,9 +3,9 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 async function assertOwner(supabase: any, userId: string) {
-  const { data, error } = await supabase.from("shop_members").select("role").eq("user_id", userId).maybeSingle();
+  const { data, error } = await supabase.from("organization_members").select("role, organization_id").eq("user_id", userId).maybeSingle();
   if (error) throw new Error(error.message);
-  if (data) throw new Error("Seul le propriétaire de la boutique peut gérer les employés.");
+  if (!data || data.role !== "admin" || data.organization_id !== userId) throw new Error("Seul le propriétaire de la boutique peut gérer les employés.");
 }
 
 export const createEmployee = createServerFn({ method: "POST" })
@@ -24,14 +24,14 @@ export const createEmployee = createServerFn({ method: "POST" })
       email: data.email,
       password: data.password,
       email_confirm: true,
-      user_metadata: { display_name: data.name },
+      user_metadata: { display_name: data.name, shop_employee: true },
     });
     if (error || !created.user) {
       throw new Error(error?.message?.includes("already") ? "Cette adresse email est déjà utilisée." : (error?.message ?? "Erreur"));
     }
-    const { error: e2 } = await supabaseAdmin.from("shop_members").insert({
+    const { error: e2 } = await supabaseAdmin.from("organization_members").insert({
       user_id: created.user.id,
-      shop_id: context.userId,
+      organization_id: context.userId,
       role: "cashier",
       email: data.email,
       display_name: data.name,
@@ -49,9 +49,9 @@ export const deleteEmployee = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertOwner(context.supabase, context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: m } = await supabaseAdmin.from("shop_members").select("shop_id").eq("user_id", data.userId).maybeSingle();
-    if (!m || m.shop_id !== context.userId) throw new Error("Employé introuvable");
-    await supabaseAdmin.from("shop_members").delete().eq("user_id", data.userId);
+    const { data: m } = await supabaseAdmin.from("organization_members").select("organization_id, role").eq("user_id", data.userId).maybeSingle();
+    if (!m || m.organization_id !== context.userId || m.role !== "cashier") throw new Error("Employé introuvable");
+    await supabaseAdmin.from("organization_members").delete().eq("user_id", data.userId);
     const { error } = await supabaseAdmin.auth.admin.deleteUser(data.userId);
     if (error) throw new Error(error.message);
     return { ok: true };

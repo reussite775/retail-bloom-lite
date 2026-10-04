@@ -11,20 +11,19 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { useAuth } from "@/lib/auth";
 import { money } from "@/lib/format";
 import { matches } from "@/lib/stock";
-import { checkSuperAdmin, listMerchants, updateSubscription } from "@/lib/superadmin.functions";
+import { listMerchants, updateSubscription } from "@/lib/superadmin.functions";
 
-export const Route = createFileRoute("/super-admin")({
+export const Route = createFileRoute("/admin/boutiques")({
   head: () => ({
     meta: [
-      { title: "Super Admin — Boutik" },
+      { title: "Boutiques — Admin Boutik" },
       { name: "description", content: "Espace d'administration de la plateforme Boutik." },
-      { property: "og:title", content: "Super Admin — Boutik" },
+      { property: "og:title", content: "Boutiques — Admin Boutik" },
       { property: "og:description", content: "Espace d'administration de la plateforme Boutik." },
       { name: "robots", content: "noindex, nofollow" },
     ],
   }),
-  ssr: false,
-  component: SuperAdmin,
+  component: Shops,
 });
 
 type Merchant = Awaited<ReturnType<typeof listMerchants>>["merchants"][number];
@@ -44,29 +43,12 @@ const statusUi: Record<Status, { label: string; cls: string }> = {
 };
 const d = (s: string | null) => (s ? new Date(s).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric" }) : "—");
 
-function SuperAdmin() {
-  const { session, loading } = useAuth();
-  const navigate = useNavigate();
-  const check = useServerFn(checkSuperAdmin);
+function Shops() {
   const list = useServerFn(listMerchants);
-  const access = useQuery({ queryKey: ["sa-check", session?.user.id], enabled: !!session, queryFn: () => check() });
-  const ok = access.data?.isSuperAdmin === true;
-  const data = useQuery({ queryKey: ["sa-merchants"], enabled: ok, queryFn: () => list() });
+  const data = useQuery({ queryKey: ["sa-merchants"], queryFn: () => list() });
   const [q, setQ] = useState("");
   const [filter, setFilter] = useState<"all" | Status>("all");
   const [edit, setEdit] = useState<Merchant | null>(null);
-
-  useEffect(() => { if (!loading && !session) navigate({ to: "/auth" }); }, [loading, session, navigate]);
-
-  if (loading || !session || access.isLoading) return <div className="grid min-h-screen place-items-center text-muted-foreground">Chargement…</div>;
-  if (!ok) {
-    return (
-      <div className="grid min-h-screen place-items-center px-4 text-center">
-        <div><p className="text-2xl font-bold">Accès refusé</p><p className="mt-2 text-muted-foreground">Cette page est réservée à l'administrateur de la plateforme.</p>
-          <Button asChild className="mt-6"><Link to="/dashboard">Retour</Link></Button></div>
-      </div>
-    );
-  }
 
   const merchants = data.data?.merchants ?? [];
   const counts = { trial: 0, active: 0, expired: 0 } as Record<Status, number>;
@@ -80,14 +62,8 @@ function SuperAdmin() {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b bg-sidebar text-sidebar-foreground">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-4">
-          <div className="flex items-center gap-2 font-display text-lg font-extrabold text-sidebar-accent-foreground"><Crown className="h-5 w-5 text-sidebar-primary" /> Super Admin</div>
-          <Link to="/dashboard" className="flex items-center gap-1 text-sm hover:text-sidebar-accent-foreground"><ArrowLeft className="h-4 w-4" /> Ma boutique</Link>
-        </div>
-      </header>
-      <main className="mx-auto max-w-6xl space-y-6 p-4 md:p-8">
+    <div>
+      <div className="space-y-6">
         <div className="grid gap-4 sm:grid-cols-3">
           {stats.map((s) => (
             <div key={s.label} className={`rounded-xl border p-5 ${s.big ? "border-primary bg-primary text-primary-foreground" : "bg-card"}`}>
@@ -150,7 +126,7 @@ function SuperAdmin() {
             </ul>
           </div>
         )}
-      </main>
+      </div>
       <ManageDialog merchant={edit} onClose={() => setEdit(null)} />
     </div>
   );

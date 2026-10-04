@@ -1,7 +1,7 @@
 import { createFileRoute, Link, Outlet, useLocation, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
-import { BarChart3, BookUser, Boxes, Crown, CloudOff, History, RefreshCw, UserCog, Clock, CreditCard, Lock, LogOut, Settings, ShoppingCart, Store } from "lucide-react";
+import { BarChart3, BookUser, Receipt, Boxes, Crown, CloudOff, History, RefreshCw, UserCog, Clock, CreditCard, Lock, LogOut, Settings, ShoppingCart, Store } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
@@ -18,6 +18,7 @@ const nav = [
   { to: "/ventes", label: "Historique des ventes", icon: History, admin: true },
   { to: "/produits", label: "Produits & stocks", icon: Boxes, admin: true },
   { to: "/credits", label: "Carnet de crédits", icon: BookUser, admin: false },
+  { to: "/depenses", label: "Dépenses", icon: Receipt, admin: true },
   { to: "/abonnement", label: "Abonnement", icon: CreditCard, admin: true },
   { to: "/parametres", label: "Paramètres", icon: Settings, admin: true },
   { to: "/equipe", label: "Équipe & accès", icon: UserCog, admin: true },
@@ -85,7 +86,7 @@ function AppLayout() {
             </div>
           )}
           {superAdmin.data && (
-            <Link to="/super-admin" className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-semibold text-sidebar-primary hover:bg-sidebar-accent"><Crown className="h-4 w-4" /> Super Admin</Link>
+            <Link to="/admin" className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-semibold text-sidebar-primary hover:bg-sidebar-accent"><Crown className="h-4 w-4" /> Super Admin</Link>
           )}
           <div className="truncate px-3 text-xs opacity-70">{session.user.email} · {isAdmin ? "Administrateur" : "Caissier"}</div>
           <button onClick={() => supabase.auth.signOut()} className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm hover:bg-sidebar-accent">
@@ -107,7 +108,7 @@ function AppLayout() {
             </Link>
           ))}
           {superAdmin.data && (
-            <Link to="/super-admin" className="flex items-center gap-2 whitespace-nowrap rounded-md px-3 py-2 text-sm font-semibold text-primary"><Crown className="h-4 w-4" /> Super Admin</Link>
+            <Link to="/admin" className="flex items-center gap-2 whitespace-nowrap rounded-md px-3 py-2 text-sm font-semibold text-primary"><Crown className="h-4 w-4" /> Super Admin</Link>
           )}
         </nav>
         {(!online || pending.length > 0) && (

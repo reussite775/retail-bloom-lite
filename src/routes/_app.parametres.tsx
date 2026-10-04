@@ -50,7 +50,8 @@ function Settings() {
   const save = useMutation({
     mutationFn: async () => {
       if (!f.shop_name.trim()) throw new Error("Le nom de la boutique est obligatoire");
-      const { error } = await supabase.from("profiles").update(f).eq("id", uid);
+      const { shop_name, ...rest } = f;
+      const { error } = await supabase.from("organizations").update({ name: shop_name, ...rest }).eq("id", uid);
       if (error) throw error;
     },
     onSuccess: () => { toast.success("Paramètres enregistrés"); qc.invalidateQueries({ queryKey: ["profile"] }); },

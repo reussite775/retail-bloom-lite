@@ -44,6 +44,13 @@ export type Database = {
             referencedRelation: "customers"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "credit_payments_org_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
         ]
       }
       customers: {
@@ -67,6 +74,135 @@ export type Database = {
           name?: string
           phone?: string
           user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customers_org_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      expenses: {
+        Row: {
+          amount: number
+          category: string
+          created_at: string
+          created_by: string | null
+          id: string
+          label: string
+          organization_id: string
+          spent_on: string
+        }
+        Insert: {
+          amount: number
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          label: string
+          organization_id?: string
+          spent_on?: string
+        }
+        Update: {
+          amount?: number
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          label?: string
+          organization_id?: string
+          spent_on?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expenses_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organization_members: {
+        Row: {
+          created_at: string
+          display_name: string
+          email: string
+          organization_id: string
+          role: Database["public"]["Enums"]["shop_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string
+          email?: string
+          organization_id: string
+          role?: Database["public"]["Enums"]["shop_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string
+          email?: string
+          organization_id?: string
+          role?: Database["public"]["Enums"]["shop_role"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_members_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organizations: {
+        Row: {
+          address: string
+          contact: string
+          created_at: string
+          id: string
+          logo_url: string
+          name: string
+          owner_id: string
+          plan: string
+          slogan: string
+          subscription_active: boolean
+          subscription_ends_at: string | null
+          trial_ends_at: string
+        }
+        Insert: {
+          address?: string
+          contact?: string
+          created_at?: string
+          id?: string
+          logo_url?: string
+          name?: string
+          owner_id: string
+          plan?: string
+          slogan?: string
+          subscription_active?: boolean
+          subscription_ends_at?: string | null
+          trial_ends_at?: string
+        }
+        Update: {
+          address?: string
+          contact?: string
+          created_at?: string
+          id?: string
+          logo_url?: string
+          name?: string
+          owner_id?: string
+          plan?: string
+          slogan?: string
+          subscription_active?: boolean
+          subscription_ends_at?: string | null
+          trial_ends_at?: string
         }
         Relationships: []
       }
@@ -101,43 +237,63 @@ export type Database = {
           stock?: number
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "products_org_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
           address: string
           contact: string
           created_at: string
+          email: string
+          full_name: string
           id: string
+          is_suspended: boolean
           logo_url: string
           shop_name: string
           slogan: string
           subscription_active: boolean
           subscription_ends_at: string | null
+          suspended_at: string | null
           trial_ends_at: string
         }
         Insert: {
           address?: string
           contact?: string
           created_at?: string
+          email?: string
+          full_name?: string
           id: string
+          is_suspended?: boolean
           logo_url?: string
           shop_name?: string
           slogan?: string
           subscription_active?: boolean
           subscription_ends_at?: string | null
+          suspended_at?: string | null
           trial_ends_at?: string
         }
         Update: {
           address?: string
           contact?: string
           created_at?: string
+          email?: string
+          full_name?: string
           id?: string
+          is_suspended?: boolean
           logo_url?: string
           shop_name?: string
           slogan?: string
           subscription_active?: boolean
           subscription_ends_at?: string | null
+          suspended_at?: string | null
           trial_ends_at?: string
         }
         Relationships: []
@@ -175,10 +331,24 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "sale_items_org_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "sale_items_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sale_items_sale_id_fkey"
+            columns: ["sale_id"]
+            isOneToOne: false
+            referencedRelation: "debts"
             referencedColumns: ["id"]
           },
           {
@@ -230,6 +400,13 @@ export type Database = {
             columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_org_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
         ]
@@ -327,7 +504,87 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      debt_payments: {
+        Row: {
+          amount: number | null
+          created_at: string | null
+          customer_id: string | null
+          id: string | null
+          organization_id: string | null
+        }
+        Insert: {
+          amount?: number | null
+          created_at?: string | null
+          customer_id?: string | null
+          id?: string | null
+          organization_id?: string | null
+        }
+        Update: {
+          amount?: number | null
+          created_at?: string | null
+          customer_id?: string | null
+          id?: string | null
+          organization_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "credit_payments_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "credit_payments_org_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      debts: {
+        Row: {
+          amount: number | null
+          created_at: string | null
+          customer_id: string | null
+          id: string | null
+          organization_id: string | null
+          seller_id: string | null
+        }
+        Insert: {
+          amount?: number | null
+          created_at?: string | null
+          customer_id?: string | null
+          id?: string | null
+          organization_id?: string | null
+          seller_id?: string | null
+        }
+        Update: {
+          amount?: number | null
+          created_at?: string | null
+          customer_id?: string | null
+          id?: string | null
+          organization_id?: string | null
+          seller_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_org_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       create_credit_sale: {
