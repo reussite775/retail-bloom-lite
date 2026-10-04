@@ -1,7 +1,7 @@
 import { createFileRoute, Link, Outlet, useLocation, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
-import { BarChart3, BookUser, Boxes, CloudOff, History, RefreshCw, UserCog, Clock, CreditCard, Lock, LogOut, Settings, ShoppingCart, Store } from "lucide-react";
+import { BarChart3, BookUser, Boxes, Crown, CloudOff, History, RefreshCw, UserCog, Clock, CreditCard, Lock, LogOut, Settings, ShoppingCart, Store } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
@@ -32,6 +32,11 @@ function AppLayout() {
   const shopId = member.data?.shopId;
   const isAdmin = member.data?.isAdmin ?? false;
   const profile = useQuery({ ...profileQuery(shopId ?? ""), enabled: !!shopId });
+  const superAdmin = useQuery({
+    queryKey: ["super-admin", uid],
+    enabled: !!uid,
+    queryFn: async () => (await supabase.from("user_roles").select("role").eq("user_id", uid!).eq("role", "super_admin")).data?.length === 1,
+  });
   const online = useOnline();
   const pending = usePendingSales();
   const allowed = nav.filter((n) => isAdmin || !n.admin);
@@ -52,7 +57,8 @@ function AppLayout() {
   const p = profile.data;
   const trialEnd = p ? new Date(p.trial_ends_at) : new Date(0);
   const daysLeft = Math.ceil((trialEnd.getTime() - Date.now()) / 86400000);
-  const hasAccess = !!p && (p.subscription_active || daysLeft > 0);
+  const subActive = !!p && p.subscription_active && (!p.subscription_ends_at || new Date(p.subscription_ends_at).getTime() > Date.now());
+  const hasAccess = !!p && (subActive || daysLeft > 0);
 
   if (!hasAccess && (!isAdmin || pathname !== "/abonnement")) return <Paywall isAdmin={isAdmin} />;
 
@@ -72,11 +78,14 @@ function AppLayout() {
           ))}
         </nav>
         <div className="mt-auto space-y-3">
-          {isAdmin && !p!.subscription_active && (
+          {isAdmin && !subActive && (
             <div className="rounded-lg border border-sidebar-border p-3 text-sm">
               <div className="flex items-center gap-2 font-semibold text-sidebar-accent-foreground"><Clock className="h-4 w-4 text-sidebar-primary" /> Essai gratuit</div>
               <p className="mt-1">{daysLeft} jour{daysLeft > 1 ? "s" : ""} restant{daysLeft > 1 ? "s" : ""}</p>
             </div>
+          )}
+          {superAdmin.data && (
+            <Link to="/super-admin" className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-semibold text-sidebar-primary hover:bg-sidebar-accent"><Crown className="h-4 w-4" /> Super Admin</Link>
           )}
           <div className="truncate px-3 text-xs opacity-70">{session.user.email} · {isAdmin ? "Administrateur" : "Caissier"}</div>
           <button onClick={() => supabase.auth.signOut()} className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm hover:bg-sidebar-accent">
@@ -85,7 +94,7 @@ function AppLayout() {
         </div>
       </aside>
       <div className="flex min-w-0 flex-1 flex-col">
-        {isAdmin && !p!.subscription_active && (
+        {isAdmin && !subActive && (
           <Link to="/abonnement" className="flex items-center justify-center gap-2 bg-primary-soft px-3 py-2 text-sm font-medium text-accent-foreground md:hidden">
             <Clock className="h-4 w-4" /> {daysLeft > 0 ? `Essai gratuit : ${daysLeft} jour${daysLeft > 1 ? "s" : ""} restant${daysLeft > 1 ? "s" : ""}` : "Essai terminé — s'abonner"}
           </Link>
@@ -97,6 +106,9 @@ function AppLayout() {
               <n.icon className="h-4 w-4" /> {n.label}
             </Link>
           ))}
+          {superAdmin.data && (
+            <Link to="/super-admin" className="flex items-center gap-2 whitespace-nowrap rounded-md px-3 py-2 text-sm font-semibold text-primary"><Crown className="h-4 w-4" /> Super Admin</Link>
+          )}
         </nav>
         {(!online || pending.length > 0) && (
           <div className={`flex items-center justify-center gap-2 px-3 py-2 text-center text-sm font-medium ${online ? "bg-primary-soft text-accent-foreground" : "bg-warning/25 text-warning-foreground"}`}>
