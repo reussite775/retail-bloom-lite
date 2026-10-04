@@ -1,4 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { LOW_STOCK, stockBadge, stockLevel } from "@/lib/stock";
 import { useQuery } from "@tanstack/react-query";
 import { AlertTriangle, Package, Receipt, TrendingUp, Wallet } from "lucide-react";
 import { money, startOfToday } from "@/lib/format";
@@ -25,7 +26,7 @@ function Dashboard() {
   const revenue = sales.reduce((s, x) => s + Number(x.total), 0);
   const profit = sales.reduce((s, x) => s + Number(x.profit), 0);
   const prods = products.data ?? [];
-  const low = prods.filter((p) => p.stock <= 5);
+  const low = prods.filter((p) => p.stock <= LOW_STOCK);
   const stockValue = prods.reduce((s, p) => s + p.stock * Number(p.purchase_price), 0);
 
   const days = Array.from({ length: 7 }, (_, i) => {
@@ -74,17 +75,26 @@ function Dashboard() {
             ))}
           </div>
         </div>
-        <div className="rounded-xl border bg-card p-6">
-          <h2 className="flex items-center gap-2 font-bold"><AlertTriangle className="h-4 w-4 text-warning" /> Stock faible</h2>
-          {low.length === 0 ? <p className="mt-4 text-sm text-muted-foreground">Aucun produit en rupture.</p> : (
-            <ul className="mt-4 divide-y">
-              {low.slice(0, 8).map((p) => (
-                <li key={p.id} className="flex justify-between py-2 text-sm">
-                  <span>{p.name}</span>
-                  <span className={`font-semibold tabular ${p.stock === 0 ? "text-destructive" : "text-warning-foreground"}`}>{p.stock}</span>
-                </li>
-              ))}
-            </ul>
+        <div className={`rounded-xl border bg-card p-6 ${low.some((p) => p.stock <= 0) ? "border-destructive/40" : low.length ? "border-warning/60" : ""}`}>
+          <div className="flex items-center justify-between">
+            <h2 className="flex items-center gap-2 font-bold"><AlertTriangle className={`h-4 w-4 ${low.some((p) => p.stock <= 0) ? "text-destructive" : "text-warning"}`} /> Alertes stock</h2>
+            <Link to="/produits" className="text-sm font-medium text-primary hover:underline">Gérer</Link>
+          </div>
+          {low.length === 0 ? <p className="mt-4 text-sm text-muted-foreground">Tous vos stocks sont suffisants.</p> : (
+            <>
+              <div className="mt-3 flex gap-2 text-xs font-semibold">
+                <span className="rounded-full bg-destructive/10 px-2 py-1 text-destructive">{low.filter((p) => p.stock <= 0).length} en rupture</span>
+                <span className="rounded-full bg-warning/25 px-2 py-1 text-warning-foreground">{low.filter((p) => p.stock > 0).length} stock faible</span>
+              </div>
+              <ul className="mt-3 divide-y">
+                {[...low].sort((a, b) => a.stock - b.stock).slice(0, 8).map((p) => (
+                  <li key={p.id} className="flex items-center justify-between gap-2 py-2 text-sm">
+                    <span className="truncate">{p.name}</span>
+                    <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold tabular ${stockBadge[stockLevel(p.stock)]}`}>{p.stock <= 0 ? "Rupture" : p.stock}</span>
+                  </li>
+                ))}
+              </ul>
+            </>
           )}
         </div>
       </div>
