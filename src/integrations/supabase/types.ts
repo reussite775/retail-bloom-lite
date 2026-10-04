@@ -352,6 +352,7 @@ export type Database = {
           name: string
           owner_id: string
           plan: string
+          referral_code: string
           slogan: string
           subscription_active: boolean
           subscription_ends_at: string | null
@@ -368,6 +369,7 @@ export type Database = {
           name?: string
           owner_id: string
           plan?: string
+          referral_code?: string
           slogan?: string
           subscription_active?: boolean
           subscription_ends_at?: string | null
@@ -384,6 +386,7 @@ export type Database = {
           name?: string
           owner_id?: string
           plan?: string
+          referral_code?: string
           slogan?: string
           subscription_active?: boolean
           subscription_ends_at?: string | null
@@ -569,6 +572,48 @@ export type Database = {
           trial_ends_at?: string
         }
         Relationships: []
+      }
+      referrals: {
+        Row: {
+          created_at: string
+          id: string
+          referred_org: string
+          referrer_org: string
+          reward_months: number
+          rewarded_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          referred_org: string
+          referrer_org: string
+          reward_months?: number
+          rewarded_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          referred_org?: string
+          referrer_org?: string
+          reward_months?: number
+          rewarded_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referrals_referred_org_fkey"
+            columns: ["referred_org"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referrals_referrer_org_fkey"
+            columns: ["referrer_org"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       sale_items: {
         Row: {
@@ -863,6 +908,7 @@ export type Database = {
         Args: { _amount: number; _items: string; _name: string; _phone: string }
         Returns: string
       }
+      claim_referral: { Args: { _code: string }; Returns: boolean }
       create_credit_sale: {
         Args: { _customer_id: string; _items: Json }
         Returns: string
@@ -887,6 +933,17 @@ export type Database = {
           _provider_ref: string
         }
         Returns: boolean
+      }
+      my_referrals: {
+        Args: never
+        Returns: {
+          id: string
+          joined_at: string
+          reward_months: number
+          rewarded_at: string
+          shop_name: string
+          status: string
+        }[]
       }
       record_payment: {
         Args: { _amount: number; _customer_id: string }
