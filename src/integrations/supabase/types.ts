@@ -206,6 +206,62 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_checkouts: {
+        Row: {
+          amount: number
+          billing: string
+          created_at: string
+          created_by: string | null
+          id: string
+          months: number
+          organization_id: string
+          paid_at: string | null
+          plan: string
+          provider: string
+          provider_ref: string | null
+          raw_event: Json | null
+          status: string
+        }
+        Insert: {
+          amount: number
+          billing: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          months: number
+          organization_id: string
+          paid_at?: string | null
+          plan: string
+          provider?: string
+          provider_ref?: string | null
+          raw_event?: Json | null
+          status?: string
+        }
+        Update: {
+          amount?: number
+          billing?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          months?: number
+          organization_id?: string
+          paid_at?: string | null
+          plan?: string
+          provider?: string
+          provider_ref?: string | null
+          raw_event?: Json | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_checkouts_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       platform_settings: {
         Row: {
           contact_email: string
@@ -633,6 +689,15 @@ export type Database = {
         Returns: boolean
       }
       is_shop_admin: { Args: never; Returns: boolean }
+      mark_checkout_paid: {
+        Args: {
+          _checkout: string
+          _event: Json
+          _method: string
+          _provider_ref: string
+        }
+        Returns: boolean
+      }
       record_payment: {
         Args: { _amount: number; _customer_id: string }
         Returns: string

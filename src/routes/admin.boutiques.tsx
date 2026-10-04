@@ -12,7 +12,7 @@ import { useAuth } from "@/lib/auth";
 import { money } from "@/lib/format";
 import { matches } from "@/lib/stock";
 import { PLANS, type PlanId } from "@/lib/plans";
-import { listMerchants, updateSubscription } from "@/lib/superadmin.functions";
+import { listCheckouts, listMerchants, updateSubscription, validateCheckout } from "@/lib/superadmin.functions";
 
 export const Route = createFileRoute("/admin/boutiques")({
   head: () => ({
@@ -74,6 +74,9 @@ function Shops() {
             </div>
           ))}
         </div>
+
+        <CheckoutsPanel />
+
 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex gap-1 overflow-x-auto rounded-lg bg-muted p-1 text-sm">
@@ -192,5 +195,39 @@ function ManageDialog({ merchant, onClose }: { merchant: Merchant | null; onClos
         )}
       </DialogContent>
     </Dialog>
+  );
+}
+
+function CheckoutsPanel() {
+  const qc = useQueryClient();
+  const list = useServerFn(listCheckouts);
+  const validate = useServerFn(validateCheckout);
+  const q = useQuery({ queryKey: ["sa-checkouts"], queryFn: () => list() });
+  const m = useMutation({
+    mutationFn: (id: string) => validate({ data: { id } }),
+    onSuccess: () => { toast.success("Paiement validé, abonnement activé"); qc.invalidateQueries(); },
+    onError: (e: Error) => toast.error(e.message),
+  });
+  const rows = q.data ?? [];
+  if (!rows.length) return null;
+  const label: Record<string, string> = { pending: "En attente", paid: "Payé", failed: "Échoué", cancelled: "Annulé" };
+  return (
+    <div className="rounded-xl border bg-card">
+      <p className="border-b p-4 font-bold">Paiements Bkapay</p>
+      <div className="divide-y">
+        {rows.map((r: any) => (
+          <div key={r.id} className="flex flex-wrap items-center gap-3 p-4 text-sm">
+            <div className="min-w-0 flex-1">
+              <p className="font-semibold">{r.organizations?.name ?? "Boutique"} · {PLANS[r.plan as PlanId]?.name} {r.months} mois</p>
+              <p className="text-muted-foreground">{money(Number(r.amount))} · {d(r.created_at)}</p>
+            </div>
+            <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${r.status === "paid" ? "bg-primary-soft text-accent-foreground" : r.status === "pending" ? "bg-warning/25 text-warning-foreground" : "bg-destructive/10 text-destructive"}`}>{label[r.status] ?? r.status}</span>
+            {r.status !== "paid" && (
+              <Button size="sm" disabled={m.isPending} onClick={() => confirm("Valider ce paiement et activer l'abonnement ?") && m.mutate(r.id)}>Valider / simuler</Button>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
