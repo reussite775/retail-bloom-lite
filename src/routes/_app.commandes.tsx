@@ -1,3 +1,4 @@
+import { isNetworkError, queueOp } from "@/lib/offline";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
@@ -106,10 +107,13 @@ function Orders() {
       const auto = lines.map((l) => `${l.quantity} × ${pname(l.product_id)}`).join(", ");
       const r = orderSchema.safeParse({ ...form, items: [auto, form.items.trim()].filter(Boolean).join(" — ") });
       if (!r.success) throw new Error(r.error.issues[0]?.message ?? "Champs invalides");
-      const { error } = await supabase.from("online_orders").insert({ ...r.data, order_items: lines, delivery_zone: zone?.name ?? "", delivery_fee: fee });
+      const row = { ...r.data, order_items: lines, delivery_zone: zone?.name ?? "", delivery_fee: fee };
+      if (!navigator.onLine) { queueOp("order_insert", row, "Commande"); return true; }
+      const { error } = await supabase.from("online_orders").insert(row);
+      if (error && isNetworkError(error)) { queueOp("order_insert", row, "Commande"); return true; }
       if (error) throw error;
     },
-    onSuccess: () => { toast.success("Commande ajoutée"); setForm({ customer_name: "", customer_phone: "", channel: "whatsapp", items: "", amount: "", zone: "" }); setLines([]); setShowForm(false); refresh(); },
+    onSuccess: (queued) => { toast.success(queued === true ? "Hors ligne : commande enregistrée sur l'appareil, envoi au retour du réseau" : "Commande ajoutée"); setForm({ customer_name: "", customer_phone: "", channel: "whatsapp", items: "", amount: "", zone: "" }); setLines([]); setShowForm(false); refresh(); },
     onError,
   });
 
