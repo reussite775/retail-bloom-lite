@@ -17,6 +17,7 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AppAbonnementRouteImport } from './routes/_app.abonnement'
 import { Route as AppAssistantRouteImport } from './routes/_app.assistant'
 import { Route as AppCaisseRouteImport } from './routes/_app.caisse'
+import { Route as AppCommandesRouteImport } from './routes/_app.commandes'
 import { Route as AppCreditsRouteImport } from './routes/_app.credits'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
 import { Route as AppDepensesRouteImport } from './routes/_app.depenses'
@@ -70,6 +71,11 @@ const AppAssistantRoute = AppAssistantRouteImport.update({
 const AppCaisseRoute = AppCaisseRouteImport.update({
   id: '/caisse',
   path: '/caisse',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppCommandesRoute = AppCommandesRouteImport.update({
+  id: '/commandes',
+  path: '/commandes',
   getParentRoute: () => AppRoute,
 } as any)
 const AppCreditsRoute = AppCreditsRouteImport.update({
@@ -156,6 +162,7 @@ export interface FileRoutesByFullPath {
   '/abonnement': typeof AppAbonnementRoute
   '/assistant': typeof AppAssistantRoute
   '/caisse': typeof AppCaisseRoute
+  '/commandes': typeof AppCommandesRoute
   '/credits': typeof AppCreditsRoute
   '/dashboard': typeof AppDashboardRoute
   '/depenses': typeof AppDepensesRoute
@@ -179,6 +186,7 @@ export interface FileRoutesByTo {
   '/abonnement': typeof AppAbonnementRoute
   '/assistant': typeof AppAssistantRoute
   '/caisse': typeof AppCaisseRoute
+  '/commandes': typeof AppCommandesRoute
   '/credits': typeof AppCreditsRoute
   '/dashboard': typeof AppDashboardRoute
   '/depenses': typeof AppDepensesRoute
@@ -205,6 +213,7 @@ export interface FileRoutesById {
   '/_app/abonnement': typeof AppAbonnementRoute
   '/_app/assistant': typeof AppAssistantRoute
   '/_app/caisse': typeof AppCaisseRoute
+  '/_app/commandes': typeof AppCommandesRoute
   '/_app/credits': typeof AppCreditsRoute
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/depenses': typeof AppDepensesRoute
@@ -231,6 +240,7 @@ export interface FileRouteTypes {
     | '/abonnement'
     | '/assistant'
     | '/caisse'
+    | '/commandes'
     | '/credits'
     | '/dashboard'
     | '/depenses'
@@ -254,6 +264,7 @@ export interface FileRouteTypes {
     | '/abonnement'
     | '/assistant'
     | '/caisse'
+    | '/commandes'
     | '/credits'
     | '/dashboard'
     | '/depenses'
@@ -279,6 +290,7 @@ export interface FileRouteTypes {
     | '/_app/abonnement'
     | '/_app/assistant'
     | '/_app/caisse'
+    | '/_app/commandes'
     | '/_app/credits'
     | '/_app/dashboard'
     | '/_app/depenses'
@@ -362,6 +374,13 @@ declare module '@tanstack/react-router' {
       path: '/caisse'
       fullPath: '/caisse'
       preLoaderRoute: typeof AppCaisseRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/commandes': {
+      id: '/_app/commandes'
+      path: '/commandes'
+      fullPath: '/commandes'
+      preLoaderRoute: typeof AppCommandesRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/credits': {
@@ -476,6 +495,7 @@ interface AppRouteChildren {
   AppAbonnementRoute: typeof AppAbonnementRoute
   AppAssistantRoute: typeof AppAssistantRoute
   AppCaisseRoute: typeof AppCaisseRoute
+  AppCommandesRoute: typeof AppCommandesRoute
   AppCreditsRoute: typeof AppCreditsRoute
   AppDashboardRoute: typeof AppDashboardRoute
   AppDepensesRoute: typeof AppDepensesRoute
@@ -489,6 +509,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppAbonnementRoute: AppAbonnementRoute,
   AppAssistantRoute: AppAssistantRoute,
   AppCaisseRoute: AppCaisseRoute,
+  AppCommandesRoute: AppCommandesRoute,
   AppCreditsRoute: AppCreditsRoute,
   AppDashboardRoute: AppDashboardRoute,
   AppDepensesRoute: AppDepensesRoute,
