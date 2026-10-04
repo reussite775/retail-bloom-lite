@@ -208,9 +208,11 @@ export type Database = {
           customer_phone: string
           id: string
           items: string
+          order_items: Json
           organization_id: string
           remitted_at: string | null
           status: string
+          stock_applied: boolean
           updated_at: string
         }
         Insert: {
@@ -224,9 +226,11 @@ export type Database = {
           customer_phone?: string
           id?: string
           items: string
+          order_items?: Json
           organization_id?: string
           remitted_at?: string | null
           status?: string
+          stock_applied?: boolean
           updated_at?: string
         }
         Update: {
@@ -240,9 +244,11 @@ export type Database = {
           customer_phone?: string
           id?: string
           items?: string
+          order_items?: Json
           organization_id?: string
           remitted_at?: string | null
           status?: string
+          stock_applied?: boolean
           updated_at?: string
         }
         Relationships: [
