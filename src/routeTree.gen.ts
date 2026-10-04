@@ -24,6 +24,7 @@ import { Route as AppProduitsRouteImport } from './routes/_app.produits'
 import { Route as AppVentesRouteImport } from './routes/_app.ventes'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminBoutiquesRouteImport } from './routes/admin.boutiques'
+import { Route as AdminParametresRouteImport } from './routes/admin.parametres'
 import { Route as AdminRelancesRouteImport } from './routes/admin.relances'
 import { Route as AdminStatistiquesRouteImport } from './routes/admin.statistiques'
 import { Route as AdminUtilisateursRouteImport } from './routes/admin.utilisateurs'
@@ -102,6 +103,11 @@ const AdminBoutiquesRoute = AdminBoutiquesRouteImport.update({
   path: '/boutiques',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminParametresRoute = AdminParametresRouteImport.update({
+  id: '/parametres',
+  path: '/parametres',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminRelancesRoute = AdminRelancesRouteImport.update({
   id: '/relances',
   path: '/relances',
@@ -132,6 +138,7 @@ export interface FileRoutesByFullPath {
   '/produits': typeof AppProduitsRoute
   '/ventes': typeof AppVentesRoute
   '/admin/boutiques': typeof AdminBoutiquesRoute
+  '/admin/parametres': typeof AdminParametresRoute
   '/admin/relances': typeof AdminRelancesRoute
   '/admin/statistiques': typeof AdminStatistiquesRoute
   '/admin/utilisateurs': typeof AdminUtilisateursRoute
@@ -150,6 +157,7 @@ export interface FileRoutesByTo {
   '/produits': typeof AppProduitsRoute
   '/ventes': typeof AppVentesRoute
   '/admin/boutiques': typeof AdminBoutiquesRoute
+  '/admin/parametres': typeof AdminParametresRoute
   '/admin/relances': typeof AdminRelancesRoute
   '/admin/statistiques': typeof AdminStatistiquesRoute
   '/admin/utilisateurs': typeof AdminUtilisateursRoute
@@ -171,6 +179,7 @@ export interface FileRoutesById {
   '/_app/produits': typeof AppProduitsRoute
   '/_app/ventes': typeof AppVentesRoute
   '/admin/boutiques': typeof AdminBoutiquesRoute
+  '/admin/parametres': typeof AdminParametresRoute
   '/admin/relances': typeof AdminRelancesRoute
   '/admin/statistiques': typeof AdminStatistiquesRoute
   '/admin/utilisateurs': typeof AdminUtilisateursRoute
@@ -192,6 +201,7 @@ export interface FileRouteTypes {
     | '/produits'
     | '/ventes'
     | '/admin/boutiques'
+    | '/admin/parametres'
     | '/admin/relances'
     | '/admin/statistiques'
     | '/admin/utilisateurs'
@@ -210,6 +220,7 @@ export interface FileRouteTypes {
     | '/produits'
     | '/ventes'
     | '/admin/boutiques'
+    | '/admin/parametres'
     | '/admin/relances'
     | '/admin/statistiques'
     | '/admin/utilisateurs'
@@ -230,6 +241,7 @@ export interface FileRouteTypes {
     | '/_app/produits'
     | '/_app/ventes'
     | '/admin/boutiques'
+    | '/admin/parametres'
     | '/admin/relances'
     | '/admin/statistiques'
     | '/admin/utilisateurs'
@@ -350,6 +362,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminBoutiquesRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/parametres': {
+      id: '/admin/parametres'
+      path: '/parametres'
+      fullPath: '/admin/parametres'
+      preLoaderRoute: typeof AdminParametresRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/relances': {
       id: '/admin/relances'
       path: '/relances'
@@ -402,6 +421,7 @@ const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
 interface AdminRouteChildren {
   AdminBoutiquesRoute: typeof AdminBoutiquesRoute
+  AdminParametresRoute: typeof AdminParametresRoute
   AdminRelancesRoute: typeof AdminRelancesRoute
   AdminStatistiquesRoute: typeof AdminStatistiquesRoute
   AdminUtilisateursRoute: typeof AdminUtilisateursRoute
@@ -410,6 +430,7 @@ interface AdminRouteChildren {
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminBoutiquesRoute: AdminBoutiquesRoute,
+  AdminParametresRoute: AdminParametresRoute,
   AdminRelancesRoute: AdminRelancesRoute,
   AdminStatistiquesRoute: AdminStatistiquesRoute,
   AdminUtilisateursRoute: AdminUtilisateursRoute,
