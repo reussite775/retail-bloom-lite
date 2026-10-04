@@ -88,7 +88,7 @@ function Orders() {
   const pname = (id: string) => products.data?.find((x) => x.id === id)?.name ?? "?";
   const addLine = () => {
     const q = Math.floor(Number(pick.quantity));
-    if (!pick.product_id || !(q > 0)) return toast.error("Choisissez un produit et une quantité");
+    if (!pick.product_id || !(q > 0)) { toast.error("Choisissez un produit et une quantité"); return; }
     const next = [...lines.filter((l) => l.product_id !== pick.product_id), { product_id: pick.product_id, quantity: (lines.find((l) => l.product_id === pick.product_id)?.quantity ?? 0) + q }];
     setLines(next);
     const total = next.reduce((a, l) => a + l.quantity * Number(products.data?.find((x) => x.id === l.product_id)?.sale_price ?? 0), 0);
