@@ -195,6 +195,7 @@ export type Database = {
           is_credit: boolean
           items_count: number
           profit: number
+          seller_id: string | null
           total: number
           user_id: string
         }
@@ -205,6 +206,7 @@ export type Database = {
           is_credit?: boolean
           items_count?: number
           profit?: number
+          seller_id?: string | null
           total?: number
           user_id?: string
         }
@@ -215,6 +217,7 @@ export type Database = {
           is_credit?: boolean
           items_count?: number
           profit?: number
+          seller_id?: string | null
           total?: number
           user_id?: string
         }
@@ -224,6 +227,41 @@ export type Database = {
             columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shop_members: {
+        Row: {
+          created_at: string
+          display_name: string
+          email: string
+          role: Database["public"]["Enums"]["shop_role"]
+          shop_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string
+          email?: string
+          role?: Database["public"]["Enums"]["shop_role"]
+          shop_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string
+          email?: string
+          role?: Database["public"]["Enums"]["shop_role"]
+          shop_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shop_members_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -238,15 +276,17 @@ export type Database = {
         Returns: string
       }
       create_sale: { Args: { _items: Json }; Returns: string }
+      current_shop: { Args: never; Returns: string }
       customer_debt: { Args: { _cid: string }; Returns: number }
       has_access: { Args: { _uid: string }; Returns: boolean }
+      is_shop_admin: { Args: never; Returns: boolean }
       record_payment: {
         Args: { _amount: number; _customer_id: string }
         Returns: string
       }
     }
     Enums: {
-      [_ in never]: never
+      shop_role: "admin" | "cashier"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -373,6 +413,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      shop_role: ["admin", "cashier"],
+    },
   },
 } as const
