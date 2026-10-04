@@ -106,6 +106,9 @@ function AppLayout() {
               <n.icon className="h-4 w-4" /> {n.label}
             </Link>
           ))}
+          {superAdmin.data && (
+            <Link to="/super-admin" className="flex items-center gap-2 whitespace-nowrap rounded-md px-3 py-2 text-sm font-semibold text-primary"><Crown className="h-4 w-4" /> Super Admin</Link>
+          )}
         </nav>
         {(!online || pending.length > 0) && (
           <div className={`flex items-center justify-center gap-2 px-3 py-2 text-center text-sm font-medium ${online ? "bg-primary-soft text-accent-foreground" : "bg-warning/25 text-warning-foreground"}`}>
