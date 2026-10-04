@@ -1,7 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
-import { BadgeCheck, Check, Clock, Crown, Sparkles } from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { useEffect, useState } from "react";
+import { BadgeCheck, Check, Clock, Crown, Loader2, Sparkles } from "lucide-react";
+import { toast } from "sonner";
+import { startCheckout } from "@/lib/payments.functions";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
 import { profileQuery } from "@/lib/data";
@@ -29,6 +32,24 @@ function Subscription() {
   const email = session!.user.email ?? "";
   const [billing, setBilling] = useState<Billing>("month");
   const [chosen, setChosen] = useState<PlanId | null>(null);
+  const [pending, setPending] = useState<string | null>(null);
+  const qc = useQueryClient();
+  const checkout = useServerFn(startCheckout);
+  const pay = useMutation({
+    mutationFn: () => checkout({ data: { plan: chosen!, billing } }),
+    onSuccess: (r) => {
+      if (r.paymentUrl) { window.location.href = r.paymentUrl; return; }
+      setPending(r.checkoutId);
+      toast.info("Demande de paiement enregistrée");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+  // While a payment is pending, refresh the shop status so activation shows up automatically.
+  useEffect(() => {
+    if (!pending) return;
+    const t = setInterval(() => qc.invalidateQueries({ queryKey: profileQuery(session!.user.id).queryKey }), 5000);
+    return () => clearInterval(t);
+  }, [pending, qc, session]);
   const now = Date.now();
   const active = !!p?.subscription_active && (!p.subscription_ends_at || new Date(p.subscription_ends_at).getTime() > now);
   const daysLeft = p ? Math.ceil((new Date(p.trial_ends_at).getTime() - now) / 86400000) : 0;
@@ -95,7 +116,17 @@ function Subscription() {
       {chosen && (
         <div className="space-y-3 rounded-2xl border bg-card p-6">
           <p className="font-bold">Offre {PLANS[chosen].name} · {BILLING_LABEL[billing]} · {money(PLANS[chosen].prices[billing])}</p>
-          <p className="text-sm text-muted-foreground">Envoyez votre paiement (Mobile Money) puis contactez-nous : votre abonnement est activé dès validation du paiement.</p>
+          {pending ? (
+            <div className="flex items-center gap-3 rounded-xl bg-muted p-4 text-sm">
+              <Loader2 className="h-5 w-5 shrink-0 animate-spin text-primary" />
+              Paiement en attente de validation. Votre abonnement s'activera automatiquement dès confirmation.
+            </div>
+          ) : (
+            <Button className="h-12 w-full text-base" disabled={pay.isPending} onClick={() => pay.mutate()}>
+              {pay.isPending ? <Loader2 className="h-5 w-5 animate-spin" /> : `Payer ${money(PLANS[chosen].prices[billing])}`}
+            </Button>
+          )}
+          <p className="text-sm text-muted-foreground">Le paiement en ligne arrive bientôt. En attendant, payez par Mobile Money puis contactez-nous : votre abonnement est activé dès validation.</p>
           <ContactButtons email={email} choice={`offre ${PLANS[chosen].name}, ${BILLING_LABEL[billing]} (${PLANS[chosen].prices[billing].toLocaleString("fr-FR")} FCFA)`} />
         </div>
       )}
