@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 export type PendingSale = {
   id: string;
   createdAt: string;
-  kind?: "sale" | "product_insert" | "product_update" | "manual_debt" | "debt_payment";
+  kind?: "sale" | "product_insert" | "product_update" | "manual_debt" | "debt_payment" | "order_insert";
   items?: { product_id: string; quantity: number }[];
   customerId?: string | undefined;
   total: number;
@@ -42,6 +42,7 @@ async function replay(op: PendingSale) {
   switch (op.kind ?? "sale") {
     case "product_insert": return (await supabase.from("products").insert(p as any)).error;
     case "product_update": { const { id, ...row } = p; return (await supabase.from("products").update(row as any).eq("id", id)).error; }
+    case "order_insert": return (await supabase.from("online_orders").insert(p as any)).error;
     case "manual_debt": return (await supabase.rpc("add_manual_debt", p as any)).error;
     case "debt_payment": return (await supabase.rpc("record_payment", p as any)).error;
     default:
