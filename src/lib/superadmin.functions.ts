@@ -103,6 +103,30 @@ export const updateSubscription = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export const listCheckouts = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertSuperAdmin(context.supabase, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data, error } = await supabaseAdmin.from("payment_checkouts")
+      .select("id, organization_id, plan, billing, months, amount, status, created_at, paid_at, organizations(name)")
+      .order("created_at", { ascending: false }).limit(50);
+    if (error) throw new Error(error.message);
+    return data ?? [];
+  });
+
+/** Manual validation / simulation of a Bkapay payment — same activation path as the webhook. */
+export const validateCheckout = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    await assertSuperAdmin(context.supabase, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.rpc("mark_checkout_paid", { _checkout: data.id, _provider_ref: null as any, _event: { manual: true, by: context.userId }, _method: "Validation manuelle" });
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
 async function loadUsers(admin: any) {
   const all: any[] = [];
   for (let page = 1; page <= 20; page++) {
