@@ -8,6 +8,7 @@ import { useAuth } from "@/lib/auth";
 import { ContactButtons, PlanPrice } from "@/components/plan-contact";
 import { useOnline, usePendingSales } from "@/lib/offline";
 import { membershipQuery, profileQuery } from "@/lib/data";
+import { hasPremium } from "@/lib/plans";
 
 export const Route = createFileRoute("/_app")({
   component: AppLayout,
@@ -63,6 +64,7 @@ function AppLayout() {
   const subActive = !!p && p.subscription_active && (!p.subscription_ends_at || new Date(p.subscription_ends_at).getTime() > Date.now());
   const hasAccess = !!p && (subActive || daysLeft > 0);
 
+  if (!isAdmin && !hasPremium(p)) return <CashierPremiumWall />;
   if (!hasAccess && (!isAdmin || pathname !== "/abonnement")) return <Paywall isAdmin={isAdmin} />;
 
   return (
@@ -122,6 +124,22 @@ function AppLayout() {
           </div>
         )}
         <main className="flex-1 p-4 md:p-8"><Outlet /></main>
+      </div>
+    </div>
+  );
+}
+
+function CashierPremiumWall() {
+  return (
+    <div className="grid min-h-screen place-items-center bg-background px-4">
+      <div className="w-full max-w-md rounded-2xl border bg-card p-8 text-center shadow-sm">
+        <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-primary-soft text-primary"><Crown className="h-7 w-7" /></div>
+        <h1 className="mt-5 text-2xl font-bold">Boutique en attente de Premium</h1>
+        <p className="mt-2 text-muted-foreground">
+          Les comptes caissiers sont réservés à l'offre Premium. Votre accès à la caisse et au carnet de crédits reprendra dès que la boutique sera passée à Premium.
+        </p>
+        <p className="mt-6 rounded-lg bg-muted p-3 text-sm font-medium">Demandez au propriétaire de la boutique de souscrire à l'offre Premium.</p>
+        <button onClick={() => supabase.auth.signOut()} className="mt-4 text-sm text-muted-foreground hover:text-foreground">Se déconnecter</button>
       </div>
     </div>
   );
