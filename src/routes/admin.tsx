@@ -10,10 +10,10 @@ import { checkSuperAdmin } from "@/lib/superadmin.functions";
 export const Route = createFileRoute("/admin")({
   head: () => ({
     meta: [
-      { title: "Administration — Boutik" },
-      { name: "description", content: "Espace d'administration de la plateforme Boutik." },
-      { property: "og:title", content: "Administration — Boutik" },
-      { property: "og:description", content: "Espace d'administration de la plateforme Boutik." },
+      { title: "Administration — GestiPro" },
+      { name: "description", content: "Espace d'administration de la plateforme GestiPro." },
+      { property: "og:title", content: "Administration — GestiPro" },
+      { property: "og:description", content: "Espace d'administration de la plateforme GestiPro." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "robots", content: "noindex, nofollow" },

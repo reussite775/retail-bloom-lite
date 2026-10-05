@@ -13,9 +13,9 @@ import { money } from "@/lib/format";
 export const Route = createFileRoute("/_app/depenses")({
   head: () => ({
     meta: [
-      { title: "Dépenses — Boutik" },
+      { title: "Dépenses — GestiPro" },
       { name: "description", content: "Notez les dépenses de la boutique et suivez votre bénéfice net." },
-      { property: "og:title", content: "Dépenses — Boutik" },
+      { property: "og:title", content: "Dépenses — GestiPro" },
       { property: "og:description", content: "Notez les dépenses de la boutique et suivez votre bénéfice net." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

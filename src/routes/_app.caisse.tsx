@@ -18,9 +18,9 @@ import { printReceipt, shareReceipt, type Receipt, type Shop } from "@/lib/recei
 export const Route = createFileRoute("/_app/caisse")({
   head: () => ({
     meta: [
-      { title: "Caisse — Boutik" },
+      { title: "Caisse — GestiPro" },
       { name: "description", content: "Enregistrez les ventes du jour rapidement." },
-      { property: "og:title", content: "Caisse — Boutik" },
+      { property: "og:title", content: "Caisse — GestiPro" },
       { property: "og:description", content: "Enregistrez les ventes du jour rapidement." },
     ],
   }),

@@ -19,7 +19,7 @@ export function PlanPrice({ className = "" }: { className?: string }) {
 
 export function ContactButtons({ email, choice }: { email: string; choice?: string }) {
   const { data } = useQuery(platformSettingsQuery);
-  const text = `Bonjour, je souhaite activer mon abonnement Boutik${choice ? ` : ${choice}` : ""}. Compte : ${email}`;
+  const text = `Bonjour, je souhaite activer mon abonnement GestiPro${choice ? ` : ${choice}` : ""}. Compte : ${email}`;
   const wa = (data?.contact_whatsapp ?? "").replace(/[^\d]/g, "");
   const mail = data?.contact_email ?? "";
   return (

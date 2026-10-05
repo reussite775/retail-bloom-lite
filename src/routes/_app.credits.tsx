@@ -19,9 +19,9 @@ import { buildDebtReminder, waLink } from "@/lib/order-receipt";
 export const Route = createFileRoute("/_app/credits")({
   head: () => ({
     meta: [
-      { title: "Carnet de crédits — Boutik" },
+      { title: "Carnet de crédits — GestiPro" },
       { name: "description", content: "Suivez les dettes de vos clients et enregistrez les remboursements." },
-      { property: "og:title", content: "Carnet de crédits — Boutik" },
+      { property: "og:title", content: "Carnet de crédits — GestiPro" },
       { property: "og:description", content: "Suivez les dettes de vos clients et enregistrez les remboursements." },
     ],
   }),

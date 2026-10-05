@@ -12,10 +12,10 @@ import { useAuth } from "@/lib/auth";
 export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
-      { title: "Connexion — Boutik" },
-      { name: "description", content: "Connectez-vous ou créez votre compte Boutik." },
-      { property: "og:title", content: "Connexion — Boutik" },
-      { property: "og:description", content: "Connectez-vous ou créez votre compte Boutik." },
+      { title: "Connexion — GestiPro" },
+      { name: "description", content: "Connectez-vous ou créez votre compte GestiPro." },
+      { property: "og:title", content: "Connexion — GestiPro" },
+      { property: "og:description", content: "Connectez-vous ou créez votre compte GestiPro." },
     ],
   }),
   component: AuthPage,
@@ -85,7 +85,7 @@ function AuthPage() {
         <div className="w-full max-w-sm rounded-2xl border bg-card p-8 shadow-sm">
           <div className="mb-6 flex items-center gap-2 font-display text-xl font-extrabold">
             <span className="grid h-9 w-9 place-items-center rounded-lg bg-primary text-primary-foreground"><Store className="h-5 w-5" /></span>
-            Boutik
+            GestiPro
           </div>
           <h1 className="text-2xl font-bold">Vérifiez votre email</h1>
           <p className="mt-1 text-sm text-muted-foreground">Saisissez le code reçu à l'adresse <strong>{email}</strong>.</p>
@@ -123,13 +123,13 @@ function AuthPage() {
       <div className="w-full max-w-sm rounded-2xl border bg-card p-8 shadow-sm">
         <div className="mb-6 flex items-center gap-2 font-display text-xl font-extrabold">
           <span className="grid h-9 w-9 place-items-center rounded-lg bg-primary text-primary-foreground"><Store className="h-5 w-5" /></span>
-          Boutik
+          GestiPro
         </div>
         <h1 className="text-2xl font-bold">{mode === "in" ? "Bon retour" : "Créer un compte"}</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           {mode === "in" ? "Connectez-vous à votre boutique." : "7 jours d'essai gratuit, sans engagement."}
         </p>
-        {invited && <p className="mt-3 rounded-lg bg-primary-soft p-2 text-sm text-accent-foreground">Vous êtes invité par un commerçant Boutik (code de parrainage {refCode}).</p>}
+        {invited && <p className="mt-3 rounded-lg bg-primary-soft p-2 text-sm text-accent-foreground">Vous êtes invité par un commerçant GestiPro (code de parrainage {refCode}).</p>}
         {invited && session && (
           <div className="mt-3 rounded-lg border p-3 text-sm">
             Vous êtes déjà connecté avec {session.user.email}. Pour créer une nouvelle boutique avec cette invitation, déconnectez-vous d'abord.

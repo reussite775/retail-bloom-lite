@@ -38,7 +38,7 @@ export const generateFollowUps = createServerFn({ method: "POST" })
     });
     if (shops.length === 0) return { items: [], shops: [] };
 
-    const prompt = `Tu es le responsable commercial de Boutik, une application de caisse et de gestion de stock pour petits commerçants (Afrique de l'Ouest, francs CFA, paiement par Mobile Money).
+    const prompt = `Tu es le responsable commercial de GestiPro, une application de caisse et de gestion de stock pour petits commerçants (Afrique de l'Ouest, francs CFA, paiement par Mobile Money).
 Aujourd'hui : ${new Date().toISOString().slice(0, 10)}.
 Voici les boutiques (JSON) :
 ${JSON.stringify(shops)}

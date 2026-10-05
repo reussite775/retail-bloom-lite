@@ -12,10 +12,10 @@ import { profileQuery } from "@/lib/data";
 export const Route = createFileRoute("/_app/parrainage")({
   head: () => ({
     meta: [
-      { title: "Parrainage — Boutik" },
-      { name: "description", content: "Invitez d'autres commerçants sur Boutik et gagnez un mois offert pour chaque filleul abonné." },
-      { property: "og:title", content: "Parrainage — Boutik" },
-      { property: "og:description", content: "Partagez votre lien de parrainage Boutik et suivez vos filleuls." },
+      { title: "Parrainage — GestiPro" },
+      { name: "description", content: "Invitez d'autres commerçants sur GestiPro et gagnez un mois offert pour chaque filleul abonné." },
+      { property: "og:title", content: "Parrainage — GestiPro" },
+      { property: "og:description", content: "Partagez votre lien de parrainage GestiPro et suivez vos filleuls." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -56,7 +56,7 @@ function Referral() {
   });
   const list = refs.data ?? [];
   const months = list.reduce((a, r) => a + (r.reward_months ?? 0), 0);
-  const message = `Je gère ma boutique avec Boutik (caisse, stocks, crédits, commandes en ligne). Essaie-le gratuitement 7 jours avec mon lien : ${link}`;
+  const message = `Je gère ma boutique avec GestiPro (caisse, stocks, crédits, commandes en ligne). Essaie-le gratuitement 7 jours avec mon lien : ${link}`;
 
   const copy = async (text: string, what: string) => {
     try { await navigator.clipboard.writeText(text); toast.success(`${what} copié`); } catch { toast.error("Copie impossible"); }

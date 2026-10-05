@@ -1,6 +1,6 @@
 {
-  "name": "Boutik — Gestion de commerce",
-  "short_name": "Boutik",
+  "name": "GestiPro — Gestion de commerce",
+  "short_name": "GestiPro",
   "description": "Caisse, stocks et crédits pour commerçants.",
   "id": "/",
   "start_url": "/caisse",

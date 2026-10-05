@@ -19,9 +19,9 @@ type Patch = TablesUpdate<"online_orders">;
 export const Route = createFileRoute("/_app/commandes")({
   head: () => ({
     meta: [
-      { title: "Commandes en ligne & livreurs — Boutik" },
+      { title: "Commandes en ligne & livreurs — GestiPro" },
       { name: "description", content: "Gérez vos commandes WhatsApp, TikTok et Instagram et suivez l'argent encaissé par vos livreurs." },
-      { property: "og:title", content: "Commandes en ligne & livreurs — Boutik" },
+      { property: "og:title", content: "Commandes en ligne & livreurs — GestiPro" },
       { property: "og:description", content: "Commandes digitales et suivi Cash Delivery des livreurs." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

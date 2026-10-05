@@ -7,9 +7,9 @@ import { useAuth } from "@/lib/auth";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Boutik — La gestion simple pour commerçants" },
+      { title: "GestiPro — La gestion simple pour commerçants" },
       { name: "description", content: "Caisse, stocks et chiffre d'affaires du jour. Essai gratuit 7 jours." },
-      { property: "og:title", content: "Boutik — La gestion simple pour commerçants" },
+      { property: "og:title", content: "GestiPro — La gestion simple pour commerçants" },
       { property: "og:description", content: "Caisse, stocks et chiffre d'affaires du jour. Essai gratuit 7 jours." },
     ],
   }),
@@ -34,7 +34,7 @@ function Landing() {
       <header className="mx-auto flex max-w-6xl items-center justify-between px-6 py-6">
         <div className="flex items-center gap-2 font-display text-xl font-extrabold">
           <span className="grid h-9 w-9 place-items-center rounded-lg bg-primary text-primary-foreground"><Store className="h-5 w-5" /></span>
-          Boutik
+          GestiPro
         </div>
         <Button asChild variant="outline"><Link to="/auth">Se connecter</Link></Button>
       </header>

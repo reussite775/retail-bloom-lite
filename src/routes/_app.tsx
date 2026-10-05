@@ -80,7 +80,7 @@ function AppLayout() {
       <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col bg-sidebar p-4 text-sidebar-foreground md:flex">
         <div className="mb-8 flex items-center gap-2 px-2 pt-2 font-display text-xl font-extrabold text-sidebar-accent-foreground">
           <span className="grid h-9 w-9 place-items-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground"><Store className="h-5 w-5" /></span>
-          Boutik
+          GestiPro
         </div>
         <nav className="space-y-1">
           {allowed.map((n) => (

@@ -6,9 +6,9 @@ import { useStats } from "./admin.index";
 export const Route = createFileRoute("/admin/statistiques")({
   head: () => ({
     meta: [
-      { title: "Statistiques — Admin Boutik" },
+      { title: "Statistiques — Admin GestiPro" },
       { name: "description", content: "Graphiques des inscriptions et de l'activité de la plateforme." },
-      { property: "og:title", content: "Statistiques — Admin Boutik" },
+      { property: "og:title", content: "Statistiques — Admin GestiPro" },
       { property: "og:description", content: "Graphiques des inscriptions et de l'activité de la plateforme." },
       { name: "robots", content: "noindex, nofollow" },
     ],

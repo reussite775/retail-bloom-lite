@@ -8,9 +8,9 @@ import { productsQuery, todaySalesQuery, weekSalesQuery } from "@/lib/data";
 export const Route = createFileRoute("/_app/dashboard")({
   head: () => ({
     meta: [
-      { title: "Tableau de bord — Boutik" },
+      { title: "Tableau de bord — GestiPro" },
       { name: "description", content: "Chiffre d'affaires du jour et statistiques de votre boutique." },
-      { property: "og:title", content: "Tableau de bord — Boutik" },
+      { property: "og:title", content: "Tableau de bord — GestiPro" },
       { property: "og:description", content: "Chiffre d'affaires du jour et statistiques de votre boutique." },
     ],
   }),

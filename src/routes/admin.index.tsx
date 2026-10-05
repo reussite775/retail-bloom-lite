@@ -7,10 +7,10 @@ import { getPlatformStats } from "@/lib/superadmin.functions";
 export const Route = createFileRoute("/admin/")({
   head: () => ({
     meta: [
-      { title: "Vue d'ensemble — Admin Boutik" },
-      { name: "description", content: "Chiffres clés de la plateforme Boutik." },
-      { property: "og:title", content: "Vue d'ensemble — Admin Boutik" },
-      { property: "og:description", content: "Chiffres clés de la plateforme Boutik." },
+      { title: "Vue d'ensemble — Admin GestiPro" },
+      { name: "description", content: "Chiffres clés de la plateforme GestiPro." },
+      { property: "og:title", content: "Vue d'ensemble — Admin GestiPro" },
+      { property: "og:description", content: "Chiffres clés de la plateforme GestiPro." },
       { name: "robots", content: "noindex, nofollow" },
     ],
   }),

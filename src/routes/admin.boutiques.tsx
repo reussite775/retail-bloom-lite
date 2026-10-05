@@ -17,10 +17,10 @@ import { listCheckouts, listMerchants, updateSubscription, validateCheckout } fr
 export const Route = createFileRoute("/admin/boutiques")({
   head: () => ({
     meta: [
-      { title: "Boutiques — Admin Boutik" },
-      { name: "description", content: "Espace d'administration de la plateforme Boutik." },
-      { property: "og:title", content: "Boutiques — Admin Boutik" },
-      { property: "og:description", content: "Espace d'administration de la plateforme Boutik." },
+      { title: "Boutiques — Admin GestiPro" },
+      { name: "description", content: "Espace d'administration de la plateforme GestiPro." },
+      { property: "og:title", content: "Boutiques — Admin GestiPro" },
+      { property: "og:description", content: "Espace d'administration de la plateforme GestiPro." },
       { name: "robots", content: "noindex, nofollow" },
     ],
   }),

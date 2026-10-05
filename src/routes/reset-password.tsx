@@ -10,10 +10,10 @@ import { Label } from "@/components/ui/label";
 export const Route = createFileRoute("/reset-password")({
   head: () => ({
     meta: [
-      { title: "Nouveau mot de passe — Boutik" },
-      { name: "description", content: "Choisissez un nouveau mot de passe pour votre compte Boutik." },
-      { property: "og:title", content: "Nouveau mot de passe — Boutik" },
-      { property: "og:description", content: "Réinitialisez le mot de passe de votre compte Boutik." },
+      { title: "Nouveau mot de passe — GestiPro" },
+      { name: "description", content: "Choisissez un nouveau mot de passe pour votre compte GestiPro." },
+      { property: "og:title", content: "Nouveau mot de passe — GestiPro" },
+      { property: "og:description", content: "Réinitialisez le mot de passe de votre compte GestiPro." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "robots", content: "noindex" },
@@ -54,7 +54,7 @@ function ResetPassword() {
       <div className="w-full max-w-sm rounded-2xl border bg-card p-8 shadow-sm">
         <div className="mb-6 flex items-center gap-2 font-display text-xl font-extrabold">
           <span className="grid h-9 w-9 place-items-center rounded-lg bg-primary text-primary-foreground"><Store className="h-5 w-5" /></span>
-          Boutik
+          GestiPro
         </div>
         <h1 className="text-2xl font-bold">Nouveau mot de passe</h1>
         {!ready ? (
