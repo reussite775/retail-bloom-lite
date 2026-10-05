@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { AlertTriangle, Package, Receipt, TrendingUp, Wallet } from "lucide-react";
 import { money, startOfToday } from "@/lib/format";
 import { productsQuery, todaySalesQuery, weekSalesQuery } from "@/lib/data";
+import { InstallPrompt } from "@/components/install-prompt";
 
 export const Route = createFileRoute("/_app/dashboard")({
   head: () => ({
@@ -48,6 +49,7 @@ function Dashboard() {
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
+      <InstallPrompt />
       <div>
         <h1 className="text-3xl font-extrabold">Tableau de bord</h1>
         <p className="text-muted-foreground first-letter:uppercase">{new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}</p>
