@@ -9,9 +9,9 @@ import { generateFollowUps } from "@/lib/relances.functions";
 export const Route = createFileRoute("/admin/relances")({
   head: () => ({
     meta: [
-      { title: "Relances IA — Admin Boutik" },
+      { title: "Relances IA — Admin GestiPro" },
       { name: "description", content: "Priorités de relance et messages personnalisés générés par l'IA." },
-      { property: "og:title", content: "Relances IA — Admin Boutik" },
+      { property: "og:title", content: "Relances IA — Admin GestiPro" },
       { property: "og:description", content: "Priorités de relance et messages personnalisés générés par l'IA." },
       { name: "robots", content: "noindex, nofollow" },
     ],

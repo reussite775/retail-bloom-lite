@@ -18,9 +18,9 @@ import { Shimmer } from "@/components/ai-elements/shimmer";
 export const Route = createFileRoute("/_app/assistant")({
   head: () => ({
     meta: [
-      { title: "Conseiller IA — Boutik" },
+      { title: "Conseiller IA — GestiPro" },
       { name: "description", content: "Posez vos questions sur vos ventes, stocks et dépenses et recevez des conseils personnalisés." },
-      { property: "og:title", content: "Conseiller IA — Boutik" },
+      { property: "og:title", content: "Conseiller IA — GestiPro" },
       { property: "og:description", content: "Un conseiller commercial qui analyse les données de votre boutique." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

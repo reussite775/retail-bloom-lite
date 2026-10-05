@@ -17,9 +17,9 @@ import { createEmployee, deleteEmployee } from "@/lib/team.functions";
 export const Route = createFileRoute("/_app/equipe")({
   head: () => ({
     meta: [
-      { title: "Équipe & accès — Boutik" },
+      { title: "Équipe & accès — GestiPro" },
       { name: "description", content: "Ajoutez vos caissiers et vendeurs et gérez leurs accès." },
-      { property: "og:title", content: "Équipe & accès — Boutik" },
+      { property: "og:title", content: "Équipe & accès — GestiPro" },
       { property: "og:description", content: "Ajoutez vos caissiers et vendeurs et gérez leurs accès." },
     ],
   }),

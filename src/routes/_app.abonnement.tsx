@@ -15,10 +15,10 @@ import { ContactButtons } from "@/components/plan-contact";
 export const Route = createFileRoute("/_app/abonnement")({
   head: () => ({
     meta: [
-      { title: "Abonnement — Boutik" },
-      { name: "description", content: "Offres Standard et Premium de Boutik : caisse, stocks, crédits, multi-utilisateurs et statistiques." },
-      { property: "og:title", content: "Abonnement — Boutik" },
-      { property: "og:description", content: "Choisissez l'offre Standard ou Premium de Boutik." },
+      { title: "Abonnement — GestiPro" },
+      { name: "description", content: "Offres Standard et Premium de GestiPro : caisse, stocks, crédits, multi-utilisateurs et statistiques." },
+      { property: "og:title", content: "Abonnement — GestiPro" },
+      { property: "og:description", content: "Choisissez l'offre Standard ou Premium de GestiPro." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],

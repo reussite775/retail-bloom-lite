@@ -12,9 +12,9 @@ import { hasPremium } from "@/lib/plans";
 export const Route = createFileRoute("/_app/parametres")({
   head: () => ({
     meta: [
-      { title: "Paramètres de la boutique — Boutik" },
+      { title: "Paramètres de la boutique — GestiPro" },
       { name: "description", content: "Nom, slogan, contact, adresse et logo affichés sur vos reçus." },
-      { property: "og:title", content: "Paramètres de la boutique — Boutik" },
+      { property: "og:title", content: "Paramètres de la boutique — GestiPro" },
       { property: "og:description", content: "Personnalisez les reçus de votre boutique." },
     ],
   }),

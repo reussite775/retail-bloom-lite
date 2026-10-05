@@ -17,9 +17,9 @@ import type { Tables } from "@/integrations/supabase/types";
 export const Route = createFileRoute("/_app/produits")({
   head: () => ({
     meta: [
-      { title: "Produits & stocks — Boutik" },
+      { title: "Produits & stocks — GestiPro" },
       { name: "description", content: "Gérez vos articles, prix et quantités en stock." },
-      { property: "og:title", content: "Produits & stocks — Boutik" },
+      { property: "og:title", content: "Produits & stocks — GestiPro" },
       { property: "og:description", content: "Gérez vos articles, prix et quantités en stock." },
     ],
   }),

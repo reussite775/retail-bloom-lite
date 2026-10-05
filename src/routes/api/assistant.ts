@@ -102,7 +102,7 @@ export const Route = createFileRoute("/api/assistant")({
         });
         const result = streamText({
           model: provider.responses("openai/gpt-6-astra"),
-          system: `Tu es « Conseiller Boutik », l'assistant commercial d'un petit commerce de détail en Afrique de l'Ouest. Réponds toujours en français simple, concis et concret, montants en FCFA (format 12 500 FCFA). Appuie-toi UNIQUEMENT sur les données JSON ci-dessous ; si une information manque, dis-le. Quand c'est utile, termine par 2 à 4 recommandations actionnables (réapprovisionnement, prix, produits peu rentables, dépenses à réduire, relance des dettes). Utilise du markdown léger (listes, gras, petits tableaux).\n\nDONNÉES DE LA BOUTIQUE :\n${context}`,
+          system: `Tu es « Conseiller GestiPro », l'assistant commercial d'un petit commerce de détail en Afrique de l'Ouest. Réponds toujours en français simple, concis et concret, montants en FCFA (format 12 500 FCFA). Appuie-toi UNIQUEMENT sur les données JSON ci-dessous ; si une information manque, dis-le. Quand c'est utile, termine par 2 à 4 recommandations actionnables (réapprovisionnement, prix, produits peu rentables, dépenses à réduire, relance des dettes). Utilise du markdown léger (listes, gras, petits tableaux).\n\nDONNÉES DE LA BOUTIQUE :\n${context}`,
           messages: await convertToModelMessages(messages),
           abortSignal: request.signal,
           providerOptions: {

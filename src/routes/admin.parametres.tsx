@@ -13,9 +13,9 @@ import { updatePlatformSettings } from "@/lib/superadmin.functions";
 export const Route = createFileRoute("/admin/parametres")({
   head: () => ({
     meta: [
-      { title: "Paramètres — Admin Boutik" },
+      { title: "Paramètres — Admin GestiPro" },
       { name: "description", content: "Tarif d'abonnement et coordonnées de contact de la plateforme." },
-      { property: "og:title", content: "Paramètres — Admin Boutik" },
+      { property: "og:title", content: "Paramètres — Admin GestiPro" },
       { property: "og:description", content: "Tarif d'abonnement et coordonnées de contact de la plateforme." },
       { name: "robots", content: "noindex, nofollow" },
     ],

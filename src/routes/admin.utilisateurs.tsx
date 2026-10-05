@@ -12,9 +12,9 @@ import { listPlatformUsers, setUserSuspended } from "@/lib/superadmin.functions"
 export const Route = createFileRoute("/admin/utilisateurs")({
   head: () => ({
     meta: [
-      { title: "Utilisateurs — Admin Boutik" },
+      { title: "Utilisateurs — Admin GestiPro" },
       { name: "description", content: "Liste des comptes de la plateforme, recherche et suspension." },
-      { property: "og:title", content: "Utilisateurs — Admin Boutik" },
+      { property: "og:title", content: "Utilisateurs — Admin GestiPro" },
       { property: "og:description", content: "Liste des comptes de la plateforme, recherche et suspension." },
       { name: "robots", content: "noindex, nofollow" },
     ],

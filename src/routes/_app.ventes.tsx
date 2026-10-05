@@ -10,9 +10,9 @@ import { matches } from "@/lib/stock";
 export const Route = createFileRoute("/_app/ventes")({
   head: () => ({
     meta: [
-      { title: "Historique des ventes — Boutik" },
+      { title: "Historique des ventes — GestiPro" },
       { name: "description", content: "Toutes vos ventes passées, filtrées par période, avec le bénéfice réalisé." },
-      { property: "og:title", content: "Historique des ventes — Boutik" },
+      { property: "og:title", content: "Historique des ventes — GestiPro" },
       { property: "og:description", content: "Toutes vos ventes passées, filtrées par période, avec le bénéfice réalisé." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
