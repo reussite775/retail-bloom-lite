@@ -24,6 +24,8 @@ export function buildOrderReceipt(o: Order, shop: Shop) {
     shop?.contact ? `📞 ${shop.contact}` : "",
     shop?.address ? `📍 ${shop.address}` : "",
     "Merci pour votre confiance ! 🙏",
+    "",
+    "_Propulsé par GestiPro — https://getcommercestream.app_",
   ];
   return lines.filter((l, i, a) => l !== "" || (a[i - 1] ?? "") !== "").join("\n").trim();
 }
