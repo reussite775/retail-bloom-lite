@@ -28,9 +28,10 @@ table{width:100%;border-collapse:collapse}td{padding:2px 0}img{max-width:30mm;ma
 ${shop.slogan ? `<div><i>${esc(shop.slogan)}</i></div>` : ""}${shop.address ? `<div>${esc(shop.address)}</div>` : ""}${shop.contact ? `<div>${esc(shop.contact)}</div>` : ""}</div>
 <hr><div>Reçu n° ${r.number}<br>${dateStr(r.date)}</div><hr>
 <table>${rows}</table><hr>
-<table><tr><td><b>TOTAL</b></td><td class="r"><b>${money(r.total)}</b></td></tr>
-<tr><td>Paiement</td><td class="r">${esc(r.payment)}</td></tr>${r.customer ? `<tr><td>Client</td><td class="r">${esc(r.customer)}</td></tr>` : ""}</table>
+<table><tr><td><b>TOTAL</b></td><td class="r"><b>${money(r.total)}</b></td></tr>${r.customer ? `<tr><td>Client</td><td class="r">${esc(r.customer)}</td></tr>` : ""}</table>
+<div style="white-space:nowrap">Paiement : ${esc(r.payment)}</div>
 <hr><div class="c">Merci de votre visite !</div>
+<div class="c" style="margin-top:6px;font-size:10px;color:#555">Propulsé par <a href="https://getcommercestream.app" style="color:#555;text-decoration:none">GestiPro</a></div>
 <script>window.onload=()=>{window.print();}</script></body></html>`);
   w.document.close();
 }
@@ -76,10 +77,11 @@ export async function receiptBlob(shop: Shop, r: Receipt): Promise<Blob> {
   }
   sep();
   pair("TOTAL", money(r.total), "bold 26px monospace");
-  pair("Paiement", r.payment);
   if (r.customer) pair("Client", r.customer);
+  text(`Paiement : ${r.payment}`);
   sep();
   text("Merci de votre visite !", "center");
+  text("Propulsé par GestiPro", "center", "16px monospace");
 
   const y = pad + ops.length * lh + (logo ? 110 : 0) + 40;
   c.width = W; c.height = y;

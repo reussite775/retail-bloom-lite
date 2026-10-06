@@ -1,8 +1,9 @@
 import { createFileRoute, Link, Outlet, useLocation, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect } from "react";
-import { BarChart3, BookUser, Receipt, Boxes, Crown, CloudOff, History, RefreshCw, UserCog, Clock, CreditCard, Lock, LogOut, Settings, ShoppingCart, Store , Lightbulb, Truck, Gift } from "lucide-react";
+import { useEffect, useState } from "react";
+import { BarChart3, BookUser, Receipt, Boxes, Crown, CloudOff, History, RefreshCw, UserCog, Clock, CreditCard, Lock, LogOut, Settings, ShoppingCart, Store , Lightbulb, Truck, Gift, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { ContactButtons, PlanPrice } from "@/components/plan-contact";
@@ -44,6 +45,7 @@ function AppLayout() {
     queryFn: async () => (await supabase.from("user_roles").select("role").eq("user_id", uid!).eq("role", "super_admin")).data?.length === 1,
   });
   const online = useOnline();
+  const [menuOpen, setMenuOpen] = useState(false);
   const pending = usePendingSales();
   const allowed = nav.filter((n) => (isAdmin || !n.admin) && (!("online" in n) || profile.data?.business_mode === "online"));
   const forbidden = !!member.data && !isAdmin && !allowed.some((n) => pathname.startsWith(n.to));
@@ -112,17 +114,37 @@ function AppLayout() {
             <Clock className="h-4 w-4" /> {daysLeft > 0 ? `Essai gratuit : ${daysLeft} jour${daysLeft > 1 ? "s" : ""} restant${daysLeft > 1 ? "s" : ""}` : "Essai terminé — s'abonner"}
           </Link>
         )}
-        <nav className="flex gap-1 overflow-x-auto border-b bg-card p-2 md:hidden">
-          {allowed.map((n) => (
-            <Link key={n.to} to={n.to} className="flex items-center gap-2 whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium"
-              activeProps={{ className: "bg-primary-soft text-accent-foreground" }}>
-              <n.icon className="h-4 w-4" /> {n.label}
-            </Link>
-          ))}
-          {superAdmin.data && (
-            <Link to="/admin" className="flex items-center gap-2 whitespace-nowrap rounded-md px-3 py-2 text-sm font-semibold text-primary"><Crown className="h-4 w-4" /> Super Admin</Link>
-          )}
-        </nav>
+        <div className="flex items-center gap-3 border-b bg-card px-3 py-2 md:hidden">
+          <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
+            <SheetTrigger asChild>
+              <button aria-label="Ouvrir le menu" className="grid h-11 w-11 place-items-center rounded-lg hover:bg-muted"><Menu className="h-6 w-6" /></button>
+            </SheetTrigger>
+            <SheetContent side="left" className="w-72 overflow-y-auto p-4">
+              <SheetTitle className="mb-4 flex items-center gap-2 font-display text-xl font-extrabold">
+                <span className="grid h-9 w-9 place-items-center rounded-lg bg-primary text-primary-foreground"><Store className="h-5 w-5" /></span>
+                GestiPro
+              </SheetTitle>
+              <nav className="space-y-1">
+                {allowed.map((n) => (
+                  <Link key={n.to} to={n.to} onClick={() => setMenuOpen(false)} className="flex min-h-12 items-center gap-3 rounded-lg px-3 text-base font-medium hover:bg-muted"
+                    activeProps={{ className: "bg-primary-soft text-accent-foreground" }}>
+                    <n.icon className="h-5 w-5" /> {n.label}
+                  </Link>
+                ))}
+                {superAdmin.data && (
+                  <Link to="/admin" onClick={() => setMenuOpen(false)} className="flex min-h-12 items-center gap-3 rounded-lg px-3 text-base font-semibold text-primary"><Crown className="h-5 w-5" /> Super Admin</Link>
+                )}
+              </nav>
+              <div className="mt-6 border-t pt-4">
+                <div className="truncate px-3 text-xs text-muted-foreground">{session.user.email} · {isAdmin ? "Administrateur" : "Caissier"}</div>
+                <button onClick={() => supabase.auth.signOut()} className="mt-2 flex min-h-12 w-full items-center gap-3 rounded-lg px-3 text-base hover:bg-muted">
+                  <LogOut className="h-5 w-5" /> Déconnexion
+                </button>
+              </div>
+            </SheetContent>
+          </Sheet>
+          <span className="font-display text-lg font-extrabold">GestiPro</span>
+        </div>
         {(!online || pending.length > 0) && (
           <div className={`flex items-center justify-center gap-2 px-3 py-2 text-center text-sm font-medium ${online ? "bg-primary-soft text-accent-foreground" : "bg-warning/25 text-warning-foreground"}`}>
             {online ? <RefreshCw className="h-4 w-4 animate-spin" /> : <CloudOff className="h-4 w-4" />}
