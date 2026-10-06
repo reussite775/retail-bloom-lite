@@ -25,6 +25,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let restored = false;
     const { data } = supabase.auth.onAuthStateChange((event, session) => {
       // The initial state is decided below, once restoration is finished.
+      console.log("DBG event", event, !!session);
       if (event === "INITIAL_SESSION" || !active) return;
       if (!restored && !session && event !== "SIGNED_OUT") return;
       setState({ session, loading: false });
@@ -34,6 +35,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     (async () => {
       const { data: res, error } = await supabase.auth.getSession();
+      console.log("DBG getSession", !!res.session, error?.name, error?.message);
       if (!active) return;
       restored = true;
       if (res.session) return setState({ session: res.session, loading: false });
