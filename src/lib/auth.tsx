@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { isAuthRetryableFetchError, type Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 
 type AuthState = { session: Session | null; loading: boolean };
 const AuthContext = createContext<AuthState>({ session: null, loading: true });
@@ -20,12 +21,18 @@ async function storedSession(): Promise<Session | null> {
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AuthState>({ session: null, loading: true });
+  const queryClient = useQueryClient();
   useEffect(() => {
     let active = true;
     let restored = false;
     const { data } = supabase.auth.onAuthStateChange((event, session) => {
       // The initial state is decided below, once restoration is finished.
       if (event === "INITIAL_SESSION" || !active) return;
+      if (event === "SIGNED_OUT") {
+        // Remove the shop data kept on the device for offline use.
+        queryClient.clear();
+        localStorage.removeItem("boutik-cache");
+      }
       if (!restored && !session && event !== "SIGNED_OUT") return;
       setState({ session, loading: false });
     });
@@ -54,7 +61,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       data.subscription.unsubscribe();
       window.removeEventListener("online", retry);
     };
-  }, []);
+  }, [queryClient]);
   return <AuthContext.Provider value={state}>{children}</AuthContext.Provider>;
 }
 
