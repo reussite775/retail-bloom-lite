@@ -61,7 +61,7 @@ function AppLayout() {
   }, [session]);
 
   useEffect(() => {
-    if (!loading && !session) navigate({ to: "/auth" });
+    console.log("TMPDBG app", loading, !!session); if (!loading && !session) navigate({ to: "/auth" });
   }, [loading, session, navigate]);
 
   if (loading || !session || member.isLoading || profile.isLoading || forbidden) {
