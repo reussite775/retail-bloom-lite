@@ -40,7 +40,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const retry = () => { void supabase.auth.getSession(); };
 
     (async () => {
-      const { data: res, error } = await supabase.auth.getSession(); console.log("TMPDBG gs", !!res.session, error?.message);
+      const { data: res, error } = await supabase.auth.getSession(); 
       if (!active) return;
       restored = true;
       if (res.session) return setState({ session: res.session, loading: false });
