@@ -43,8 +43,8 @@ export const startCheckout = createServerFn({ method: "POST" })
           expires_in: 3600,
         }),
       });
-      const json = (await res.json().catch(() => ({}))) as Record<string, any>;
-      const d = (json.data ?? json) as Record<string, any>;
+      const json = (await res.json().catch(() => ({}))) as any;
+      const d = (json.data ?? json) as any;
       const paymentUrl: string | undefined = d.payment_url ?? d.paymentUrl;
       const sessionId: string | undefined = d.session_id ?? d.sessionId ?? d.id;
       if (!res.ok || !paymentUrl) {

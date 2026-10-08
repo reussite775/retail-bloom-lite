@@ -30,9 +30,9 @@ export const Route = createFileRoute("/api/public/bkapay/webhook")({
         const ts = request.headers.get("x-bkapay-timestamp") ?? "";
         if (!sig || !validSignature(body, ts, sig, secret)) return new Response("Invalid signature", { status: 401 });
 
-        let payload: Record<string, any>;
+        let payload: any;
         try { payload = JSON.parse(body); } catch { return new Response("Bad payload", { status: 400 }); }
-        const d = (payload.data ?? payload) as Record<string, any>;
+        const d = (payload.data ?? payload) as any;
         const event = String(request.headers.get("x-bkapay-event") ?? payload.event ?? payload.type ?? "").toLowerCase();
         const orderId = String(d.order_id ?? d.orderId ?? "");
         const transactionId = d.transactionId ?? d.transaction_id ?? null;
