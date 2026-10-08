@@ -25,18 +25,38 @@ export const startCheckout = createServerFn({ method: "POST" })
       .select("id").single();
     if (error) throw new Error(error.message);
 
-    const apiKey = process.env["BKAPAY_API_KEY"];
+    const apiKey = process.env["BKAPAY_SECRET_KEY"];
     if (!apiKey) return { checkoutId: c.id, paymentUrl: null as string | null, configured: false };
 
-    // ===== BKAPAY: create payment here =====
-    // const res = await fetch("https://<bkapay-api>/payments", {
-    //   method: "POST",
-    //   headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-    //   body: JSON.stringify({ amount, currency: "XOF", reference: c.id,
-    //     callback_url: `${origin}/api/public/bkapay/webhook`, return_url: `${origin}/abonnement?checkout=${c.id}` }),
-    // });
-    // const json = await res.json();
-    // await supabaseAdmin.from("payment_checkouts").update({ provider_ref: json.id }).eq("id", c.id);
-    // return { checkoutId: c.id, paymentUrl: json.payment_url, configured: true };
-    return { checkoutId: c.id, paymentUrl: null as string | null, configured: false };
+    const APP = "https://getcommercestream.app";
+    try {
+      const res = await fetch("https://bkapay.com/api/v1/payment-sessions", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({
+          amount, currency: "XOF",
+          description: `GestiPro ${PLANS[data.plan].name} · ${months} mois`,
+          success_url: `${APP}/abonnement?checkout=${c.id}`,
+          cancel_url: `${APP}/abonnement?checkout=${c.id}&cancelled=1`,
+          callback_url: `${APP}/api/public/bkapay/webhook`,
+          order_id: c.id,
+          expires_in: 3600,
+        }),
+      });
+      const json = (await res.json().catch(() => ({}))) as Record<string, any>;
+      const d = (json.data ?? json) as Record<string, any>;
+      const paymentUrl: string | undefined = d.payment_url ?? d.paymentUrl;
+      const sessionId: string | undefined = d.session_id ?? d.sessionId ?? d.id;
+      if (!res.ok || !paymentUrl) {
+        console.error("BkaPay session failed", res.status);
+        await supabaseAdmin.from("payment_checkouts").update({ status: "failed" }).eq("id", c.id);
+        throw new Error("Le paiement n'a pas pu démarrer. Veuillez réessayer dans un instant.");
+      }
+      await supabaseAdmin.from("payment_checkouts").update({ session_id: sessionId ? String(sessionId) : null }).eq("id", c.id);
+      return { checkoutId: c.id, paymentUrl, configured: true };
+    } catch (e) {
+      if (e instanceof Error && e.message.startsWith("Le paiement")) throw e;
+      await supabaseAdmin.from("payment_checkouts").update({ status: "failed" }).eq("id", c.id);
+      throw new Error("Le paiement n'a pas pu démarrer. Veuillez réessayer dans un instant.");
+    }
   });
