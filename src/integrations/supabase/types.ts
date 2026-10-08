@@ -401,6 +401,7 @@ export type Database = {
           billing: string
           created_at: string
           created_by: string | null
+          currency: string
           id: string
           months: number
           organization_id: string
@@ -409,13 +410,17 @@ export type Database = {
           provider: string
           provider_ref: string | null
           raw_event: Json | null
+          session_id: string | null
           status: string
+          transaction_id: string | null
+          updated_at: string
         }
         Insert: {
           amount: number
           billing: string
           created_at?: string
           created_by?: string | null
+          currency?: string
           id?: string
           months: number
           organization_id: string
@@ -424,13 +429,17 @@ export type Database = {
           provider?: string
           provider_ref?: string | null
           raw_event?: Json | null
+          session_id?: string | null
           status?: string
+          transaction_id?: string | null
+          updated_at?: string
         }
         Update: {
           amount?: number
           billing?: string
           created_at?: string
           created_by?: string | null
+          currency?: string
           id?: string
           months?: number
           organization_id?: string
@@ -439,7 +448,10 @@ export type Database = {
           provider?: string
           provider_ref?: string | null
           raw_event?: Json | null
+          session_id?: string | null
           status?: string
+          transaction_id?: string | null
+          updated_at?: string
         }
         Relationships: [
           {
