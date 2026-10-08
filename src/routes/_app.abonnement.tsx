@@ -44,6 +44,14 @@ function Subscription() {
     },
     onError: (e: Error) => toast.error(e.message),
   });
+  // Back from BkaPay: keep refreshing until the webhook activates the subscription.
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search);
+    const id = q.get("checkout");
+    if (!id) return;
+    if (q.get("cancelled")) toast.info("Paiement annulé. Vous pouvez réessayer.");
+    else { setPending(id); toast.info("Paiement en cours de confirmation…"); }
+  }, []);
   // While a payment is pending, refresh the shop status so activation shows up automatically.
   useEffect(() => {
     if (!pending) return;

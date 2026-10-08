@@ -6,8 +6,8 @@ import { BILLING_MONTHS, PLANS } from "@/lib/plans";
 /**
  * Starts a Bkapay checkout for the caller's shop.
  * Price is always computed server-side from PLANS (never trusted from the client).
- * When BKAPAY_API_KEY is configured, plug the Bkapay "create payment" call in the marked block
- * and return its hosted payment URL; Bkapay then calls /api/public/bkapay/webhook.
+ * Creates a BkaPay payment session (BKAPAY_SECRET_KEY) and returns its payment_url.
+ * Activation happens only in /api/public/bkapay/webhook (payment.completed).
  */
 export const startCheckout = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
