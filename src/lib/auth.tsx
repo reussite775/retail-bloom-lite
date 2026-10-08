@@ -27,7 +27,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let restored = false;
     const { data } = supabase.auth.onAuthStateChange((event, session) => {
       // The initial state is decided below, once restoration is finished.
-      console.log("TMPDBG ev", event, !!session); if (event === "INITIAL_SESSION" || !active) return;
+      if (event === "INITIAL_SESSION" || !active) return;
       if (event === "SIGNED_OUT") {
         // Remove the shop data kept on the device for offline use.
         queryClient.clear();
