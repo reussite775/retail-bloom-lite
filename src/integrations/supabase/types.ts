@@ -402,6 +402,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           currency: string
+          duration_days: number | null
           id: string
           months: number
           organization_id: string
@@ -421,6 +422,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           currency?: string
+          duration_days?: number | null
           id?: string
           months: number
           organization_id: string
@@ -440,6 +442,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           currency?: string
+          duration_days?: number | null
           id?: string
           months?: number
           organization_id?: string

@@ -134,6 +134,13 @@
       "when": 1791426285155,
       "tag": "0018_bkapay_payment_sessions",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1791506495493,
+      "tag": "0019_temp_bkapay_test_days",
+      "breakpoints": true
     }
   ]
 }
