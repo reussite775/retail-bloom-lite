@@ -11,6 +11,7 @@ import { profileQuery } from "@/lib/data";
 import { money } from "@/lib/format";
 import { BILLING_LABEL, PLANS, type Billing, type PlanId } from "@/lib/plans";
 import { ContactButtons } from "@/components/plan-contact";
+import { BkapayTestBlock } from "@/components/bkapay-test";
 
 export const Route = createFileRoute("/_app/abonnement")({
   head: () => ({
@@ -138,6 +139,7 @@ function Subscription() {
           <ContactButtons email={email} choice={`offre ${PLANS[chosen].name}, ${BILLING_LABEL[billing]} (${PLANS[chosen].prices[billing].toLocaleString("fr-FR")} FCFA)`} />
         </div>
       )}
+      <BkapayTestBlock />
     </div>
   );
 }
