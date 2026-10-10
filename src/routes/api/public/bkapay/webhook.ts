@@ -33,23 +33,38 @@ export const Route = createFileRoute("/api/public/bkapay/webhook")({
         let payload: any;
         try { payload = JSON.parse(body); } catch { return new Response("Bad payload", { status: 400 }); }
         const d = (payload.data ?? payload) as any;
-        const event = String(request.headers.get("x-bkapay-event") ?? payload.event ?? payload.type ?? "").toLowerCase();
-        const orderId = String(d.order_id ?? d.orderId ?? "");
-        const transactionId = d.transactionId ?? d.transaction_id ?? null;
-        const sessionId = d.session_id ?? d.sessionId ?? null;
-        if (!UUID.test(orderId)) return new Response("Unknown order", { status: 400 });
+        const pick = (...keys: string[]) => {
+          for (const src of [d, d?.session, d?.payment, d?.metadata, payload, payload?.metadata]) {
+            if (!src || typeof src !== "object") continue;
+            for (const k of keys) if (src[k] != null && src[k] !== "") return src[k];
+          }
+          return null;
+        };
+        const rawEvent = String(request.headers.get("x-bkapay-event") ?? payload.event ?? payload.type ?? "").toLowerCase();
+        const status = String(pick("status") ?? "").toLowerCase();
+        const event = rawEvent.includes("complete") || rawEvent.includes("success") || (!rawEvent && ["completed", "success", "successful", "paid"].includes(status))
+          ? "payment.completed"
+          : rawEvent.includes("fail") ? "payment.failed" : rawEvent.includes("expire") ? "payment.expired" : rawEvent;
+        const orderRaw = String(pick("order_id", "orderId", "reference", "merchant_reference") ?? "");
+        const transactionId = pick("transactionId", "transaction_id");
+        const sessionId = pick("session_id", "sessionId");
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-        const { data: c } = await supabaseAdmin.from("payment_checkouts").select("id, amount, currency, status, session_id").eq("id", orderId).maybeSingle();
-        if (!c) return new Response("Unknown order", { status: 404 });
+        const cols = "id, amount, currency, status, session_id";
+        let c: any = null;
+        if (UUID.test(orderRaw)) c = (await supabaseAdmin.from("payment_checkouts").select(cols).eq("id", orderRaw).maybeSingle()).data;
+        if (!c && sessionId) c = (await supabaseAdmin.from("payment_checkouts").select(cols).eq("session_id", String(sessionId)).maybeSingle()).data;
+        if (!c) { console.error("bkapay webhook: unknown order", { event: rawEvent, keys: Object.keys(d ?? {}) }); return new Response("Unknown order", { status: 404 }); }
         if (c.session_id && sessionId && String(sessionId) !== c.session_id) return new Response("Session mismatch", { status: 400 });
 
         if (event === "payment.completed") {
           if (c.status === "paid") return new Response("ok"); // idempotent
           if (c.status !== "pending") return new Response("Payment not pending", { status: 409 });
-          const amount = Number(d.amount);
-          const currency = String(d.currency ?? "").toUpperCase();
-          if (amount !== Number(c.amount) || (currency && currency !== c.currency)) {
+          const amount = Number(pick("amount"));
+          const currency = String(pick("currency") ?? "").toUpperCase();
+          const okCurrency = !currency || currency === c.currency || (c.currency === "XOF" && ["FCFA", "CFA", "XOF"].includes(currency));
+          if (amount !== Number(c.amount) || !okCurrency) {
+            console.error("bkapay webhook: amount mismatch", { amount, currency, expected: c.amount });
             return new Response("Amount mismatch", { status: 400 });
           }
           if (transactionId) {
