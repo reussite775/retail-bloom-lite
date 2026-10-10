@@ -64,7 +64,7 @@ function AppLayout() {
     if (!loading && !session) navigate({ to: "/auth" });
   }, [loading, session, navigate]);
 
-  if (loading || !session || member.isLoading || profile.isLoading || forbidden) {
+  if (loading || !session || member.isLoading || profile.isLoading || superAdmin.isLoading || forbidden) {
     return <div className="grid min-h-screen place-items-center text-muted-foreground">Chargement…</div>;
   }
 
@@ -75,7 +75,7 @@ function AppLayout() {
   const hasAccess = !!p && (subActive || daysLeft > 0);
 
   if (!isAdmin && !hasPremium(p)) return <CashierPremiumWall />;
-  if (!hasAccess && (!isAdmin || pathname !== "/abonnement")) return <Paywall isAdmin={isAdmin} />;
+  if (!superAdmin.data && !hasAccess && (!isAdmin || pathname !== "/abonnement")) return <Paywall isAdmin={isAdmin} />;
 
   return (
     <div className="flex min-h-screen">
