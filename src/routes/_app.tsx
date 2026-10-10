@@ -75,7 +75,7 @@ function AppLayout() {
   const hasAccess = !!p && (subActive || daysLeft > 0);
 
   if (!isAdmin && !hasPremium(p)) return <CashierPremiumWall />;
-  if (!hasAccess && (!isAdmin || pathname !== "/abonnement")) return <Paywall isAdmin={isAdmin} />;
+  if (!superAdmin.data && !hasAccess && (!isAdmin || pathname !== "/abonnement")) return <Paywall isAdmin={isAdmin} />;
 
   return (
     <div className="flex min-h-screen">
