@@ -72,6 +72,7 @@ function Subscription() {
   const active = !!p?.subscription_active && (!p.subscription_ends_at || new Date(p.subscription_ends_at).getTime() > now);
   const daysLeft = p ? Math.ceil((new Date(p.trial_ends_at).getTime() - now) / 86400000) : 0;
   const currentPlan = active ? (p?.plan === "premium" ? "premium" : "standard") : null;
+  useEffect(() => { if (active) setPending(null); }, [active]);
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
