@@ -20,7 +20,7 @@ export async function reconcileCheckout(checkoutId: string, event: unknown = nul
     headers: { Authorization: `Bearer ${apiKey}`, Accept: "application/json" },
   }).catch(() => null);
   if (!res) return "error";
-  const s = (await res.json().catch(() => ({}))) as Record<string, any>;
+  const s = (await res.json().catch(() => ({}))) as any;
   const status = String(s.status ?? "").toLowerCase();
 
   if (status === "completed") {
