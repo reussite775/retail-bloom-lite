@@ -28,7 +28,27 @@ export const Route = createFileRoute("/api/public/bkapay/webhook")({
         const body = await request.text();
         const sig = request.headers.get("x-bkapay-signature") ?? "";
         const ts = request.headers.get("x-bkapay-timestamp") ?? "";
-        if (!sig || !validSignature(body, ts, sig, secret)) return new Response("Invalid signature", { status: 401 });
+        if (!sig || !validSignature(body, ts, sig, secret)) {
+          // The payload is NOT trusted. We only use it to locate our checkout, then ask
+          // BkaPay's authenticated status API (secret key) whether that session is really paid.
+          console.error("bkapay webhook: invalid signature", { hasSig: !!sig, hasTs: !!ts, len: body.length });
+          let p: any = null;
+          try { p = JSON.parse(body); } catch { /* ignore */ }
+          const pd = p?.data ?? p ?? {};
+          const order = String(pd.order_id ?? pd.orderId ?? p?.order_id ?? "");
+          const sess = pd.sessionId ?? pd.session_id ?? null;
+          const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+          let id: string | null = null;
+          if (UUID.test(order)) id = (await supabaseAdmin.from("payment_checkouts").select("id").eq("id", order).maybeSingle()).data?.id ?? null;
+          if (!id && sess) id = (await supabaseAdmin.from("payment_checkouts").select("id").eq("session_id", String(sess)).maybeSingle()).data?.id ?? null;
+          if (id) {
+            const { reconcileCheckout } = await import("@/lib/bkapay.server");
+            const r = await reconcileCheckout(id);
+            console.error("bkapay webhook: status API fallback", { checkout: id, result: r });
+            if (r === "activated" || r === "already_paid") return new Response("ok");
+          }
+          return new Response("Invalid signature", { status: 401 });
+        }
 
         let payload: any;
         try { payload = JSON.parse(body); } catch { return new Response("Bad payload", { status: 400 }); }

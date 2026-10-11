@@ -37,7 +37,7 @@ export const startTestCheckout = createServerFn({ method: "POST" })
         success_url: `${APP}/abonnement?checkout=${c.id}`,
         cancel_url: `${APP}/abonnement?checkout=${c.id}&cancelled=1`,
         callback_url: `${APP}/api/public/bkapay/webhook`,
-        order_id: c.id, expires_in: 3600,
+        order_id: c.id, expires_in: 60,
       }),
     }).catch(() => null);
     const json = res ? ((await res.json().catch(() => ({}))) as any) : {};

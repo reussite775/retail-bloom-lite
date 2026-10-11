@@ -40,7 +40,7 @@ export const startCheckout = createServerFn({ method: "POST" })
           cancel_url: `${APP}/abonnement?checkout=${c.id}&cancelled=1`,
           callback_url: `${APP}/api/public/bkapay/webhook`,
           order_id: c.id,
-          expires_in: 3600,
+          expires_in: 60,
         }),
       });
       const json = (await res.json().catch(() => ({}))) as any;
@@ -59,4 +59,25 @@ export const startCheckout = createServerFn({ method: "POST" })
       await supabaseAdmin.from("payment_checkouts").update({ status: "failed" }).eq("id", c.id);
       throw new Error("Le paiement n'a pas pu démarrer. Veuillez réessayer dans un instant.");
     }
+  });
+
+/**
+ * Confirms the caller's shop pending BkaPay checkouts by asking BkaPay's official status API
+ * (server-side, secret key). Never trusts the browser redirect: activation only if BkaPay reports
+ * "completed" with the same order, amount and currency.
+ */
+export const confirmMyCheckouts = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data: orgId } = await context.supabase.rpc("current_shop");
+    if (!orgId) return { activated: false };
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const since = new Date(Date.now() - 7 * 86400000).toISOString();
+    const { data: rows } = await supabaseAdmin.from("payment_checkouts").select("id")
+      .eq("organization_id", orgId as string).eq("status", "pending").not("session_id", "is", null)
+      .gte("created_at", since).order("created_at", { ascending: false }).limit(10);
+    const { reconcileCheckout } = await import("@/lib/bkapay.server");
+    let activated = false;
+    for (const r of rows ?? []) if ((await reconcileCheckout(r.id)) === "activated") activated = true;
+    return { activated };
   });
