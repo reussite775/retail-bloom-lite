@@ -4,7 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { BadgeCheck, Check, Clock, Crown, Loader2, Sparkles } from "lucide-react";
 import { toast } from "sonner";
-import { startCheckout } from "@/lib/payments.functions";
+import { confirmMyCheckouts, startCheckout } from "@/lib/payments.functions";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
 import { profileQuery } from "@/lib/data";
@@ -53,12 +53,21 @@ function Subscription() {
     if (q.get("cancelled")) toast.info("Paiement annulé. Vous pouvez réessayer.");
     else { setPending(id); toast.info("Paiement en cours de confirmation…"); }
   }, []);
-  // While a payment is pending, refresh the shop status so activation shows up automatically.
+  // Ask the server to confirm pending payments with BkaPay (official status API), then refresh the shop status.
+  const confirm = useServerFn(confirmMyCheckouts);
   useEffect(() => {
-    if (!pending) return;
-    const t = setInterval(() => qc.invalidateQueries({ queryKey: profileQuery(session!.user.id).queryKey }), 5000);
-    return () => clearInterval(t);
-  }, [pending, qc, session]);
+    let stop = false;
+    const run = async () => {
+      const r = await confirm().catch(() => null);
+      if (stop) return;
+      if (r?.activated) { setPending(null); toast.success("Paiement confirmé : abonnement activé !"); }
+      qc.invalidateQueries({ queryKey: profileQuery(session!.user.id).queryKey });
+    };
+    run();
+    if (!pending) return () => { stop = true; };
+    const t = setInterval(run, 8000);
+    return () => { stop = true; clearInterval(t); };
+  }, [pending, qc, session, confirm]);
   const now = Date.now();
   const active = !!p?.subscription_active && (!p.subscription_ends_at || new Date(p.subscription_ends_at).getTime() > now);
   const daysLeft = p ? Math.ceil((new Date(p.trial_ends_at).getTime() - now) / 86400000) : 0;
