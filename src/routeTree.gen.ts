@@ -33,6 +33,7 @@ import { Route as AdminRelancesRouteImport } from './routes/admin.relances'
 import { Route as AdminStatistiquesRouteImport } from './routes/admin.statistiques'
 import { Route as AdminUtilisateursRouteImport } from './routes/admin.utilisateurs'
 import { Route as ApiAssistantRouteImport } from './routes/api/assistant'
+import { Route as ApiPublicBkapayReconcileRouteImport } from './routes/api/public/bkapay/reconcile'
 import { Route as ApiPublicBkapayWebhookRouteImport } from './routes/api/public/bkapay/webhook'
 
 const IndexRoute = IndexRouteImport.update({
@@ -154,6 +155,12 @@ const ApiAssistantRoute = ApiAssistantRouteImport.update({
   path: '/api/assistant',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicBkapayReconcileRoute =
+  ApiPublicBkapayReconcileRouteImport.update({
+    id: '/api/public/bkapay/reconcile',
+    path: '/api/public/bkapay/reconcile',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicBkapayWebhookRoute = ApiPublicBkapayWebhookRouteImport.update({
   id: '/api/public/bkapay/webhook',
   path: '/api/public/bkapay/webhook',
@@ -184,6 +191,7 @@ export interface FileRoutesByFullPath {
   '/admin/utilisateurs': typeof AdminUtilisateursRoute
   '/api/assistant': typeof ApiAssistantRoute
   '/admin/': typeof AdminIndexRoute
+  '/api/public/bkapay/reconcile': typeof ApiPublicBkapayReconcileRoute
   '/api/public/bkapay/webhook': typeof ApiPublicBkapayWebhookRoute
 }
 export interface FileRoutesByTo {
@@ -209,6 +217,7 @@ export interface FileRoutesByTo {
   '/admin/utilisateurs': typeof AdminUtilisateursRoute
   '/api/assistant': typeof ApiAssistantRoute
   '/admin': typeof AdminIndexRoute
+  '/api/public/bkapay/reconcile': typeof ApiPublicBkapayReconcileRoute
   '/api/public/bkapay/webhook': typeof ApiPublicBkapayWebhookRoute
 }
 export interface FileRoutesById {
@@ -237,6 +246,7 @@ export interface FileRoutesById {
   '/admin/utilisateurs': typeof AdminUtilisateursRoute
   '/api/assistant': typeof ApiAssistantRoute
   '/admin/': typeof AdminIndexRoute
+  '/api/public/bkapay/reconcile': typeof ApiPublicBkapayReconcileRoute
   '/api/public/bkapay/webhook': typeof ApiPublicBkapayWebhookRoute
 }
 export interface FileRouteTypes {
@@ -265,6 +275,7 @@ export interface FileRouteTypes {
     | '/admin/utilisateurs'
     | '/api/assistant'
     | '/admin/'
+    | '/api/public/bkapay/reconcile'
     | '/api/public/bkapay/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -290,6 +301,7 @@ export interface FileRouteTypes {
     | '/admin/utilisateurs'
     | '/api/assistant'
     | '/admin'
+    | '/api/public/bkapay/reconcile'
     | '/api/public/bkapay/webhook'
   id:
     | '__root__'
@@ -317,6 +329,7 @@ export interface FileRouteTypes {
     | '/admin/utilisateurs'
     | '/api/assistant'
     | '/admin/'
+    | '/api/public/bkapay/reconcile'
     | '/api/public/bkapay/webhook'
   fileRoutesById: FileRoutesById
 }
@@ -327,6 +340,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   ApiAssistantRoute: typeof ApiAssistantRoute
+  ApiPublicBkapayReconcileRoute: typeof ApiPublicBkapayReconcileRoute
   ApiPublicBkapayWebhookRoute: typeof ApiPublicBkapayWebhookRoute
 }
 
@@ -500,6 +514,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAssistantRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/bkapay/reconcile': {
+      id: '/api/public/bkapay/reconcile'
+      path: '/api/public/bkapay/reconcile'
+      fullPath: '/api/public/bkapay/reconcile'
+      preLoaderRoute: typeof ApiPublicBkapayReconcileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/bkapay/webhook': {
       id: '/api/public/bkapay/webhook'
       path: '/api/public/bkapay/webhook'
@@ -569,6 +590,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   ApiAssistantRoute: ApiAssistantRoute,
+  ApiPublicBkapayReconcileRoute: ApiPublicBkapayReconcileRoute,
   ApiPublicBkapayWebhookRoute: ApiPublicBkapayWebhookRoute,
 }
 export const routeTree = rootRouteImport
