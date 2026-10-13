@@ -45,6 +45,17 @@ export const weekSalesQuery = queryOptions({
   },
 });
 
+export const monthSalesQuery = queryOptions({
+  queryKey: ["sales", "month"],
+  queryFn: async () => {
+    const d = startOfToday();
+    d.setDate(1);
+    const { data, error } = await supabase.from("sales").select("total, profit, created_at").gte("created_at", d.toISOString()).limit(10000);
+    if (error) throw error;
+    return data;
+  },
+});
+
 export const customersQuery = queryOptions({
   queryKey: ["customers"],
   queryFn: async () => {

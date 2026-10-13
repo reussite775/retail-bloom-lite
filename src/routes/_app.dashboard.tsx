@@ -1,9 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { levelOf, stockBadge } from "@/lib/stock";
 import { useQuery } from "@tanstack/react-query";
-import { AlertTriangle, Package, Receipt, TrendingUp, Wallet } from "lucide-react";
+import { AlertTriangle, HandCoins, Package, Receipt, TrendingUp, Wallet } from "lucide-react";
 import { money, startOfToday } from "@/lib/format";
-import { productsQuery, todaySalesQuery, weekSalesQuery } from "@/lib/data";
+import { customersQuery, expensesQuery, monthSalesQuery, productsQuery, todaySalesQuery, weekSalesQuery } from "@/lib/data";
 import { InstallPrompt } from "@/components/install-prompt";
 
 export const Route = createFileRoute("/_app/dashboard")({
@@ -22,6 +22,9 @@ function Dashboard() {
   const today = useQuery(todaySalesQuery);
   const week = useQuery(weekSalesQuery);
   const products = useQuery(productsQuery);
+  const month = useQuery(monthSalesQuery);
+  const expenses = useQuery({ ...expensesQuery, retry: false }); // admins only (RLS)
+  const customers = useQuery(customersQuery);
 
   const sales = today.data ?? [];
   const revenue = sales.reduce((s, x) => s + Number(x.total), 0);
@@ -29,6 +32,14 @@ function Dashboard() {
   const prods = products.data ?? [];
   const low = prods.filter((p) => levelOf(p) !== "ok");
   const stockValue = prods.reduce((s, p) => s + p.stock * Number(p.purchase_price), 0);
+
+  const monthStart = startOfToday(); monthStart.setDate(1);
+  const mSales = month.data ?? [];
+  const mRevenue = mSales.reduce((s, x) => s + Number(x.total), 0);
+  const mProfit = mSales.reduce((s, x) => s + Number(x.profit), 0);
+  const mExpenses = (expenses.data ?? []).filter((e) => new Date(e.spent_on) >= new Date(monthStart.toDateString()))
+    .reduce((s, e) => s + Number(e.amount), 0);
+  const owed = (customers.data ?? []).reduce((s, c) => s + Math.max(0, c.owed), 0);
 
   const days = Array.from({ length: 7 }, (_, i) => {
     const d = startOfToday();
@@ -45,7 +56,11 @@ function Dashboard() {
     { label: "Bénéfice du jour", value: money(profit), icon: TrendingUp },
     { label: "Ventes du jour", value: String(sales.length), icon: Receipt },
     { label: "Valeur du stock", value: money(stockValue), icon: Package },
-  ];
+    { label: "Chiffre d'affaires du mois", value: money(mRevenue), icon: Wallet },
+    { label: `Ventes du mois`, value: String(mSales.length), icon: Receipt },
+    ...(expenses.isSuccess ? [{ label: "Bénéfice net du mois", value: money(mProfit - mExpenses), icon: TrendingUp, hint: `Dépenses : ${money(mExpenses)}` }] : [{ label: "Bénéfice du mois", value: money(mProfit), icon: TrendingUp }]),
+    { label: "Crédits clients à recouvrer", value: money(owed), icon: HandCoins },
+  ] as { label: string; value: string; icon: typeof Wallet; big?: boolean; hint?: string }[];
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
@@ -62,6 +77,7 @@ function Dashboard() {
               <s.icon className="h-5 w-5 opacity-80" />
             </div>
             <p className="mt-3 font-display text-2xl font-extrabold tabular">{s.value}</p>
+            {s.hint && <p className="mt-1 text-xs text-muted-foreground">{s.hint}</p>}
           </div>
         ))}
       </div>
