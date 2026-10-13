@@ -77,6 +77,7 @@ function Dashboard() {
               <s.icon className="h-5 w-5 opacity-80" />
             </div>
             <p className="mt-3 font-display text-2xl font-extrabold tabular">{s.value}</p>
+            {s.hint && <p className="mt-1 text-xs text-muted-foreground">{s.hint}</p>}
           </div>
         ))}
       </div>
