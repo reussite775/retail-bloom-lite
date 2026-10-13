@@ -1,7 +1,7 @@
 import { createFileRoute, Link, Outlet, useLocation, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { BarChart3, BookUser, Receipt, Boxes, Crown, CloudOff, History, RefreshCw, UserCog, Clock, CreditCard, Lock, LogOut, Settings, ShoppingCart, Store , Lightbulb, Truck, Gift, Menu } from "lucide-react";
+import { BarChart3, BookUser, Receipt, Boxes, Crown, CloudOff, History, RefreshCw, UserCog, Clock, CreditCard, Lock, LogOut, Settings, ShoppingCart, Store , Lightbulb, Truck, Gift, Menu, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
@@ -22,6 +22,7 @@ const nav = [
   { to: "/produits", label: "Produits & stocks", icon: Boxes, admin: true },
   { to: "/credits", label: "Carnet de crédits", icon: BookUser, admin: false },
   { to: "/commandes", label: "Commandes en ligne", icon: Truck, admin: false, online: true },
+  { to: "/ecommerce", label: "E-commerce", icon: Globe, admin: true },
   { to: "/depenses", label: "Dépenses", icon: Receipt, admin: true },
   { to: "/assistant", label: "Conseiller IA", icon: Lightbulb, admin: true },
   { to: "/abonnement", label: "Abonnement", icon: CreditCard, admin: true },

@@ -21,6 +21,7 @@ import { Route as AppCommandesRouteImport } from './routes/_app.commandes'
 import { Route as AppCreditsRouteImport } from './routes/_app.credits'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
 import { Route as AppDepensesRouteImport } from './routes/_app.depenses'
+import { Route as AppEcommerceRouteImport } from './routes/_app.ecommerce'
 import { Route as AppEquipeRouteImport } from './routes/_app.equipe'
 import { Route as AppParametresRouteImport } from './routes/_app.parametres'
 import { Route as AppParrainageRouteImport } from './routes/_app.parrainage'
@@ -93,6 +94,11 @@ const AppDashboardRoute = AppDashboardRouteImport.update({
 const AppDepensesRoute = AppDepensesRouteImport.update({
   id: '/depenses',
   path: '/depenses',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppEcommerceRoute = AppEcommerceRouteImport.update({
+  id: '/ecommerce',
+  path: '/ecommerce',
   getParentRoute: () => AppRoute,
 } as any)
 const AppEquipeRoute = AppEquipeRouteImport.update({
@@ -179,6 +185,7 @@ export interface FileRoutesByFullPath {
   '/credits': typeof AppCreditsRoute
   '/dashboard': typeof AppDashboardRoute
   '/depenses': typeof AppDepensesRoute
+  '/ecommerce': typeof AppEcommerceRoute
   '/equipe': typeof AppEquipeRoute
   '/parametres': typeof AppParametresRoute
   '/parrainage': typeof AppParrainageRoute
@@ -205,6 +212,7 @@ export interface FileRoutesByTo {
   '/credits': typeof AppCreditsRoute
   '/dashboard': typeof AppDashboardRoute
   '/depenses': typeof AppDepensesRoute
+  '/ecommerce': typeof AppEcommerceRoute
   '/equipe': typeof AppEquipeRoute
   '/parametres': typeof AppParametresRoute
   '/parrainage': typeof AppParrainageRoute
@@ -234,6 +242,7 @@ export interface FileRoutesById {
   '/_app/credits': typeof AppCreditsRoute
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/depenses': typeof AppDepensesRoute
+  '/_app/ecommerce': typeof AppEcommerceRoute
   '/_app/equipe': typeof AppEquipeRoute
   '/_app/parametres': typeof AppParametresRoute
   '/_app/parrainage': typeof AppParrainageRoute
@@ -263,6 +272,7 @@ export interface FileRouteTypes {
     | '/credits'
     | '/dashboard'
     | '/depenses'
+    | '/ecommerce'
     | '/equipe'
     | '/parametres'
     | '/parrainage'
@@ -289,6 +299,7 @@ export interface FileRouteTypes {
     | '/credits'
     | '/dashboard'
     | '/depenses'
+    | '/ecommerce'
     | '/equipe'
     | '/parametres'
     | '/parrainage'
@@ -317,6 +328,7 @@ export interface FileRouteTypes {
     | '/_app/credits'
     | '/_app/dashboard'
     | '/_app/depenses'
+    | '/_app/ecommerce'
     | '/_app/equipe'
     | '/_app/parametres'
     | '/_app/parrainage'
@@ -430,6 +442,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppDepensesRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/ecommerce': {
+      id: '/_app/ecommerce'
+      path: '/ecommerce'
+      fullPath: '/ecommerce'
+      preLoaderRoute: typeof AppEcommerceRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/equipe': {
       id: '/_app/equipe'
       path: '/equipe'
@@ -539,6 +558,7 @@ interface AppRouteChildren {
   AppCreditsRoute: typeof AppCreditsRoute
   AppDashboardRoute: typeof AppDashboardRoute
   AppDepensesRoute: typeof AppDepensesRoute
+  AppEcommerceRoute: typeof AppEcommerceRoute
   AppEquipeRoute: typeof AppEquipeRoute
   AppParametresRoute: typeof AppParametresRoute
   AppParrainageRoute: typeof AppParrainageRoute
@@ -554,6 +574,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppCreditsRoute: AppCreditsRoute,
   AppDashboardRoute: AppDashboardRoute,
   AppDepensesRoute: AppDepensesRoute,
+  AppEcommerceRoute: AppEcommerceRoute,
   AppEquipeRoute: AppEquipeRoute,
   AppParametresRoute: AppParametresRoute,
   AppParrainageRoute: AppParrainageRoute,
