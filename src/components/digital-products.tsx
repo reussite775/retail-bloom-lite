@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { money } from "@/lib/format";
-import type { Tables } from "@/integrations/supabase/types";
+import type { Tables, TablesUpdate } from "@/integrations/supabase/types";
 
 type DP = Tables<"digital_products"> & { coverUrl?: string | null };
 
@@ -48,7 +48,7 @@ export function DigitalProducts({ shopId }: { shopId: string }) {
       if (!title) throw new Error("Le titre est requis");
       if (cover && !cover.type.startsWith("image/")) throw new Error("La couverture doit être une image");
       const id = editing?.id ?? crypto.randomUUID();
-      const row: Partial<DP> = { title, description: form.description.trim(), price: Math.max(0, Number(form.price) || 0) };
+      const row: TablesUpdate<"digital_products"> = { title, description: form.description.trim(), price: Math.max(0, Number(form.price) || 0) };
       if (cover) {
         const path = `${shopId}/${id}/cover-${Date.now()}.${ext(cover)}`;
         const { error } = await supabase.storage.from("digital-covers").upload(path, cover, { contentType: cover.type });
@@ -96,7 +96,7 @@ export function DigitalProducts({ shopId }: { shopId: string }) {
   const download = async (p: DP) => {
     if (!p.file_path) return;
     const { data: s, error } = await supabase.storage.from("digital-files").createSignedUrl(p.file_path, 60, { download: p.file_name ?? true });
-    if (error || !s) return toast.error("Fichier inaccessible");
+    if (error || !s) { toast.error("Fichier inaccessible"); return; }
     window.open(s.signedUrl, "_blank");
   };
 
