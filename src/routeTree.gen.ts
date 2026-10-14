@@ -34,6 +34,7 @@ import { Route as AdminRelancesRouteImport } from './routes/admin.relances'
 import { Route as AdminStatistiquesRouteImport } from './routes/admin.statistiques'
 import { Route as AdminUtilisateursRouteImport } from './routes/admin.utilisateurs'
 import { Route as ApiAssistantRouteImport } from './routes/api/assistant'
+import { Route as PProductIdRouteImport } from './routes/p.$productId'
 import { Route as ApiPublicBkapayReconcileRouteImport } from './routes/api/public/bkapay/reconcile'
 import { Route as ApiPublicBkapayWebhookRouteImport } from './routes/api/public/bkapay/webhook'
 
@@ -161,6 +162,11 @@ const ApiAssistantRoute = ApiAssistantRouteImport.update({
   path: '/api/assistant',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PProductIdRoute = PProductIdRouteImport.update({
+  id: '/p/$productId',
+  path: '/p/$productId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicBkapayReconcileRoute =
   ApiPublicBkapayReconcileRouteImport.update({
     id: '/api/public/bkapay/reconcile',
@@ -197,6 +203,7 @@ export interface FileRoutesByFullPath {
   '/admin/statistiques': typeof AdminStatistiquesRoute
   '/admin/utilisateurs': typeof AdminUtilisateursRoute
   '/api/assistant': typeof ApiAssistantRoute
+  '/p/$productId': typeof PProductIdRoute
   '/admin/': typeof AdminIndexRoute
   '/api/public/bkapay/reconcile': typeof ApiPublicBkapayReconcileRoute
   '/api/public/bkapay/webhook': typeof ApiPublicBkapayWebhookRoute
@@ -224,6 +231,7 @@ export interface FileRoutesByTo {
   '/admin/statistiques': typeof AdminStatistiquesRoute
   '/admin/utilisateurs': typeof AdminUtilisateursRoute
   '/api/assistant': typeof ApiAssistantRoute
+  '/p/$productId': typeof PProductIdRoute
   '/admin': typeof AdminIndexRoute
   '/api/public/bkapay/reconcile': typeof ApiPublicBkapayReconcileRoute
   '/api/public/bkapay/webhook': typeof ApiPublicBkapayWebhookRoute
@@ -254,6 +262,7 @@ export interface FileRoutesById {
   '/admin/statistiques': typeof AdminStatistiquesRoute
   '/admin/utilisateurs': typeof AdminUtilisateursRoute
   '/api/assistant': typeof ApiAssistantRoute
+  '/p/$productId': typeof PProductIdRoute
   '/admin/': typeof AdminIndexRoute
   '/api/public/bkapay/reconcile': typeof ApiPublicBkapayReconcileRoute
   '/api/public/bkapay/webhook': typeof ApiPublicBkapayWebhookRoute
@@ -284,6 +293,7 @@ export interface FileRouteTypes {
     | '/admin/statistiques'
     | '/admin/utilisateurs'
     | '/api/assistant'
+    | '/p/$productId'
     | '/admin/'
     | '/api/public/bkapay/reconcile'
     | '/api/public/bkapay/webhook'
@@ -311,6 +321,7 @@ export interface FileRouteTypes {
     | '/admin/statistiques'
     | '/admin/utilisateurs'
     | '/api/assistant'
+    | '/p/$productId'
     | '/admin'
     | '/api/public/bkapay/reconcile'
     | '/api/public/bkapay/webhook'
@@ -340,6 +351,7 @@ export interface FileRouteTypes {
     | '/admin/statistiques'
     | '/admin/utilisateurs'
     | '/api/assistant'
+    | '/p/$productId'
     | '/admin/'
     | '/api/public/bkapay/reconcile'
     | '/api/public/bkapay/webhook'
@@ -352,6 +364,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   ApiAssistantRoute: typeof ApiAssistantRoute
+  PProductIdRoute: typeof PProductIdRoute
   ApiPublicBkapayReconcileRoute: typeof ApiPublicBkapayReconcileRoute
   ApiPublicBkapayWebhookRoute: typeof ApiPublicBkapayWebhookRoute
 }
@@ -533,6 +546,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAssistantRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/p/$productId': {
+      id: '/p/$productId'
+      path: '/p/$productId'
+      fullPath: '/p/$productId'
+      preLoaderRoute: typeof PProductIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/bkapay/reconcile': {
       id: '/api/public/bkapay/reconcile'
       path: '/api/public/bkapay/reconcile'
@@ -611,6 +631,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   ApiAssistantRoute: ApiAssistantRoute,
+  PProductIdRoute: PProductIdRoute,
   ApiPublicBkapayReconcileRoute: ApiPublicBkapayReconcileRoute,
   ApiPublicBkapayWebhookRoute: ApiPublicBkapayWebhookRoute,
 }
