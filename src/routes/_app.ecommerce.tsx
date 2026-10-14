@@ -2,7 +2,9 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Boxes, Globe, Package, Truck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { productsQuery } from "@/lib/data";
+import { membershipQuery, productsQuery } from "@/lib/data";
+import { useAuth } from "@/lib/auth";
+import { DigitalProducts } from "@/components/digital-products";
 import { money } from "@/lib/format";
 
 export const Route = createFileRoute("/_app/ecommerce")({
@@ -30,6 +32,8 @@ const ordersSummaryQuery = {
 };
 
 function Ecommerce() {
+  const { session } = useAuth();
+  const member = useQuery({ ...membershipQuery(session?.user.id ?? ""), enabled: !!session });
   const products = useQuery(productsQuery);
   const orders = useQuery(ordersSummaryQuery);
   const prods = products.data ?? [];
@@ -75,6 +79,7 @@ function Ecommerce() {
           <Link to="/commandes" className="mt-4 inline-block text-sm font-medium text-primary hover:underline">Voir les commandes</Link>
         </div>
       </div>
+      {member.data?.shopId && <DigitalProducts shopId={member.data.shopId} />}
     </div>
   );
 }
