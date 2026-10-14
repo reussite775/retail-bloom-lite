@@ -187,6 +187,59 @@ export type Database = {
           },
         ]
       }
+      digital_products: {
+        Row: {
+          cover_path: string | null
+          created_at: string
+          created_by: string | null
+          description: string
+          file_name: string | null
+          file_path: string | null
+          id: string
+          organization_id: string
+          price: number
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          cover_path?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          file_name?: string | null
+          file_path?: string | null
+          id?: string
+          organization_id: string
+          price?: number
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          cover_path?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          file_name?: string | null
+          file_path?: string | null
+          id?: string
+          organization_id?: string
+          price?: number
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "digital_products_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       expenses: {
         Row: {
           amount: number
