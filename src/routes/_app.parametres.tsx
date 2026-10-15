@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -78,6 +78,20 @@ function Settings() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const navigate = useNavigate();
+  const setSpace = useMutation({
+    mutationFn: async (t: "physical" | "digital") => {
+      const { error } = await supabase.from("organizations").update({ account_type: t }).eq("id", uid);
+      if (error) throw error;
+      return t;
+    },
+    onSuccess: async (t) => {
+      toast.success("Espace enregistré");
+      await qc.invalidateQueries({ queryKey: ["profile"] });
+      navigate({ to: t === "digital" ? "/studio" : "/dashboard" });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
   const setMode = useMutation({
     mutationFn: async (mode: "physical" | "online") => {
       const { error } = await supabase.from("organizations").update({ business_mode: mode }).eq("id", uid);
@@ -122,6 +136,24 @@ function Settings() {
       </div>
       <div className="space-y-4 rounded-xl border bg-card p-6">
         <div>
+          <h2 className="text-lg font-bold">Espace de travail</h2>
+          <p className="text-sm text-muted-foreground">Choisissez l'espace affiché à chaque connexion. Vos données sont conservées dans les deux cas.</p>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2">
+          {([
+            ["physical", "Commerçant physique", "Caisse, stocks, crédits, dépenses"],
+            ["digital", "Créateur numérique", "Produits numériques, ventes, affiliés"],
+          ] as const).map(([v, t, d]) => (
+            <button key={v} type="button" disabled={setSpace.isPending} onClick={() => setSpace.mutate(v)}
+              className={`rounded-lg border p-4 text-left transition-colors ${(p?.account_type ?? "physical") === v ? "border-primary bg-primary-soft" : "hover:bg-muted"}`}>
+              <div className="font-semibold">{t}</div>
+              <div className="text-sm text-muted-foreground">{d}</div>
+            </button>
+          ))}
+        </div>
+      </div>
+      {p?.account_type !== "digital" && <div className="space-y-4 rounded-xl border bg-card p-6">
+        <div>
           <h2 className="text-lg font-bold">Type d'activité</h2>
           <p className="text-sm text-muted-foreground">Le mode Vendeur en ligne ajoute la gestion des commandes et le suivi des livreurs (offre Premium).</p>
         </div>
@@ -140,8 +172,8 @@ function Settings() {
         {p?.business_mode === "online" && !hasPremium(p) && (
           <p className="rounded-lg bg-warning/20 p-3 text-sm">Le module Commandes en ligne nécessite l'offre Premium. Passez à Premium depuis la page Abonnement.</p>
         )}
-      </div>
-      {p?.business_mode === "online" && (
+      </div>}
+      {p?.account_type !== "digital" && p?.business_mode === "online" && (
         <div className="space-y-4 rounded-xl border bg-card p-6">
           <div>
             <h2 className="text-lg font-bold">Zones de livraison</h2>

@@ -26,6 +26,7 @@ import { Route as AppEquipeRouteImport } from './routes/_app.equipe'
 import { Route as AppParametresRouteImport } from './routes/_app.parametres'
 import { Route as AppParrainageRouteImport } from './routes/_app.parrainage'
 import { Route as AppProduitsRouteImport } from './routes/_app.produits'
+import { Route as AppStudioRouteImport } from './routes/_app.studio'
 import { Route as AppVentesRouteImport } from './routes/_app.ventes'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminBoutiquesRouteImport } from './routes/admin.boutiques'
@@ -35,6 +36,10 @@ import { Route as AdminStatistiquesRouteImport } from './routes/admin.statistiqu
 import { Route as AdminUtilisateursRouteImport } from './routes/admin.utilisateurs'
 import { Route as ApiAssistantRouteImport } from './routes/api/assistant'
 import { Route as PProductIdRouteImport } from './routes/p.$productId'
+import { Route as AppStudioIndexRouteImport } from './routes/_app.studio.index'
+import { Route as AppStudioAffiliesRouteImport } from './routes/_app.studio.affilies'
+import { Route as AppStudioProduitsRouteImport } from './routes/_app.studio.produits'
+import { Route as AppStudioVentesRouteImport } from './routes/_app.studio.ventes'
 import { Route as ApiPublicBkapayReconcileRouteImport } from './routes/api/public/bkapay/reconcile'
 import { Route as ApiPublicBkapayWebhookRouteImport } from './routes/api/public/bkapay/webhook'
 
@@ -122,6 +127,11 @@ const AppProduitsRoute = AppProduitsRouteImport.update({
   path: '/produits',
   getParentRoute: () => AppRoute,
 } as any)
+const AppStudioRoute = AppStudioRouteImport.update({
+  id: '/studio',
+  path: '/studio',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppVentesRoute = AppVentesRouteImport.update({
   id: '/ventes',
   path: '/ventes',
@@ -167,6 +177,26 @@ const PProductIdRoute = PProductIdRouteImport.update({
   path: '/p/$productId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppStudioIndexRoute = AppStudioIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppStudioRoute,
+} as any)
+const AppStudioAffiliesRoute = AppStudioAffiliesRouteImport.update({
+  id: '/affilies',
+  path: '/affilies',
+  getParentRoute: () => AppStudioRoute,
+} as any)
+const AppStudioProduitsRoute = AppStudioProduitsRouteImport.update({
+  id: '/produits',
+  path: '/produits',
+  getParentRoute: () => AppStudioRoute,
+} as any)
+const AppStudioVentesRoute = AppStudioVentesRouteImport.update({
+  id: '/ventes',
+  path: '/ventes',
+  getParentRoute: () => AppStudioRoute,
+} as any)
 const ApiPublicBkapayReconcileRoute =
   ApiPublicBkapayReconcileRouteImport.update({
     id: '/api/public/bkapay/reconcile',
@@ -196,6 +226,7 @@ export interface FileRoutesByFullPath {
   '/parametres': typeof AppParametresRoute
   '/parrainage': typeof AppParrainageRoute
   '/produits': typeof AppProduitsRoute
+  '/studio': typeof AppStudioRouteWithChildren
   '/ventes': typeof AppVentesRoute
   '/admin/boutiques': typeof AdminBoutiquesRoute
   '/admin/parametres': typeof AdminParametresRoute
@@ -205,6 +236,10 @@ export interface FileRoutesByFullPath {
   '/api/assistant': typeof ApiAssistantRoute
   '/p/$productId': typeof PProductIdRoute
   '/admin/': typeof AdminIndexRoute
+  '/studio/affilies': typeof AppStudioAffiliesRoute
+  '/studio/produits': typeof AppStudioProduitsRoute
+  '/studio/ventes': typeof AppStudioVentesRoute
+  '/studio/': typeof AppStudioIndexRoute
   '/api/public/bkapay/reconcile': typeof ApiPublicBkapayReconcileRoute
   '/api/public/bkapay/webhook': typeof ApiPublicBkapayWebhookRoute
 }
@@ -233,6 +268,10 @@ export interface FileRoutesByTo {
   '/api/assistant': typeof ApiAssistantRoute
   '/p/$productId': typeof PProductIdRoute
   '/admin': typeof AdminIndexRoute
+  '/studio/affilies': typeof AppStudioAffiliesRoute
+  '/studio/produits': typeof AppStudioProduitsRoute
+  '/studio/ventes': typeof AppStudioVentesRoute
+  '/studio': typeof AppStudioIndexRoute
   '/api/public/bkapay/reconcile': typeof ApiPublicBkapayReconcileRoute
   '/api/public/bkapay/webhook': typeof ApiPublicBkapayWebhookRoute
 }
@@ -255,6 +294,7 @@ export interface FileRoutesById {
   '/_app/parametres': typeof AppParametresRoute
   '/_app/parrainage': typeof AppParrainageRoute
   '/_app/produits': typeof AppProduitsRoute
+  '/_app/studio': typeof AppStudioRouteWithChildren
   '/_app/ventes': typeof AppVentesRoute
   '/admin/boutiques': typeof AdminBoutiquesRoute
   '/admin/parametres': typeof AdminParametresRoute
@@ -264,6 +304,10 @@ export interface FileRoutesById {
   '/api/assistant': typeof ApiAssistantRoute
   '/p/$productId': typeof PProductIdRoute
   '/admin/': typeof AdminIndexRoute
+  '/_app/studio/affilies': typeof AppStudioAffiliesRoute
+  '/_app/studio/produits': typeof AppStudioProduitsRoute
+  '/_app/studio/ventes': typeof AppStudioVentesRoute
+  '/_app/studio/': typeof AppStudioIndexRoute
   '/api/public/bkapay/reconcile': typeof ApiPublicBkapayReconcileRoute
   '/api/public/bkapay/webhook': typeof ApiPublicBkapayWebhookRoute
 }
@@ -286,6 +330,7 @@ export interface FileRouteTypes {
     | '/parametres'
     | '/parrainage'
     | '/produits'
+    | '/studio'
     | '/ventes'
     | '/admin/boutiques'
     | '/admin/parametres'
@@ -295,6 +340,10 @@ export interface FileRouteTypes {
     | '/api/assistant'
     | '/p/$productId'
     | '/admin/'
+    | '/studio/affilies'
+    | '/studio/produits'
+    | '/studio/ventes'
+    | '/studio/'
     | '/api/public/bkapay/reconcile'
     | '/api/public/bkapay/webhook'
   fileRoutesByTo: FileRoutesByTo
@@ -323,6 +372,10 @@ export interface FileRouteTypes {
     | '/api/assistant'
     | '/p/$productId'
     | '/admin'
+    | '/studio/affilies'
+    | '/studio/produits'
+    | '/studio/ventes'
+    | '/studio'
     | '/api/public/bkapay/reconcile'
     | '/api/public/bkapay/webhook'
   id:
@@ -344,6 +397,7 @@ export interface FileRouteTypes {
     | '/_app/parametres'
     | '/_app/parrainage'
     | '/_app/produits'
+    | '/_app/studio'
     | '/_app/ventes'
     | '/admin/boutiques'
     | '/admin/parametres'
@@ -353,6 +407,10 @@ export interface FileRouteTypes {
     | '/api/assistant'
     | '/p/$productId'
     | '/admin/'
+    | '/_app/studio/affilies'
+    | '/_app/studio/produits'
+    | '/_app/studio/ventes'
+    | '/_app/studio/'
     | '/api/public/bkapay/reconcile'
     | '/api/public/bkapay/webhook'
   fileRoutesById: FileRoutesById
@@ -490,6 +548,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppProduitsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/studio': {
+      id: '/_app/studio'
+      path: '/studio'
+      fullPath: '/studio'
+      preLoaderRoute: typeof AppStudioRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/ventes': {
       id: '/_app/ventes'
       path: '/ventes'
@@ -553,6 +618,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PProductIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_app/studio/': {
+      id: '/_app/studio/'
+      path: '/'
+      fullPath: '/studio/'
+      preLoaderRoute: typeof AppStudioIndexRouteImport
+      parentRoute: typeof AppStudioRoute
+    }
+    '/_app/studio/affilies': {
+      id: '/_app/studio/affilies'
+      path: '/affilies'
+      fullPath: '/studio/affilies'
+      preLoaderRoute: typeof AppStudioAffiliesRouteImport
+      parentRoute: typeof AppStudioRoute
+    }
+    '/_app/studio/produits': {
+      id: '/_app/studio/produits'
+      path: '/produits'
+      fullPath: '/studio/produits'
+      preLoaderRoute: typeof AppStudioProduitsRouteImport
+      parentRoute: typeof AppStudioRoute
+    }
+    '/_app/studio/ventes': {
+      id: '/_app/studio/ventes'
+      path: '/ventes'
+      fullPath: '/studio/ventes'
+      preLoaderRoute: typeof AppStudioVentesRouteImport
+      parentRoute: typeof AppStudioRoute
+    }
     '/api/public/bkapay/reconcile': {
       id: '/api/public/bkapay/reconcile'
       path: '/api/public/bkapay/reconcile'
@@ -570,6 +663,24 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AppStudioRouteChildren {
+  AppStudioAffiliesRoute: typeof AppStudioAffiliesRoute
+  AppStudioProduitsRoute: typeof AppStudioProduitsRoute
+  AppStudioVentesRoute: typeof AppStudioVentesRoute
+  AppStudioIndexRoute: typeof AppStudioIndexRoute
+}
+
+const AppStudioRouteChildren: AppStudioRouteChildren = {
+  AppStudioAffiliesRoute: AppStudioAffiliesRoute,
+  AppStudioProduitsRoute: AppStudioProduitsRoute,
+  AppStudioVentesRoute: AppStudioVentesRoute,
+  AppStudioIndexRoute: AppStudioIndexRoute,
+}
+
+const AppStudioRouteWithChildren = AppStudioRoute._addFileChildren(
+  AppStudioRouteChildren,
+)
+
 interface AppRouteChildren {
   AppAbonnementRoute: typeof AppAbonnementRoute
   AppAssistantRoute: typeof AppAssistantRoute
@@ -583,6 +694,7 @@ interface AppRouteChildren {
   AppParametresRoute: typeof AppParametresRoute
   AppParrainageRoute: typeof AppParrainageRoute
   AppProduitsRoute: typeof AppProduitsRoute
+  AppStudioRoute: typeof AppStudioRouteWithChildren
   AppVentesRoute: typeof AppVentesRoute
 }
 
@@ -599,6 +711,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppParametresRoute: AppParametresRoute,
   AppParrainageRoute: AppParrainageRoute,
   AppProduitsRoute: AppProduitsRoute,
+  AppStudioRoute: AppStudioRouteWithChildren,
   AppVentesRoute: AppVentesRoute,
 }
 
