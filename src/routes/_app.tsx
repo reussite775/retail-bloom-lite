@@ -22,13 +22,22 @@ const nav = [
   { to: "/produits", label: "Produits & stocks", icon: Boxes, admin: true },
   { to: "/credits", label: "Carnet de crédits", icon: BookUser, admin: false },
   { to: "/commandes", label: "Commandes en ligne", icon: Truck, admin: false, online: true },
-  { to: "/ecommerce", label: "E-commerce", icon: Globe, admin: true },
   { to: "/depenses", label: "Dépenses", icon: Receipt, admin: true },
   { to: "/assistant", label: "Conseiller IA", icon: Lightbulb, admin: true },
   { to: "/abonnement", label: "Abonnement", icon: CreditCard, admin: true },
   { to: "/parametres", label: "Paramètres", icon: Settings, admin: true },
   { to: "/equipe", label: "Équipe & accès", icon: UserCog, admin: true },
   { to: "/parrainage", label: "Parrainage", icon: Gift, admin: true },
+] as const;
+
+// Digital creator space: separate navigation, no physical-commerce modules.
+const digitalNav = [
+  { to: "/studio", label: "Accueil", icon: Home, admin: true },
+  { to: "/studio/produits", label: "Produits", icon: FileText, admin: true },
+  { to: "/studio/ventes", label: "Vente", icon: Globe, admin: true },
+  { to: "/studio/affilies", label: "Affiliés", icon: Users, admin: true },
+  { to: "/abonnement", label: "Abonnement", icon: CreditCard, admin: true },
+  { to: "/parametres", label: "Paramètres", icon: Settings, admin: true },
 ] as const;
 
 function AppLayout() {
@@ -48,8 +57,17 @@ function AppLayout() {
   const online = useOnline();
   const [menuOpen, setMenuOpen] = useState(false);
   const pending = usePendingSales();
-  const allowed = nav.filter((n) => (isAdmin || !n.admin) && (!("online" in n) || profile.data?.business_mode === "online"));
-  const forbidden = !!member.data && !isAdmin && !allowed.some((n) => pathname.startsWith(n.to));
+  const digital = profile.data?.account_type === "digital";
+  const allowed = digital
+    ? digitalNav.filter((n) => isAdmin || !n.admin)
+    : nav.filter((n) => (isAdmin || !n.admin) && (!("online" in n) || profile.data?.business_mode === "online"));
+  const inStudio = pathname.startsWith("/studio");
+  const wrongSpace = !!profile.data && (digital ? !allowed.some((n) => pathname.startsWith(n.to)) : inStudio);
+  const forbidden = !!member.data && ((!isAdmin && !allowed.some((n) => pathname.startsWith(n.to))) || wrongSpace);
+
+  useEffect(() => {
+    if (forbidden) navigate({ to: digital ? (isAdmin ? "/studio" : "/abonnement") : "/caisse", replace: true });
+  }, [forbidden, digital, isAdmin, navigate]);
 
   useEffect(() => {
     if (forbidden) navigate({ to: "/caisse", replace: true });
