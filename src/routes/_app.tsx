@@ -62,8 +62,8 @@ function AppLayout() {
     ? digitalNav.filter((n) => isAdmin || !n.admin)
     : nav.filter((n) => (isAdmin || !n.admin) && (!("online" in n) || profile.data?.business_mode === "online"));
   const inStudio = pathname.startsWith("/studio");
-  const wrongSpace = !!profile.data && (digital ? !allowed.some((n) => pathname.startsWith(n.to)) : inStudio);
-  const forbidden = !!member.data && ((!isAdmin && !allowed.some((n) => pathname.startsWith(n.to))) || wrongSpace);
+  const wrongSpace = !!profile.data && (digital ? !allowed.some((n) => n.to === "/studio" ? pathname.replace(/\/$/, "") === "/studio" : pathname.startsWith(n.to)) : inStudio);
+  const forbidden = !!member.data && ((!isAdmin && !allowed.some((n) => n.to === "/studio" ? pathname.replace(/\/$/, "") === "/studio" : pathname.startsWith(n.to))) || wrongSpace);
 
   useEffect(() => {
     if (forbidden) navigate({ to: digital ? "/studio" : isAdmin ? "/dashboard" : "/caisse", replace: true });
