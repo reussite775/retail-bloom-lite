@@ -1,7 +1,7 @@
 import { createFileRoute, Link, Outlet, useLocation, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { BarChart3, BookUser, Receipt, Boxes, Crown, CloudOff, History, RefreshCw, UserCog, Clock, CreditCard, Lock, LogOut, Settings, ShoppingCart, Store , Lightbulb, Truck, Gift, Menu, Globe } from "lucide-react";
+import { BarChart3, BookUser, Receipt, Boxes, Crown, CloudOff, History, RefreshCw, UserCog, Clock, CreditCard, Lock, LogOut, Settings, ShoppingCart, Store , Lightbulb, Truck, Gift, Menu, Globe, Home, FileText, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
@@ -32,7 +32,7 @@ const nav = [
 
 // Digital creator space: separate navigation, no physical-commerce modules.
 const digitalNav = [
-  { to: "/studio", label: "Accueil", icon: Home, admin: true },
+  { to: "/studio", label: "Accueil", icon: Home, admin: false },
   { to: "/studio/produits", label: "Produits", icon: FileText, admin: true },
   { to: "/studio/ventes", label: "Vente", icon: Globe, admin: true },
   { to: "/studio/affilies", label: "Affiliés", icon: Users, admin: true },
@@ -66,12 +66,9 @@ function AppLayout() {
   const forbidden = !!member.data && ((!isAdmin && !allowed.some((n) => pathname.startsWith(n.to))) || wrongSpace);
 
   useEffect(() => {
-    if (forbidden) navigate({ to: digital ? (isAdmin ? "/studio" : "/abonnement") : "/caisse", replace: true });
+    if (forbidden) navigate({ to: digital ? "/studio" : isAdmin ? "/dashboard" : "/caisse", replace: true });
   }, [forbidden, digital, isAdmin, navigate]);
 
-  useEffect(() => {
-    if (forbidden) navigate({ to: "/caisse", replace: true });
-  }, [forbidden, navigate]);
 
   useEffect(() => {
     const ref = typeof window !== "undefined" ? localStorage.getItem("boutik_ref") : null;
