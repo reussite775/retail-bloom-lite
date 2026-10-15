@@ -396,6 +396,7 @@ export type Database = {
       }
       organizations: {
         Row: {
+          account_type: string
           address: string
           business_mode: string
           contact: string
@@ -413,6 +414,7 @@ export type Database = {
           trial_ends_at: string
         }
         Insert: {
+          account_type?: string
           address?: string
           business_mode?: string
           contact?: string
@@ -430,6 +432,7 @@ export type Database = {
           trial_ends_at?: string
         }
         Update: {
+          account_type?: string
           address?: string
           business_mode?: string
           contact?: string
