@@ -172,8 +172,8 @@ function Settings() {
         {p?.business_mode === "online" && !hasPremium(p) && (
           <p className="rounded-lg bg-warning/20 p-3 text-sm">Le module Commandes en ligne nécessite l'offre Premium. Passez à Premium depuis la page Abonnement.</p>
         )}
-      </div>
-      {p?.business_mode === "online" && (
+      </div>}
+      {p?.account_type !== "digital" && p?.business_mode === "online" && (
         <div className="space-y-4 rounded-xl border bg-card p-6">
           <div>
             <h2 className="text-lg font-bold">Zones de livraison</h2>
