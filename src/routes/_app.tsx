@@ -1,5 +1,6 @@
 import { createFileRoute, Link, Outlet, useLocation, useNavigate } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { useEffect, useState } from "react";
 import { BarChart3, BookUser, Receipt, Boxes, Crown, CloudOff, History, RefreshCw, UserCog, Clock, CreditCard, Lock, LogOut, Settings, ShoppingCart, Store , Lightbulb, Truck, Gift, Menu, Globe, Home, FileText, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -90,6 +91,7 @@ function AppLayout() {
   const subActive = !!p && p.subscription_active && (!p.subscription_ends_at || new Date(p.subscription_ends_at).getTime() > Date.now());
   const hasAccess = !!p && (subActive || daysLeft > 0);
 
+  if (p && shopId === uid && !p.space_chosen_at) return <WelcomeChoice uid={uid!} />;
   if (!isAdmin && !hasPremium(p)) return <CashierPremiumWall />;
   if (!superAdmin.data && !hasAccess && (!isAdmin || pathname !== "/abonnement")) return <Paywall isAdmin={isAdmin} />;
 
@@ -174,6 +176,45 @@ function AppLayout() {
           {online ? "En ligne" : "Hors ligne"}
         </div>
         <main className="flex-1 p-4 md:p-8"><Outlet /></main>
+      </div>
+    </div>
+  );
+}
+
+function WelcomeChoice({ uid }: { uid: string }) {
+  const qc = useQueryClient();
+  const navigate = useNavigate();
+  const [busy, setBusy] = useState<string | null>(null);
+  const choose = async (t: "physical" | "digital") => {
+    setBusy(t);
+    const { error } = await supabase.from("organizations")
+      .update({ account_type: t, space_chosen_at: new Date().toISOString() }).eq("id", uid);
+    if (error) { setBusy(null); toast.error("Impossible d'enregistrer votre choix. Réessayez."); return; }
+    await qc.invalidateQueries({ queryKey: ["profile", uid] });
+    navigate({ to: t === "digital" ? "/studio" : "/dashboard", replace: true });
+  };
+  const cards = [
+    { t: "physical" as const, icon: Store, title: "Commerçant physique", desc: "Caisse, ventes, produits et stocks, carnet de crédits et dépenses." },
+    { t: "digital" as const, icon: Globe, title: "Créateur numérique", desc: "Produits numériques, ventes et affiliation." },
+  ];
+  return (
+    <div className="grid min-h-screen place-items-center bg-background px-4 py-10">
+      <div className="w-full max-w-3xl text-center">
+        <h1 className="font-display text-3xl font-extrabold">Bienvenue dans GestiPro !</h1>
+        <p className="mt-2 text-lg text-muted-foreground">Quelle activité souhaitez-vous gérer ?</p>
+        <div className="mt-8 grid gap-4 md:grid-cols-2">
+          {cards.map((c) => (
+            <div key={c.t} className="flex flex-col rounded-2xl border bg-card p-6 text-left shadow-sm">
+              <span className="grid h-12 w-12 place-items-center rounded-xl bg-primary-soft text-primary"><c.icon className="h-6 w-6" /></span>
+              <h2 className="mt-4 text-xl font-bold">{c.title}</h2>
+              <p className="mt-1 flex-1 text-muted-foreground">{c.desc}</p>
+              <Button className="mt-6" disabled={!!busy} onClick={() => choose(c.t)}>
+                {busy === c.t ? "Enregistrement…" : "Continuer"}
+              </Button>
+            </div>
+          ))}
+        </div>
+        <p className="mt-6 text-sm text-muted-foreground">Vous pourrez changer d'espace plus tard dans Paramètres.</p>
       </div>
     </div>
   );

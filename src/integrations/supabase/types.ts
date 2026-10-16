@@ -408,6 +408,7 @@ export type Database = {
           plan: string
           referral_code: string
           slogan: string
+          space_chosen_at: string | null
           subscription_active: boolean
           subscription_ends_at: string | null
           subscription_started_at: string | null
@@ -426,6 +427,7 @@ export type Database = {
           plan?: string
           referral_code?: string
           slogan?: string
+          space_chosen_at?: string | null
           subscription_active?: boolean
           subscription_ends_at?: string | null
           subscription_started_at?: string | null
@@ -444,6 +446,7 @@ export type Database = {
           plan?: string
           referral_code?: string
           slogan?: string
+          space_chosen_at?: string | null
           subscription_active?: boolean
           subscription_ends_at?: string | null
           subscription_started_at?: string | null
