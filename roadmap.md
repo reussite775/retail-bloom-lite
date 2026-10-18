@@ -1,4 +1,5 @@
 # Roadmap
+- [x] Corriger les liens produits vers le domaine public ; vrai produit vérifié sans session, brouillons couverts par un test ciblé (aucun brouillon existant). Aucun changement de données ou permissions.
 - [x] Préparer les e-mails de confirmation GestiPro avec le code officiel.
 - [x] Domaine d’envoi vérifié, envoi personnalisé activé ; publication demandée.
 - [ ] Vérifier le parcours avec un vrai code reçu : l’envoi à parcours.test3@boutik-test.app a été rejeté par la messagerie ; attente d’une adresse de test qui reçoit les e-mails.

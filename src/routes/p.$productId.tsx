@@ -13,6 +13,10 @@ export const Route = createFileRoute("/p/$productId")({
       { property: "og:description", content: loaderData?.description?.slice(0, 150) || "Produit numérique vendu avec GestiPro." },
       { property: "og:type", content: "product" },
       { name: "twitter:card", content: "summary" },
+      ...(loaderData?.coverUrl?.startsWith("https://") ? [
+        { property: "og:image", content: loaderData.coverUrl },
+        { name: "twitter:image", content: loaderData.coverUrl },
+      ] : []),
       ...(loaderData ? [] : [{ name: "robots", content: "noindex" }]),
     ],
   }),

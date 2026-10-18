@@ -11,6 +11,8 @@ export const Route = createFileRoute("/")({
       { name: "description", content: "Caisse, stocks et chiffre d'affaires du jour. Essai gratuit 7 jours." },
       { property: "og:title", content: "GestiPro — La gestion simple pour commerçants" },
       { property: "og:description", content: "Caisse, stocks et chiffre d'affaires du jour. Essai gratuit 7 jours." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: Landing,
