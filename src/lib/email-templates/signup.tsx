@@ -94,10 +94,10 @@ const codeStyle = {
   margin: '0 0 25px',
 }
 const button = {
-  backgroundColor: '#000000',
+  backgroundColor: '#2e9e5b',
   color: '#ffffff',
   fontSize: '14px',
-  border: '1px solid #000000',
+  border: '1px solid #2e9e5b',
   borderRadius: '8px',
   padding: '12px 20px',
   textDecoration: 'none',
