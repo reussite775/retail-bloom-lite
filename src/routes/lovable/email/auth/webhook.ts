@@ -35,7 +35,7 @@ export const Route = createFileRoute("/lovable/email/auth/webhook")({
                   siteUrl: SITE_URL,
                   recipient: data.email,
                   confirmationUrl: data.url,
-                  token: data.token ?? undefined,
+                  token: data.token ?? '',
                 }),
             },
             invite: {
