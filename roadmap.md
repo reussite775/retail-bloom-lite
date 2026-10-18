@@ -1,4 +1,5 @@
 # Roadmap
+- [ ] Corriger les liens produits vers le domaine public et vérifier l’accès anonyme, sans changer les permissions ni les données.
 - [x] Préparer les e-mails de confirmation GestiPro avec le code officiel.
 - [x] Domaine d’envoi vérifié, envoi personnalisé activé ; publication demandée.
 - [ ] Vérifier le parcours avec un vrai code reçu : l’envoi à parcours.test3@boutik-test.app a été rejeté par la messagerie ; attente d’une adresse de test qui reçoit les e-mails.

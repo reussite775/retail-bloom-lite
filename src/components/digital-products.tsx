@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { money } from "@/lib/format";
+import { digitalProductLink } from "@/lib/digital-links";
 import type { Tables, TablesUpdate } from "@/integrations/supabase/types";
 
 type DP = Tables<"digital_products"> & { coverUrl?: string | null };
@@ -100,7 +101,7 @@ export function DigitalProducts({ shopId }: { shopId: string }) {
     window.open(s.signedUrl, "_blank");
   };
 
-  const link = (p: DP) => `${window.location.origin}/p/${p.id}`;
+  const link = (p: DP) => digitalProductLink(p.id);
   const copy = async (p: DP) => { await navigator.clipboard.writeText(link(p)); toast.success("Lien copié"); };
 
   const openNew = () => { setEditing(null); setForm({ title: "", description: "", price: "" }); setCover(null); setFile(null); setOpen(true); };
