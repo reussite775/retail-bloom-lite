@@ -17,6 +17,7 @@ interface SignupEmailProps {
   siteUrl: string
   recipient: string
   confirmationUrl: string
+  token?: string
 }
 
 export const SignupEmail = ({
@@ -24,34 +25,40 @@ export const SignupEmail = ({
   siteUrl,
   recipient,
   confirmationUrl,
+  token,
 }: SignupEmailProps) => (
-  <Html lang="en" dir="ltr">
+  <Html lang="fr" dir="ltr">
     <Head>
       <style>{darkModeCss}</style>
     </Head>
-    <Preview>Confirm your email for {siteName}</Preview>
+    <Preview>Votre code de confirmation {siteName}</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Heading style={h1}>Confirm your email</Heading>
+        <Heading style={h1}>Bienvenue dans {siteName} !</Heading>
         <Text style={text}>
-          Thanks for signing up for{' '}
+          Merci de votre inscription à{' '}
           <Link href={siteUrl} style={link}>
             <strong>{siteName}</strong>
           </Link>
           !
         </Text>
         <Text style={text}>
-          Please confirm your email address (
+          Pour confirmer votre adresse e-mail (
           <Link href={`mailto:${recipient}`} style={link}>
             {recipient}
           </Link>
-          ) by clicking the button below:
+          ), saisissez ce code dans GestiPro :
         </Text>
-        <Button className="dm-btn" style={button} href={confirmationUrl}>
-          Verify Email
-        </Button>
+        {token ? (
+          <Text style={codeStyle}>{token}</Text>
+        ) : (
+          <Button className="dm-btn" style={button} href={confirmationUrl}>
+            Confirmer mon adresse e-mail
+          </Button>
+        )}
+        <Text style={text}>Ce code est personnel. Ne le communiquez à personne. S’il a expiré, demandez un nouveau code depuis GestiPro.</Text>
         <Text style={footer}>
-          If you didn't create an account, you can safely ignore this email.
+          Si vous n’avez pas créé de compte GestiPro, ignorez cet e-mail.
         </Text>
       </Container>
     </Body>
@@ -75,6 +82,17 @@ const text = {
   margin: '0 0 25px',
 }
 const link = { color: 'inherit', textDecoration: 'underline' }
+const codeStyle = {
+  fontFamily: 'Arial, sans-serif',
+  fontSize: '32px',
+  fontWeight: 'bold' as const,
+  color: '#2e9e5b',
+  backgroundColor: '#edf7f0',
+  borderRadius: '8px',
+  padding: '20px',
+  textAlign: 'center' as const,
+  margin: '0 0 25px',
+}
 const button = {
   backgroundColor: '#000000',
   color: '#ffffff',

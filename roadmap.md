@@ -1,4 +1,6 @@
 # Roadmap
+- [x] Préparer les e-mails de confirmation GestiPro avec le code officiel.
+- [ ] Activer l’envoi personnalisé : attente de vérification DNS et publication.
 - [x] Multi-tenant: organizations, organization_members, expenses, debts views, strict RLS
 - [x] /admin (overview, utilisateurs + suspension, statistiques, boutiques)
 - [x] Page Dépenses

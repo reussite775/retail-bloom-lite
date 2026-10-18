@@ -18,7 +18,7 @@ const EMAIL_TEMPLATES: Record<string, React.ComponentType<any>> = {
 }
 
 // Configuration
-const SITE_NAME = "Commerce Stream"
+const SITE_NAME = "GestiPro"
 const ROOT_DOMAIN = "getcommercestream.app"
 
 // Sample data for preview mode ONLY (not used in actual email sending).
@@ -34,6 +34,7 @@ const SAMPLE_DATA: Record<string, object> = {
     siteUrl: SAMPLE_PROJECT_URL,
     recipient: SAMPLE_EMAIL,
     confirmationUrl: SAMPLE_PROJECT_URL,
+    token: '123456',
   },
   magiclink: {
     siteName: SITE_NAME,
