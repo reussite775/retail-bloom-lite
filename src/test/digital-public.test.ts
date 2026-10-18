@@ -23,7 +23,7 @@ vi.mock("@supabase/supabase-js", () => ({
         select: (columns: string) => { db.select(table, columns); return query; },
         eq: (column: string, value: unknown) => { db.filters[column] = value; return query; },
         maybeSingle: async () => ({ data: table === "digital_products" &&
-          db.product?.id === db.filters.id && db.product?.status === db.filters.status
+          db.product?.["id"] === db.filters["id"] && db.product?.["status"] === db.filters["status"]
           ? db.product : null }),
       };
       return query;
@@ -57,6 +57,6 @@ describe("Public digital products", () => {
   it("never returns a draft to an anonymous visitor", async () => {
     db.product = { ...db.product, status: "draft" };
     expect(await getPublicDigitalProduct({ data: { id } })).toBeNull();
-    expect(db.filters.status).toBe("published");
+    expect(db.filters["status"]).toBe("published");
   });
 });
