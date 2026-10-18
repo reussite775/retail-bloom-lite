@@ -21,3 +21,4 @@
 - Subscription fields on `organizations` (plan, trial/subscription dates, active flag) are writable only by service role; `authenticated` has column-level UPDATE on shop identity columns only, `anon` has no table or function access. Why: merchants must never self-activate or extend.
 - `current_shop()` returns NULL for cashiers when the shop is neither Premium nor in trial. Why: multi-user is a Premium feature, enforced in the database.
 - Workspace type (`organizations.account_type`: physical|digital) is separate from member role; `_app.tsx` picks the nav (physical `nav` vs `digitalNav` under `/studio/*`) and redirects users out of the other space. Why: one account model, two isolated UIs.
+- Authentication emails use the managed SDK handler in `/lovable/email/auth/webhook`; signup displays the provider token without generating or altering it. Why: preserve verification security and managed delivery.
