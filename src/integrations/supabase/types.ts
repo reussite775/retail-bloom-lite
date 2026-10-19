@@ -84,6 +84,32 @@ export type Database = {
           },
         ]
       }
+      creator_storefronts: {
+        Row: {
+          organization_id: string
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          organization_id: string
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          organization_id?: string
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "creator_storefronts_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       credit_payments: {
         Row: {
           amount: number
@@ -198,6 +224,7 @@ export type Database = {
           id: string
           organization_id: string
           price: number
+          slug: string | null
           status: string
           title: string
           updated_at: string
@@ -212,6 +239,7 @@ export type Database = {
           id?: string
           organization_id: string
           price?: number
+          slug?: string | null
           status?: string
           title: string
           updated_at?: string
@@ -226,6 +254,7 @@ export type Database = {
           id?: string
           organization_id?: string
           price?: number
+          slug?: string | null
           status?: string
           title?: string
           updated_at?: string
@@ -988,6 +1017,10 @@ export type Database = {
         Returns: string
       }
       create_sale: { Args: { _items: Json }; Returns: string }
+      creator_slug_available: {
+        Args: { _kind: string; _product_id?: string; _slug: string }
+        Returns: boolean
+      }
       current_shop: { Args: never; Returns: string }
       customer_debt: { Args: { _cid: string }; Returns: number }
       has_access: { Args: { _uid: string }; Returns: boolean }
@@ -1020,11 +1053,25 @@ export type Database = {
           status: string
         }[]
       }
+      public_creator_store: { Args: { _slug: string }; Returns: Json }
+      public_digital_product: {
+        Args: { _identifier: string }
+        Returns: {
+          cover_path: string
+          description: string
+          id: string
+          price: number
+          shop_name: string
+          slug: string
+          title: string
+        }[]
+      }
       record_payment: {
         Args: { _amount: number; _customer_id: string }
         Returns: string
       }
       shop_has_premium: { Args: { _org: string }; Returns: boolean }
+      valid_public_slug: { Args: { _slug: string }; Returns: boolean }
     }
     Enums: {
       app_role: "super_admin"

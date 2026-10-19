@@ -162,6 +162,13 @@
       "when": 1792110202905,
       "tag": "0022_space_choice_onboarding",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1792396923740,
+      "tag": "0023_creator_public_slugs",
+      "breakpoints": true
     }
   ]
 }
