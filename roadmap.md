@@ -1,4 +1,5 @@
 # Roadmap
+- [ ] Liens personnalisés produits/boutiques : disponibilité, sécurité, compatibilité UUID et vérification ciblée.
 - [x] Corriger les liens produits vers le domaine public ; vrai produit vérifié sans session, brouillons couverts par un test ciblé (aucun brouillon existant). Aucun changement de données ou permissions.
 - [x] Préparer les e-mails de confirmation GestiPro avec le code officiel.
 - [x] Domaine d’envoi vérifié, envoi personnalisé activé ; publication demandée.
