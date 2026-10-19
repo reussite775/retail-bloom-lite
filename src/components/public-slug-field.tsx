@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { checkCreatorSlug } from '@/lib/creator-links.functions';
 import { validPublicSlug } from '@/lib/public-slugs';
 import { creatorStoreLink, digitalProductLink } from '@/lib/digital-links';
-export function PublicSlugField({ value, onChange, kind, productId, onAvailability }: { value: string; onChange: (v: string) => void; kind: 'product' | 'store'; productId?: string; onAvailability?: (v: boolean) => void }) {
+export function PublicSlugField({ value, onChange, kind, productId, onAvailability }: { value: string; onChange: (v: string) => void; kind: 'product' | 'store'; productId?: string | undefined; onAvailability?: (v: boolean) => void }) {
   const check = useServerFn(checkCreatorSlug);
   const [debounced, setDebounced] = useState(value);
   useEffect(() => { const timer = setTimeout(() => setDebounced(value), 350); return () => clearTimeout(timer); }, [value]);

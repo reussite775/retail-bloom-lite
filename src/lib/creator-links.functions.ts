@@ -2,10 +2,10 @@ import { createServerFn } from '@tanstack/react-start';
 import { requireSupabaseAuth } from '@/integrations/supabase/auth-middleware';
 import { validPublicSlug } from './public-slugs';
 export const checkCreatorSlug = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth])
-  .inputValidator((data: { kind: 'product' | 'store'; slug: string; productId?: string }) => data)
+  .inputValidator((data: { kind: 'product' | 'store'; slug: string; productId?: string | undefined }) => data)
   .handler(async ({ data, context }) => {
     if (!validPublicSlug(data.slug)) return false;
-    const { data: available, error } = await context.supabase.rpc('creator_slug_available', { _kind: data.kind, _slug: data.slug, _product_id: data.productId });
+    const { data: available, error } = await context.supabase.rpc('creator_slug_available', { _kind: data.kind, _slug: data.slug, ...(data.productId ? { _product_id: data.productId } : {}) });
     if (error) throw new Error('Impossible de vérifier ce nom public.');
     return available;
   });
