@@ -42,9 +42,9 @@ function ProductPage() {
         {p.coverUrl ? <img src={p.coverUrl} alt={p.title} className="aspect-video w-full object-cover" /> : <div className="flex aspect-video items-center justify-center bg-primary/10"><FileDown className="h-12 w-12 text-primary" /></div>}
         <div className="space-y-4 p-6">
           {p.shopName && <p className="text-sm font-medium text-muted-foreground">{p.shopName}</p>}
-          <h1 className="text-2xl font-extrabold">{p.title}</h1>
+           <h1 className="break-words text-2xl font-extrabold">{p.title}</h1>
           <p className="font-display text-3xl font-extrabold text-primary tabular">{money(p.price)}</p>
-          {p.description && <p className="whitespace-pre-line text-sm text-muted-foreground">{p.description}</p>}
+           {p.description && <p className="whitespace-pre-line break-words text-sm text-muted-foreground">{p.description}</p>}
           <div className="rounded-lg bg-muted p-3 text-center text-sm text-muted-foreground">L'achat en ligne sera bientôt disponible.</div>
         </div>
       </div>
