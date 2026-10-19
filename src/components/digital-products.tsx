@@ -10,6 +10,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { supabase } from "@/integrations/supabase/client";
 import { money } from "@/lib/format";
 import { digitalProductLink } from "@/lib/digital-links";
+import { useServerFn } from "@tanstack/react-start";
+import { checkCreatorSlug } from "@/lib/creator-links.functions";
+import { PublicSlugField } from "./public-slug-field";
+import { suggestedSlug } from "@/lib/public-slugs";
 import type { Tables, TablesUpdate } from "@/integrations/supabase/types";
 
 type DP = Tables<"digital_products"> & { coverUrl?: string | null };
@@ -30,14 +34,16 @@ const digitalQuery = {
   },
 };
 
-const ext = (f: File) => (f.name.includes(".") ? f.name.split(".").pop()!.toLowerCase().replace(/[^a-z0-9]/g, "") : "bin");
+const ext = (f: File) => (f.name.includes(".") ? (f.name.split(".").pop() ?? "bin").toLowerCase().replace(/[^a-z0-9]/g, "") : "bin");
 
 export function DigitalProducts({ shopId }: { shopId: string }) {
   const qc = useQueryClient();
+  const checkSlug = useServerFn(checkCreatorSlug);
+  const [slugAvailable, setSlugAvailable] = useState(false);
   const { data = [], isLoading } = useQuery(digitalQuery);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<DP | null>(null);
-  const [form, setForm] = useState({ title: "", description: "", price: "" });
+  const [form, setForm] = useState({ title: "", description: "", price: "", slug: "" });
   const [cover, setCover] = useState<File | null>(null);
   const [file, setFile] = useState<File | null>(null);
 
@@ -48,8 +54,9 @@ export function DigitalProducts({ shopId }: { shopId: string }) {
       const title = form.title.trim();
       if (!title) throw new Error("Le titre est requis");
       if (cover && !cover.type.startsWith("image/")) throw new Error("La couverture doit être une image");
+      if (!await checkSlug({ data: { kind: "product", slug: form.slug, productId: editing?.id } })) throw new Error("Nom public invalide, réservé ou déjà utilisé");
       const id = editing?.id ?? crypto.randomUUID();
-      const row: TablesUpdate<"digital_products"> = { title, description: form.description.trim(), price: Math.max(0, Number(form.price) || 0) };
+      const row: TablesUpdate<"digital_products"> = { title, slug: form.slug, description: form.description.trim(), price: Math.max(0, Number(form.price) || 0) };
       if (cover) {
         const path = `${shopId}/${id}/cover-${Date.now()}.${ext(cover)}`;
         const { error } = await supabase.storage.from("digital-covers").upload(path, cover, { contentType: cover.type });
@@ -68,7 +75,7 @@ export function DigitalProducts({ shopId }: { shopId: string }) {
       const { error } = editing
         ? await supabase.from("digital_products").update(row).eq("id", id)
         : await supabase.from("digital_products").insert({ ...row, id, title, organization_id: shopId });
-      if (error) throw error;
+      if (error) throw new Error(error.code === "23505" ? "Ce nom public est déjà utilisé" : error.message);
     },
     onSuccess: () => { refresh(); setOpen(false); toast.success("Produit enregistré"); },
     onError: (e: Error) => toast.error(e.message),
@@ -101,11 +108,11 @@ export function DigitalProducts({ shopId }: { shopId: string }) {
     window.open(s.signedUrl, "_blank");
   };
 
-  const link = (p: DP) => digitalProductLink(p.id);
-  const copy = async (p: DP) => { await navigator.clipboard.writeText(link(p)); toast.success("Lien copié"); };
+  const link = (p: DP) => digitalProductLink(p.slug ?? p.id);
+  const copy = async (p: DP) => { try { await navigator.clipboard.writeText(link(p)); toast.success("Lien copié"); } catch { toast.error("Copie impossible. Sélectionnez le lien."); } };
 
-  const openNew = () => { setEditing(null); setForm({ title: "", description: "", price: "" }); setCover(null); setFile(null); setOpen(true); };
-  const openEdit = (p: DP) => { setEditing(p); setForm({ title: p.title, description: p.description, price: String(p.price) }); setCover(null); setFile(null); setOpen(true); };
+  const openNew = () => { setEditing(null); setForm({ title: "", description: "", price: "", slug: "" }); setCover(null); setFile(null); setOpen(true); };
+  const openEdit = (p: DP) => { setEditing(p); setForm({ title: p.title, description: p.description, price: String(p.price), slug: p.slug ?? suggestedSlug(p.title) }); setCover(null); setFile(null); setOpen(true); };
 
   return (
     <div className="space-y-4">
@@ -128,8 +135,8 @@ export function DigitalProducts({ shopId }: { shopId: string }) {
               {p.file_name ? <button onClick={() => download(p)} className="block truncate text-left text-xs text-primary hover:underline">{p.file_name}</button> : <p className="text-xs text-destructive">Aucun fichier</p>}
               {p.status === "published" && (
                 <div className="flex items-center gap-2 rounded-lg bg-muted p-2 text-xs">
-                  <Link2 className="h-3.5 w-3.5 shrink-0" /><span className="truncate">{link(p)}</span>
-                  <button aria-label="Copier le lien" onClick={() => copy(p)} className="ml-auto shrink-0 text-primary"><Copy className="h-3.5 w-3.5" /></button>
+                  <Link2 className="h-3.5 w-3.5 shrink-0" /><span className="min-w-0 break-all">{link(p)}</span>
+                  <Button size="icon" variant="ghost" aria-label="Copier le lien" onClick={() => copy(p)} className="ml-auto shrink-0 text-primary"><Copy className="h-3.5 w-3.5" /></Button>
                 </div>
               )}
               <div className="flex gap-1">
@@ -146,14 +153,15 @@ export function DigitalProducts({ shopId }: { shopId: string }) {
         <DialogContent className="max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle>{editing ? "Modifier le produit" : "Nouveau produit numérique"}</DialogTitle></DialogHeader>
           <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); save.mutate(null); }}>
-            <div className="space-y-1.5"><Label>Titre</Label><Input maxLength={200} value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} /></div>
+            <div className="space-y-1.5"><Label>Titre</Label><Input maxLength={200} value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value, slug: !editing && (!form.slug || form.slug === suggestedSlug(form.title)) ? suggestedSlug(e.target.value) : form.slug })} /></div>
+            <PublicSlugField kind="product" value={form.slug} onChange={(slug) => setForm({ ...form, slug })} productId={editing?.id} onAvailability={setSlugAvailable} />
             <div className="space-y-1.5"><Label>Description</Label><Textarea rows={4} maxLength={5000} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
             <div className="space-y-1.5"><Label>Prix (FCFA)</Label><Input type="number" min="0" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} /></div>
             <div className="space-y-1.5"><Label>Image de couverture {editing?.cover_path && "(laisser vide pour garder l'actuelle)"}</Label><Input type="file" accept="image/*" onChange={(e) => setCover(e.target.files?.[0] ?? null)} /></div>
             <div className="space-y-1.5"><Label>Fichier numérique (PDF ou autre, 50 Mo max) {editing?.file_name && `— actuel : ${editing.file_name}`}</Label><Input type="file" onChange={(e) => setFile(e.target.files?.[0] ?? null)} /></div>
             <div className="flex gap-2">
-              <Button type="submit" variant="outline" className="flex-1" disabled={save.isPending}>{editing ? "Enregistrer" : "Enregistrer en brouillon"}</Button>
-              {editing?.status !== "published" && <Button type="button" className="flex-1" disabled={save.isPending} onClick={() => save.mutate(true)}>Enregistrer et publier</Button>}
+              <Button type="submit" variant="outline" className="flex-1" disabled={save.isPending || !slugAvailable}>{editing ? "Enregistrer" : "Enregistrer en brouillon"}</Button>
+              {editing?.status !== "published" && <Button type="button" className="flex-1" disabled={save.isPending || !slugAvailable} onClick={() => save.mutate(true)}>Enregistrer et publier</Button>}
             </div>
           </form>
         </DialogContent>

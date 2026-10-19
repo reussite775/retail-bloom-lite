@@ -23,3 +23,4 @@
 - Workspace type (`organizations.account_type`: physical|digital) is separate from member role; `_app.tsx` picks the nav (physical `nav` vs `digitalNav` under `/studio/*`) and redirects users out of the other space. Why: one account model, two isolated UIs.
 - Authentication emails use the managed SDK handler in `/lovable/email/auth/webhook`; signup displays the provider token without generating or altering it. Why: preserve verification security and managed delivery.
 - Digital-product share URLs use the canonical published origin through `digitalProductLink`, never the browser origin. Why: editor preview URLs require Lovable authentication.
+- Public creator links use independent globally unique product and storefront slugs, guarded by database validation and tenant RLS; safe public RPCs return published product metadata only and UUID lookup remains supported. Why: editable storefront URLs must not break product URLs or expose private data.

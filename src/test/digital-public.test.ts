@@ -18,15 +18,10 @@ vi.mock("@tanstack/react-start", () => ({
 
 vi.mock("@supabase/supabase-js", () => ({
   createClient: () => ({
-    from: (table: string) => {
-      const query = {
-        select: (columns: string) => { db.select(table, columns); return query; },
-        eq: (column: string, value: unknown) => { db.filters[column] = value; return query; },
-        maybeSingle: async () => ({ data: table === "digital_products" &&
-          db.product?.["id"] === db.filters["id"] && db.product?.["status"] === db.filters["status"]
-          ? db.product : null }),
-      };
-      return query;
+    rpc: (_name: string, args: { _identifier: string }) => {
+      db.filters['identifier'] = args._identifier;
+      return Promise.resolve({ data: db.product?.['status'] === 'published' &&
+        (db.product?.['id'] === args._identifier || db.product?.['slug'] === args._identifier) ? [db.product] : [], error: null });
     },
   }),
 }));
@@ -39,10 +34,17 @@ beforeEach(() => {
   db.filters = {};
   db.select.mockClear();
   db.product = { id, organization_id: "shop", status: "published", title: "100PRIERES",
-    description: "Livre numérique", price: 2000, cover_path: null };
+    description: "Livre numérique", price: 2000, cover_path: null, slug: "100prieres", shop_name: "Créateur" };
 });
 
 describe("Public digital products", () => {
+  it("resolves the personalized product link", async () => {
+    expect(await getPublicDigitalProduct({ data: { id: "100prieres" } })).toMatchObject({ id, slug: "100prieres" });
+  });
+  it("does not resolve a draft by slug", async () => {
+    db.product = { ...db.product, status: "draft" };
+    expect(await getPublicDigitalProduct({ data: { id: "100prieres" } })).toBeNull();
+  });
   it("shares the permanent public domain even when the seller uses the preview", () => {
     expect(digitalProductLink(id)).toBe(`https://getcommercestream.app/p/${id}`);
   });
@@ -50,13 +52,13 @@ describe("Public digital products", () => {
   it("returns published product information without a seller session or a digital file", async () => {
     const product = await getPublicDigitalProduct({ data: { id } });
     expect(product).toMatchObject({ id, title: "100PRIERES", description: "Livre numérique", price: 2000 });
-    expect(db.select).toHaveBeenCalledWith("digital_products", "id, organization_id, title, description, price, cover_path, status");
+    expect(product).not.toHaveProperty("organization_id");
     expect(product).not.toHaveProperty("file_path");
   });
 
   it("never returns a draft to an anonymous visitor", async () => {
     db.product = { ...db.product, status: "draft" };
     expect(await getPublicDigitalProduct({ data: { id } })).toBeNull();
-    expect(db.filters["status"]).toBe("published");
+    expect(db.filters["identifier"]).toBe(id);
   });
 });
