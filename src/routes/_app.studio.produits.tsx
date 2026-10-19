@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useRole } from "@/lib/role";
+import { CreatorStoreLink } from "@/components/creator-store-link";
 import { DigitalProducts } from "@/components/digital-products";
 
 export const Route = createFileRoute("/_app/studio/produits")({
@@ -18,7 +19,7 @@ export const Route = createFileRoute("/_app/studio/produits")({
     return (
       <div className="mx-auto max-w-6xl space-y-6">
         <h1 className="text-3xl font-extrabold">Produits</h1>
-        {shopId && <DigitalProducts shopId={shopId} />}
+        {shopId && <><CreatorStoreLink shopId={shopId} /><DigitalProducts shopId={shopId} /></>}
       </div>
     );
   },
