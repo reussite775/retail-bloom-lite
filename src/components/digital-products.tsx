@@ -135,7 +135,7 @@ export function DigitalProducts({ shopId }: { shopId: string }) {
               {p.file_name ? <button onClick={() => download(p)} className="block truncate text-left text-xs text-primary hover:underline">{p.file_name}</button> : <p className="text-xs text-destructive">Aucun fichier</p>}
               {p.status === "published" && (
                 <div className="flex items-center gap-2 rounded-lg bg-muted p-2 text-xs">
-                  <Link2 className="h-3.5 w-3.5 shrink-0" /><span className="truncate">{link(p)}</span>
+                  <Link2 className="h-3.5 w-3.5 shrink-0" /><span className="min-w-0 break-all">{link(p)}</span>
                   <Button size="icon" variant="ghost" aria-label="Copier le lien" onClick={() => copy(p)} className="ml-auto shrink-0 text-primary"><Copy className="h-3.5 w-3.5" /></Button>
                 </div>
               )}
