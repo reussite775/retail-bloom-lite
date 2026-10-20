@@ -8,12 +8,6 @@ export function RichDescription({ value, onChange }: { value: string; onChange: 
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (ref.current && ref.current.innerHTML !== value) ref.current.innerHTML = value || "";
-    // Ne resynchronise que lors d'un changement externe (ouverture d'un autre produit).
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ref.current === null]);
-
-  useEffect(() => {
     if (ref.current && document.activeElement !== ref.current && ref.current.innerHTML !== value) {
       ref.current.innerHTML = value || "";
     }
