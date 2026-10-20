@@ -1,4 +1,5 @@
 import { useState } from "react";
+import DOMPurify from "dompurify";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Copy, FileDown, Link2, Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -13,6 +14,8 @@ import { digitalProductLink } from "@/lib/digital-links";
 import { useServerFn } from "@tanstack/react-start";
 import { checkCreatorSlug } from "@/lib/creator-links.functions";
 import { PublicSlugField } from "./public-slug-field";
+import { RichDescription } from "./rich-description";
+import { sanitizeRichText } from "@/lib/rich-text";
 import { suggestedSlug } from "@/lib/public-slugs";
 import type { Tables, TablesUpdate } from "@/integrations/supabase/types";
 
