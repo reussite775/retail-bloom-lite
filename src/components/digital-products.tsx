@@ -83,7 +83,7 @@ export function DigitalProducts({ shopId }: { shopId: string }) {
         row.file_name = file.name.slice(0, 200);
       }
       if (publish !== null) row.status = publish ? "published" : "draft";
-      if (row.status === "published" && !row.file_path && !editing?.file_path) throw new Error("Ajoutez le fichier avant de publier");
+      if (row.status === "published" && form.product_type === "file" && !row.file_path && !editing?.file_path) throw new Error("Ajoutez le fichier avant de publier");
       const { error } = editing
         ? await supabase.from("digital_products").update(row).eq("id", id)
         : await supabase.from("digital_products").insert({ ...row, id, title, organization_id: shopId });
@@ -141,7 +141,10 @@ export function DigitalProducts({ shopId }: { shopId: string }) {
             <div className="space-y-3 p-4">
               <div className="flex items-start justify-between gap-2">
                 <h3 className="font-bold leading-tight">{p.title}</h3>
-                <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold ${p.status === "published" ? "bg-primary/15 text-primary" : "bg-muted text-muted-foreground"}`}>{p.status === "published" ? "Publié" : "Brouillon"}</span>
+                <span className="flex shrink-0 flex-col items-end gap-1">
+                  <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${p.status === "published" ? "bg-primary/15 text-primary" : "bg-muted text-muted-foreground"}`}>{p.status === "published" ? "Publié" : "Brouillon"}</span>
+                  <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">{typeLabel(p.product_type)}</span>
+                </span>
               </div>
               <p className="font-display text-lg font-extrabold tabular">{money(p.price)}</p>
               {p.file_name ? <button onClick={() => download(p)} className="block truncate text-left text-xs text-primary hover:underline">{p.file_name}</button> : <p className="text-xs text-destructive">Aucun fichier</p>}
