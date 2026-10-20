@@ -21,6 +21,15 @@ import type { Tables, TablesUpdate } from "@/integrations/supabase/types";
 
 type DP = Tables<"digital_products"> & { coverUrl?: string | null };
 
+const PRODUCT_TYPES = [
+  { value: "file", label: "Fichier numérique" },
+  { value: "formation", label: "Formation" },
+  { value: "service", label: "Service" },
+  { value: "coaching", label: "Coaching" },
+] as const;
+type ProductType = (typeof PRODUCT_TYPES)[number]["value"];
+const typeLabel = (t: string | null | undefined) => PRODUCT_TYPES.find((x) => x.value === t)?.label ?? "Fichier numérique";
+
 // RLS limits rows to current_shop(); storage paths are prefixed by the shop id.
 const digitalQuery = {
   queryKey: ["digital_products"],
@@ -46,7 +55,7 @@ export function DigitalProducts({ shopId }: { shopId: string }) {
   const { data = [], isLoading } = useQuery(digitalQuery);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<DP | null>(null);
-  const [form, setForm] = useState({ title: "", description: "", price: "", slug: "" });
+  const [form, setForm] = useState<{ title: string; description: string; price: string; slug: string; product_type: ProductType }>({ title: "", description: "", price: "", slug: "", product_type: "file" });
   const [cover, setCover] = useState<File | null>(null);
   const [file, setFile] = useState<File | null>(null);
 
@@ -59,7 +68,7 @@ export function DigitalProducts({ shopId }: { shopId: string }) {
       if (cover && !cover.type.startsWith("image/")) throw new Error("La couverture doit être une image");
       if (!await checkSlug({ data: { kind: "product", slug: form.slug, productId: editing?.id } })) throw new Error("Nom public invalide, réservé ou déjà utilisé");
       const id = editing?.id ?? crypto.randomUUID();
-      const row: TablesUpdate<"digital_products"> = { title, slug: form.slug, description: form.description.trim(), price: Math.max(0, Number(form.price) || 0) };
+      const row: TablesUpdate<"digital_products"> = { title, slug: form.slug, product_type: form.product_type, description: sanitizeRichText(DOMPurify.sanitize(form.description, { USE_PROFILES: { html: true } })), price: Math.max(0, Number(form.price) || 0) };
       if (cover) {
         const path = `${shopId}/${id}/cover-${Date.now()}.${ext(cover)}`;
         const { error } = await supabase.storage.from("digital-covers").upload(path, cover, { contentType: cover.type });
@@ -114,8 +123,8 @@ export function DigitalProducts({ shopId }: { shopId: string }) {
   const link = (p: DP) => digitalProductLink(p.slug ?? p.id);
   const copy = async (p: DP) => { try { await navigator.clipboard.writeText(link(p)); toast.success("Lien copié"); } catch { toast.error("Copie impossible. Sélectionnez le lien."); } };
 
-  const openNew = () => { setEditing(null); setForm({ title: "", description: "", price: "", slug: "" }); setCover(null); setFile(null); setOpen(true); };
-  const openEdit = (p: DP) => { setEditing(p); setForm({ title: p.title, description: p.description, price: String(p.price), slug: p.slug ?? suggestedSlug(p.title) }); setCover(null); setFile(null); setOpen(true); };
+  const openNew = () => { setEditing(null); setForm({ title: "", description: "", price: "", slug: "", product_type: "file" }); setCover(null); setFile(null); setOpen(true); };
+  const openEdit = (p: DP) => { setEditing(p); setForm({ title: p.title, description: p.description, price: String(p.price), slug: p.slug ?? suggestedSlug(p.title), product_type: (p.product_type as ProductType) || "file" }); setCover(null); setFile(null); setOpen(true); };
 
   return (
     <div className="space-y-4">
