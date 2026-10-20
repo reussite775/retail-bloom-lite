@@ -23,3 +23,8 @@ export function sanitizeRichText(html: string): string {
 export function isRichHtml(text: string): boolean {
   return /<\/?(h2|h3|p|strong|b|em|ul|ol|li|a|br)\b/i.test(text);
 }
+
+// Texte brut pour les aperçus (meta description, cartes boutique).
+export function plainText(html: string): string {
+  return (html || "").replace(/<br\s*\/?>/gi, "\n").replace(/<\/(p|h2|h3|li)>/gi, "\n").replace(/<[^>]*>/g, "").replace(/\n{3,}/g, "\n\n").trim();
+}
