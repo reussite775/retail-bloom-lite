@@ -167,17 +167,40 @@ export function DigitalProducts({ shopId }: { shopId: string }) {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle>{editing ? "Modifier le produit" : "Nouveau produit numérique"}</DialogTitle></DialogHeader>
-          <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); save.mutate(null); }}>
-            <div className="space-y-1.5"><Label>Titre</Label><Input maxLength={200} value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value, slug: !editing && (!form.slug || form.slug === suggestedSlug(form.title)) ? suggestedSlug(e.target.value) : form.slug })} /></div>
-            <PublicSlugField kind="product" value={form.slug} onChange={(slug) => setForm({ ...form, slug })} productId={editing?.id} onAvailability={setSlugAvailable} />
-            <div className="space-y-1.5"><Label>Description</Label><Textarea rows={4} maxLength={5000} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
-            <div className="space-y-1.5"><Label>Prix (FCFA)</Label><Input type="number" min="0" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} /></div>
-            <div className="space-y-1.5"><Label>Image de couverture {editing?.cover_path && "(laisser vide pour garder l'actuelle)"}</Label><Input type="file" accept="image/*" onChange={(e) => setCover(e.target.files?.[0] ?? null)} /></div>
-            <div className="space-y-1.5"><Label>Fichier numérique (PDF ou autre, 50 Mo max) {editing?.file_name && `— actuel : ${editing.file_name}`}</Label><Input type="file" onChange={(e) => setFile(e.target.files?.[0] ?? null)} /></div>
-            <div className="flex gap-2">
-              <Button type="submit" variant="outline" className="flex-1" disabled={save.isPending || !slugAvailable}>{editing ? "Enregistrer" : "Enregistrer en brouillon"}</Button>
-              {editing?.status !== "published" && <Button type="button" className="flex-1" disabled={save.isPending || !slugAvailable} onClick={() => save.mutate(true)}>Enregistrer et publier</Button>}
-            </div>
+          <form className="space-y-6" onSubmit={(e) => { e.preventDefault(); save.mutate(null); }}>
+            <section className="space-y-3">
+              <h3 className="border-b pb-1 text-sm font-bold uppercase tracking-wide text-primary">Informations du produit</h3>
+              <div className="space-y-1.5">
+                <Label>Type de produit</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  {PRODUCT_TYPES.map((t) => (
+                    <button key={t.value} type="button" onClick={() => setForm({ ...form, product_type: t.value })} className={`rounded-lg border px-3 py-2 text-sm font-medium transition ${form.product_type === t.value ? "border-primary bg-primary/10 text-primary" : "bg-background text-muted-foreground hover:border-primary/50"}`}>{t.label}</button>
+                  ))}
+                </div>
+              </div>
+              <div className="space-y-1.5"><Label>Titre</Label><Input maxLength={200} value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value, slug: !editing && (!form.slug || form.slug === suggestedSlug(form.title)) ? suggestedSlug(e.target.value) : form.slug })} /></div>
+              <PublicSlugField kind="product" value={form.slug} onChange={(slug) => setForm({ ...form, slug })} productId={editing?.id} onAvailability={setSlugAvailable} />
+            </section>
+            <section className="space-y-3">
+              <h3 className="border-b pb-1 text-sm font-bold uppercase tracking-wide text-primary">Contenu</h3>
+              <div className="space-y-1.5"><Label>Description</Label><RichDescription value={form.description} onChange={(html) => setForm({ ...form, description: html })} /></div>
+              <div className="space-y-1.5"><Label>Fichier numérique (PDF ou autre, 50 Mo max) {form.product_type !== "file" && "— facultatif"} {editing?.file_name && `— actuel : ${editing.file_name}`}</Label><Input type="file" onChange={(e) => setFile(e.target.files?.[0] ?? null)} /></div>
+            </section>
+            <section className="space-y-3">
+              <h3 className="border-b pb-1 text-sm font-bold uppercase tracking-wide text-primary">Prix</h3>
+              <div className="space-y-1.5"><Label>Prix (FCFA)</Label><Input type="number" min="0" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} /></div>
+            </section>
+            <section className="space-y-3">
+              <h3 className="border-b pb-1 text-sm font-bold uppercase tracking-wide text-primary">Couverture</h3>
+              <div className="space-y-1.5"><Label>Image de couverture {editing?.cover_path && "(laisser vide pour garder l'actuelle)"}</Label><Input type="file" accept="image/*" onChange={(e) => setCover(e.target.files?.[0] ?? null)} /></div>
+            </section>
+            <section className="space-y-3">
+              <h3 className="border-b pb-1 text-sm font-bold uppercase tracking-wide text-primary">Publication</h3>
+              <div className="flex gap-2">
+                <Button type="submit" variant="outline" className="flex-1" disabled={save.isPending || !slugAvailable}>{editing ? "Enregistrer" : "Enregistrer en brouillon"}</Button>
+                {editing?.status !== "published" && <Button type="button" className="flex-1" disabled={save.isPending || !slugAvailable} onClick={() => save.mutate(true)}>Enregistrer et publier</Button>}
+              </div>
+            </section>
           </form>
         </DialogContent>
       </Dialog>
