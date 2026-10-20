@@ -169,6 +169,13 @@
       "when": 1792396923740,
       "tag": "0023_creator_public_slugs",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1792460155890,
+      "tag": "0024_digital_product_type",
+      "breakpoints": true
     }
   ]
 }
