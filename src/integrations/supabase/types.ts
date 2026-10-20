@@ -224,6 +224,7 @@ export type Database = {
           id: string
           organization_id: string
           price: number
+          product_type: string
           slug: string | null
           status: string
           title: string
@@ -239,6 +240,7 @@ export type Database = {
           id?: string
           organization_id: string
           price?: number
+          product_type?: string
           slug?: string | null
           status?: string
           title: string
@@ -254,6 +256,7 @@ export type Database = {
           id?: string
           organization_id?: string
           price?: number
+          product_type?: string
           slug?: string | null
           status?: string
           title?: string

@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { FileDown } from "lucide-react";
 import { getPublicDigitalProduct } from "@/lib/digital.functions";
 import { money } from "@/lib/format";
+import { isRichHtml, plainText, sanitizeRichText } from "@/lib/rich-text";
 
 export const Route = createFileRoute("/p/$productId")({
   loader: ({ params }) => getPublicDigitalProduct({ data: { id: params.productId } }),
