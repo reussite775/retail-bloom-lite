@@ -1069,6 +1069,19 @@ export type Database = {
           title: string
         }[]
       }
+      public_digital_product_v2: {
+        Args: { _identifier: string }
+        Returns: {
+          cover_path: string
+          description: string
+          id: string
+          price: number
+          product_type: string
+          shop_name: string
+          slug: string
+          title: string
+        }[]
+      }
       record_payment: {
         Args: { _amount: number; _customer_id: string }
         Returns: string

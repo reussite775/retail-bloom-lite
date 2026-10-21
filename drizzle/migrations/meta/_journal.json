@@ -176,6 +176,13 @@
       "when": 1792460155890,
       "tag": "0024_digital_product_type",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1792542578896,
+      "tag": "0025_public_product_type_v2",
+      "breakpoints": true
     }
   ]
 }
