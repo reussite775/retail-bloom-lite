@@ -4,14 +4,21 @@ import { getPublicDigitalProduct } from "@/lib/digital.functions";
 import { money } from "@/lib/format";
 import { isRichHtml, plainText, sanitizeRichText } from "@/lib/rich-text";
 
+const PRODUCT_TYPE_LABELS: Record<string, string> = {
+  file: "Fichier numérique",
+  formation: "Formation",
+  service: "Service",
+  coaching: "Coaching",
+};
+
 export const Route = createFileRoute("/p/$productId")({
   loader: ({ params }) => getPublicDigitalProduct({ data: { id: params.productId } }),
   head: ({ loaderData }) => ({
     meta: [
       { title: loaderData ? `${loaderData.title} — GestiPro` : "Produit indisponible — GestiPro" },
-      { name: "description", content: loaderData?.description?.slice(0, 150) || "Produit numérique vendu avec GestiPro." },
+      { name: "description", content: plainText(loaderData?.description ?? "").slice(0, 150) || "Produit numérique vendu avec GestiPro." },
       { property: "og:title", content: loaderData?.title ?? "Produit indisponible" },
-      { property: "og:description", content: loaderData?.description?.slice(0, 150) || "Produit numérique vendu avec GestiPro." },
+      { property: "og:description", content: plainText(loaderData?.description ?? "").slice(0, 150) || "Produit numérique vendu avec GestiPro." },
       { property: "og:type", content: "product" },
       { name: "twitter:card", content: "summary" },
       ...(loaderData?.coverUrl?.startsWith("https://") ? [
@@ -43,9 +50,14 @@ function ProductPage() {
         {p.coverUrl ? <img src={p.coverUrl} alt={p.title} className="aspect-video w-full object-cover" /> : <div className="flex aspect-video items-center justify-center bg-primary/10"><FileDown className="h-12 w-12 text-primary" /></div>}
         <div className="space-y-4 p-6">
           {p.shopName && <p className="text-sm font-medium text-muted-foreground">{p.shopName}</p>}
-           <h1 className="break-words text-2xl font-extrabold">{p.title}</h1>
+          <div className="flex flex-wrap items-center gap-2">
+            <h1 className="break-words text-2xl font-extrabold">{p.title}</h1>
+            <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">{PRODUCT_TYPE_LABELS[p.product_type ?? "file"] ?? "Fichier numérique"}</span>
+          </div>
           <p className="font-display text-3xl font-extrabold text-primary tabular">{money(p.price)}</p>
-           {p.description && <p className="whitespace-pre-line break-words text-sm text-muted-foreground">{p.description}</p>}
+          {p.description && (isRichHtml(p.description)
+            ? <div className="break-words text-sm text-muted-foreground [&_a]:text-primary [&_a]:underline [&_h2]:mb-1 [&_h2]:mt-3 [&_h2]:text-base [&_h2]:font-bold [&_h3]:mb-1 [&_h3]:mt-2 [&_h3]:text-sm [&_h3]:font-bold [&_li]:ml-5 [&_li]:list-disc [&_p]:my-1" dangerouslySetInnerHTML={{ __html: sanitizeRichText(p.description) }} />
+            : <p className="whitespace-pre-line break-words text-sm text-muted-foreground">{p.description}</p>)}
           <div className="rounded-lg bg-muted p-3 text-center text-sm text-muted-foreground">L'achat en ligne sera bientôt disponible.</div>
         </div>
       </div>
