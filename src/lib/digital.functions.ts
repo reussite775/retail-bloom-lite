@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
+import { normalizePageConfig } from "@/lib/page-config";
 
 // Public sale page: returns only safe columns of a PUBLISHED product. The digital file is never exposed here.
 export const getPublicDigitalProduct = createServerFn({ method: "GET" })
@@ -21,7 +22,7 @@ export const getPublicDigitalProduct = createServerFn({ method: "GET" })
         },
       },
     });
-    const { data: rows, error } = await sb.rpc("public_digital_product_v2", { _identifier: data.id });
+    const { data: rows, error } = await sb.rpc("public_digital_product_v3", { _identifier: data.id });
     if (error) throw new Error("Impossible de charger le produit.");
     const p = rows?.[0];
     if (!p) return null;
@@ -32,7 +33,7 @@ export const getPublicDigitalProduct = createServerFn({ method: "GET" })
       const { data: s } = await supabaseAdmin.storage.from("digital-covers").createSignedUrl(p.cover_path, 3600);
       coverUrl = s?.signedUrl ?? null;
     }
-    return { id: p.id, slug: p.slug, title: p.title, description: p.description, price: Number(p.price), coverUrl, shopName: p.shop_name, product_type: p.product_type ?? "file" };
+    return { id: p.id, slug: p.slug, title: p.title, description: p.description, price: Number(p.price), coverUrl, shopName: p.shop_name, product_type: p.product_type ?? "file", pageConfig: normalizePageConfig(p.page_config) };
   });
 
 export const getPublicCreatorStore = createServerFn({ method: "GET" })
