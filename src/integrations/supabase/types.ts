@@ -223,6 +223,7 @@ export type Database = {
           file_path: string | null
           id: string
           organization_id: string
+          page_config: Json | null
           price: number
           product_type: string
           slug: string | null
@@ -239,6 +240,7 @@ export type Database = {
           file_path?: string | null
           id?: string
           organization_id: string
+          page_config?: Json | null
           price?: number
           product_type?: string
           slug?: string | null
@@ -255,6 +257,7 @@ export type Database = {
           file_path?: string | null
           id?: string
           organization_id?: string
+          page_config?: Json | null
           price?: number
           product_type?: string
           slug?: string | null
@@ -1075,6 +1078,20 @@ export type Database = {
           cover_path: string
           description: string
           id: string
+          price: number
+          product_type: string
+          shop_name: string
+          slug: string
+          title: string
+        }[]
+      }
+      public_digital_product_v3: {
+        Args: { _identifier: string }
+        Returns: {
+          cover_path: string
+          description: string
+          id: string
+          page_config: Json
           price: number
           product_type: string
           shop_name: string
