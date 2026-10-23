@@ -20,7 +20,8 @@ describe("normalizePageConfig", () => {
     });
     expect(cfg?.benefits).toEqual(["Grasalert(1)"]);
     expect(cfg?.faq[0]).toEqual({ q: "Question ?", a: "Réponse" });
-    expect(cfg?.testimonials[0]).toEqual({ name: "Awa", text: "Super produit" });
+    // Les balises sont supprimées ; le texte restant est inerte (jamais interprété).
+    expect(cfg?.testimonials[0]).toEqual({ name: "Awa", text: "Super xproduit" });
     expect(cfg?.ctaLabel).toBe("Acheter");
   });
 
