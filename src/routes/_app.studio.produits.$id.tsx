@@ -16,7 +16,7 @@ import { RichDescription } from "@/components/rich-description";
 import { sanitizeRichText } from "@/lib/rich-text";
 import { emptyPageConfig, normalizePageConfig, type PageConfig } from "@/lib/page-config";
 import { SalesPageView, PRODUCT_TYPE_LABELS } from "@/components/sales-page-view";
-import type { Tables, TablesUpdate } from "@/integrations/supabase/types";
+import type { Json, Tables, TablesUpdate } from "@/integrations/supabase/types";
 
 export const Route = createFileRoute("/_app/studio/produits/$id")({
   head: () => ({
@@ -115,7 +115,7 @@ function StudioPage() {
         product_type: form.product_type,
         description: sanitizeRichText(DOMPurify.sanitize(form.description, { USE_PROFILES: { html: true } })),
         price: Math.max(0, Number(form.price) || 0),
-        page_config: normalizePageConfig(form.config) as TablesUpdate<"digital_products">["page_config"],
+        page_config: normalizePageConfig(form.config) as Json,
       };
       if (cover) {
         const ext = (cover.name.split(".").pop() ?? "bin").toLowerCase().replace(/[^a-z0-9]/g, "");
