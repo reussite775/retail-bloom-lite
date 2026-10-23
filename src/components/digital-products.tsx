@@ -1,7 +1,8 @@
 import { useState } from "react";
 import DOMPurify from "dompurify";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Copy, FileDown, Link2, Pencil, Plus, Trash2 } from "lucide-react";
+import { Copy, FileDown, LayoutTemplate, Link2, Pencil, Plus, Trash2 } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -156,6 +157,9 @@ export function DigitalProducts({ shopId }: { shopId: string }) {
               <div className="flex gap-1">
                 <Button size="sm" variant={p.status === "published" ? "outline" : "default"} className="flex-1" disabled={toggle.isPending} onClick={() => toggle.mutate(p)}>{p.status === "published" ? "Dépublier" : "Publier"}</Button>
                 <Button size="icon" variant="ghost" aria-label="Modifier" onClick={() => openEdit(p)}><Pencil className="h-4 w-4" /></Button>
+                <Button asChild size="icon" variant="ghost" aria-label="Ouvrir le studio" title="Ouvrir le studio">
+                  <Link to="/studio/produits/$id" params={{ id: p.id }}><LayoutTemplate className="h-4 w-4 text-primary" /></Link>
+                </Button>
                 <Button size="icon" variant="ghost" aria-label="Supprimer" onClick={() => confirm(`Supprimer « ${p.title} » ?`) && remove.mutate(p)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
               </div>
             </div>
