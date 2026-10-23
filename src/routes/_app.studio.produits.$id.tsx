@@ -16,7 +16,7 @@ import { RichDescription } from "@/components/rich-description";
 import { sanitizeRichText } from "@/lib/rich-text";
 import { emptyPageConfig, normalizePageConfig, type PageConfig } from "@/lib/page-config";
 import { SalesPageView, PRODUCT_TYPE_LABELS } from "@/components/sales-page-view";
-import type { Tables } from "@/integrations/supabase/types";
+import type { Tables, TablesUpdate } from "@/integrations/supabase/types";
 
 export const Route = createFileRoute("/_app/studio/produits/$id")({
   head: () => ({
@@ -109,13 +109,13 @@ function StudioPage() {
       if (!title) throw new Error("Le titre est requis");
       if (cover && !cover.type.startsWith("image/")) throw new Error("La couverture doit être une image");
       if (!await checkSlug({ data: { kind: "product", slug: form.slug, productId: product.id } })) throw new Error("Nom public invalide, réservé ou déjà utilisé");
-      const row: Record<string, unknown> = {
+      const row: TablesUpdate<"digital_products"> = {
         title,
         slug: form.slug,
         product_type: form.product_type,
         description: sanitizeRichText(DOMPurify.sanitize(form.description, { USE_PROFILES: { html: true } })),
         price: Math.max(0, Number(form.price) || 0),
-        page_config: normalizePageConfig(form.config),
+        page_config: normalizePageConfig(form.config) as TablesUpdate<"digital_products">["page_config"],
       };
       if (cover) {
         const ext = (cover.name.split(".").pop() ?? "bin").toLowerCase().replace(/[^a-z0-9]/g, "");
