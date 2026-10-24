@@ -190,6 +190,13 @@
       "when": 1792632058050,
       "tag": "0026_digital_product_page_config",
       "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1792804494157,
+      "tag": "0027_digital_products_file_required_only_for_file_type",
+      "breakpoints": true
     }
   ]
 }
