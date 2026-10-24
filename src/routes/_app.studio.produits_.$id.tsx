@@ -18,7 +18,7 @@ import { emptyPageConfig, normalizePageConfig, type PageConfig } from "@/lib/pag
 import { SalesPageView, PRODUCT_TYPE_LABELS } from "@/components/sales-page-view";
 import type { Json, Tables, TablesUpdate } from "@/integrations/supabase/types";
 
-export const Route = createFileRoute("/_app/studio/produits/$id")({
+export const Route = createFileRoute("/_app/studio/produits_/$id")({
   head: () => ({
     meta: [
       { title: "Studio de création — GestiPro" },
