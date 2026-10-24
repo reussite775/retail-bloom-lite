@@ -41,7 +41,7 @@ import { Route as AppStudioIndexRouteImport } from './routes/_app.studio.index'
 import { Route as AppStudioAffiliesRouteImport } from './routes/_app.studio.affilies'
 import { Route as AppStudioProduitsRouteImport } from './routes/_app.studio.produits'
 import { Route as AppStudioVentesRouteImport } from './routes/_app.studio.ventes'
-import { Route as AppStudioProduitsIdRouteImport } from './routes/_app.studio.produits.$id'
+import { Route as AppStudioProduitsIdRouteImport } from './routes/_app.studio.produits_.$id'
 import { Route as ApiPublicBkapayReconcileRouteImport } from './routes/api/public/bkapay/reconcile'
 import { Route as ApiPublicBkapayWebhookRouteImport } from './routes/api/public/bkapay/webhook'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
@@ -207,9 +207,9 @@ const AppStudioVentesRoute = AppStudioVentesRouteImport.update({
   getParentRoute: () => AppStudioRoute,
 } as any)
 const AppStudioProduitsIdRoute = AppStudioProduitsIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => AppStudioProduitsRoute,
+  id: '/produits_/$id',
+  path: '/produits/$id',
+  getParentRoute: () => AppStudioRoute,
 } as any)
 const ApiPublicBkapayReconcileRoute =
   ApiPublicBkapayReconcileRouteImport.update({
@@ -262,7 +262,7 @@ export interface FileRoutesByFullPath {
   '/p/$productId': typeof PProductIdRoute
   '/admin/': typeof AdminIndexRoute
   '/studio/affilies': typeof AppStudioAffiliesRoute
-  '/studio/produits': typeof AppStudioProduitsRouteWithChildren
+  '/studio/produits': typeof AppStudioProduitsRoute
   '/studio/ventes': typeof AppStudioVentesRoute
   '/studio/': typeof AppStudioIndexRoute
   '/studio/produits/$id': typeof AppStudioProduitsIdRoute
@@ -298,7 +298,7 @@ export interface FileRoutesByTo {
   '/p/$productId': typeof PProductIdRoute
   '/admin': typeof AdminIndexRoute
   '/studio/affilies': typeof AppStudioAffiliesRoute
-  '/studio/produits': typeof AppStudioProduitsRouteWithChildren
+  '/studio/produits': typeof AppStudioProduitsRoute
   '/studio/ventes': typeof AppStudioVentesRoute
   '/studio': typeof AppStudioIndexRoute
   '/studio/produits/$id': typeof AppStudioProduitsIdRoute
@@ -338,10 +338,10 @@ export interface FileRoutesById {
   '/p/$productId': typeof PProductIdRoute
   '/admin/': typeof AdminIndexRoute
   '/_app/studio/affilies': typeof AppStudioAffiliesRoute
-  '/_app/studio/produits': typeof AppStudioProduitsRouteWithChildren
+  '/_app/studio/produits': typeof AppStudioProduitsRoute
   '/_app/studio/ventes': typeof AppStudioVentesRoute
   '/_app/studio/': typeof AppStudioIndexRoute
-  '/_app/studio/produits/$id': typeof AppStudioProduitsIdRoute
+  '/_app/studio/produits_/$id': typeof AppStudioProduitsIdRoute
   '/api/public/bkapay/reconcile': typeof ApiPublicBkapayReconcileRoute
   '/api/public/bkapay/webhook': typeof ApiPublicBkapayWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -456,7 +456,7 @@ export interface FileRouteTypes {
     | '/_app/studio/produits'
     | '/_app/studio/ventes'
     | '/_app/studio/'
-    | '/_app/studio/produits/$id'
+    | '/_app/studio/produits_/$id'
     | '/api/public/bkapay/reconcile'
     | '/api/public/bkapay/webhook'
     | '/lovable/email/auth/preview'
@@ -704,12 +704,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppStudioVentesRouteImport
       parentRoute: typeof AppStudioRoute
     }
-    '/_app/studio/produits/$id': {
-      id: '/_app/studio/produits/$id'
-      path: '/$id'
+    '/_app/studio/produits_/$id': {
+      id: '/_app/studio/produits_/$id'
+      path: '/produits/$id'
       fullPath: '/studio/produits/$id'
       preLoaderRoute: typeof AppStudioProduitsIdRouteImport
-      parentRoute: typeof AppStudioProduitsRoute
+      parentRoute: typeof AppStudioRoute
     }
     '/api/public/bkapay/reconcile': {
       id: '/api/public/bkapay/reconcile'
@@ -742,29 +742,20 @@ declare module '@tanstack/react-router' {
   }
 }
 
-interface AppStudioProduitsRouteChildren {
-  AppStudioProduitsIdRoute: typeof AppStudioProduitsIdRoute
-}
-
-const AppStudioProduitsRouteChildren: AppStudioProduitsRouteChildren = {
-  AppStudioProduitsIdRoute: AppStudioProduitsIdRoute,
-}
-
-const AppStudioProduitsRouteWithChildren =
-  AppStudioProduitsRoute._addFileChildren(AppStudioProduitsRouteChildren)
-
 interface AppStudioRouteChildren {
   AppStudioAffiliesRoute: typeof AppStudioAffiliesRoute
-  AppStudioProduitsRoute: typeof AppStudioProduitsRouteWithChildren
+  AppStudioProduitsRoute: typeof AppStudioProduitsRoute
   AppStudioVentesRoute: typeof AppStudioVentesRoute
   AppStudioIndexRoute: typeof AppStudioIndexRoute
+  AppStudioProduitsIdRoute: typeof AppStudioProduitsIdRoute
 }
 
 const AppStudioRouteChildren: AppStudioRouteChildren = {
   AppStudioAffiliesRoute: AppStudioAffiliesRoute,
-  AppStudioProduitsRoute: AppStudioProduitsRouteWithChildren,
+  AppStudioProduitsRoute: AppStudioProduitsRoute,
   AppStudioVentesRoute: AppStudioVentesRoute,
   AppStudioIndexRoute: AppStudioIndexRoute,
+  AppStudioProduitsIdRoute: AppStudioProduitsIdRoute,
 }
 
 const AppStudioRouteWithChildren = AppStudioRoute._addFileChildren(
