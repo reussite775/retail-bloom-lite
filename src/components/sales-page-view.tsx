@@ -2,86 +2,86 @@ import { Check, FileDown, HelpCircle, Package, Quote } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { money } from "@/lib/format";
 import { isRichHtml, sanitizeRichText } from "@/lib/rich-text";
-import type { PageConfig } from "@/lib/page-config";
-
-export const PRODUCT_TYPE_LABELS: Record<string, string> = {
-  file: "Fichier numérique",
-  formation: "Formation",
-  service: "Service",
-  coaching: "Coaching",
-};
-
-export type SalesPageData = {
-  title: string;
-  description: string;
-  price: number;
-  coverUrl?: string | null;
-  shopName?: string | null;
-  productType?: string | null;
-  pageConfig?: PageConfig | null;
-};
+import type { PageConfig, PageSectionKey } from "@/lib/page-config";
+...
+// Une section de la page de vente. Chaque bloc n'est rendu que s'il a du contenu.
+function SectionBlock({ section, config }: { section: PageSectionKey; config: PageConfig }) {
+  if (section === "benefits" && config.benefits.length > 0) {
+    return (
+      <section>
+        <h2 className="text-lg font-bold">Ce que vous allez obtenir</h2>
+        <ul className="mt-2 space-y-2">
+          {config.benefits.map((b, i) => (
+            <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
+              <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+              <span className="break-words">{b}</span>
+            </li>
+          ))}
+        </ul>
+      </section>
+    );
+  }
+  if (section === "included" && config.included.length > 0) {
+    return (
+      <section>
+        <h2 className="text-lg font-bold">Contenu inclus</h2>
+        <ul className="mt-2 space-y-2">
+          {config.included.map((b, i) => (
+            <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
+              <Package className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+              <span className="break-words">{b}</span>
+            </li>
+          ))}
+        </ul>
+      </section>
+    );
+  }
+  if (section === "testimonials" && config.testimonials.length > 0) {
+    return (
+      <section>
+        <h2 className="text-lg font-bold">Ils en parlent</h2>
+        <div className="mt-2 space-y-3">
+          {config.testimonials.map((t, i) => (
+            <figure key={i} className="rounded-lg bg-muted p-3">
+              <Quote className="h-4 w-4 text-primary" />
+              <blockquote className="mt-1 break-words text-sm text-muted-foreground">{t.text}</blockquote>
+              <figcaption className="mt-1 text-xs font-semibold">{t.name}</figcaption>
+            </figure>
+          ))}
+        </div>
+      </section>
+    );
+  }
+  if (section === "faq" && config.faq.length > 0) {
+    return (
+      <section>
+        <h2 className="text-lg font-bold">Questions fréquentes</h2>
+        <div className="mt-2 space-y-3">
+          {config.faq.map((f, i) => (
+            <div key={i}>
+              <p className="flex items-start gap-2 text-sm font-semibold">
+                <HelpCircle className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                <span className="break-words">{f.q}</span>
+              </p>
+              <p className="ml-6 mt-1 break-words text-sm text-muted-foreground">{f.a}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+    );
+  }
+  return null;
+}
 
 // Sections modulaires de la page de vente, partagées entre la page publique
 // et l'aperçu du studio pour garantir que l'aperçu = la réalité.
+// L'ordre d'affichage suit config.sectionOrder (réordonnable dans le studio).
 export function SalesPageSections({ config }: { config: PageConfig }) {
   return (
     <div className="space-y-6 border-t pt-5">
-      {config.benefits.length > 0 && (
-        <section>
-          <h2 className="text-lg font-bold">Ce que vous allez obtenir</h2>
-          <ul className="mt-2 space-y-2">
-            {config.benefits.map((b, i) => (
-              <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
-                <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                <span className="break-words">{b}</span>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-      {config.included.length > 0 && (
-        <section>
-          <h2 className="text-lg font-bold">Contenu inclus</h2>
-          <ul className="mt-2 space-y-2">
-            {config.included.map((b, i) => (
-              <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
-                <Package className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                <span className="break-words">{b}</span>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-      {config.testimonials.length > 0 && (
-        <section>
-          <h2 className="text-lg font-bold">Ils en parlent</h2>
-          <div className="mt-2 space-y-3">
-            {config.testimonials.map((t, i) => (
-              <figure key={i} className="rounded-lg bg-muted p-3">
-                <Quote className="h-4 w-4 text-primary" />
-                <blockquote className="mt-1 break-words text-sm text-muted-foreground">{t.text}</blockquote>
-                <figcaption className="mt-1 text-xs font-semibold">{t.name}</figcaption>
-              </figure>
-            ))}
-          </div>
-        </section>
-      )}
-      {config.faq.length > 0 && (
-        <section>
-          <h2 className="text-lg font-bold">Questions fréquentes</h2>
-          <div className="mt-2 space-y-3">
-            {config.faq.map((f, i) => (
-              <div key={i}>
-                <p className="flex items-start gap-2 text-sm font-semibold">
-                  <HelpCircle className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                  <span className="break-words">{f.q}</span>
-                </p>
-                <p className="ml-6 mt-1 break-words text-sm text-muted-foreground">{f.a}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
+      {config.sectionOrder.map((key) => (
+        <SectionBlock key={key} section={key} config={config} />
+      ))}
     </div>
   );
 }

@@ -159,5 +159,3 @@ export function applyTemplate(config: PageConfig, template: SalesTemplate): Page
   return next;
 }
 
-// Garde la compatibilité avec d'anciens imports éventuels.
-export { emptyPageConfig };
