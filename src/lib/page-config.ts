@@ -73,7 +73,8 @@ export function moveSection(order: PageSectionKey[], key: PageSectionKey, delta:
   const j = i + delta;
   if (i < 0 || j < 0 || j >= order.length) return order;
   const next = [...order];
-  [next[i], next[j]] = [next[j], next[i]];
+  next[i] = order[j] as PageSectionKey;
+  next[j] = order[i] as PageSectionKey;
   return next;
 }
 

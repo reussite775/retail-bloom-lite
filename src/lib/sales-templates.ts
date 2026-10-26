@@ -140,7 +140,7 @@ export const SALES_TEMPLATES: Record<string, SalesTemplate[]> = {
 
 // Modèles proposés pour un type de produit donné (repli sur "file").
 export function templatesFor(productType: string): SalesTemplate[] {
-  return SALES_TEMPLATES[productType] ?? SALES_TEMPLATES["file"];
+  return SALES_TEMPLATES[productType] ?? SALES_TEMPLATES["file"] ?? [];
 }
 
 // Applique un modèle à la configuration actuelle SANS écraser le contenu existant :

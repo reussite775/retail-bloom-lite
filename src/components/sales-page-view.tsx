@@ -3,7 +3,24 @@ import { Button } from "@/components/ui/button";
 import { money } from "@/lib/format";
 import { isRichHtml, sanitizeRichText } from "@/lib/rich-text";
 import type { PageConfig, PageSectionKey } from "@/lib/page-config";
-...
+
+export const PRODUCT_TYPE_LABELS: Record<string, string> = {
+  file: "Fichier numérique",
+  formation: "Formation",
+  service: "Service",
+  coaching: "Coaching",
+};
+
+export type SalesPageData = {
+  title: string;
+  description: string;
+  price: number;
+  coverUrl?: string | null;
+  shopName?: string | null;
+  productType?: string | null;
+  pageConfig?: PageConfig | null;
+};
+
 // Une section de la page de vente. Chaque bloc n'est rendu que s'il a du contenu.
 function SectionBlock({ section, config }: { section: PageSectionKey; config: PageConfig }) {
   if (section === "benefits" && config.benefits.length > 0) {
