@@ -58,3 +58,50 @@ describe("normalizePageConfig", () => {
     expect(hasAnySection({ ...emptyPageConfig(), ctaLabel: "Acheter" })).toBe(true);
   });
 });
+
+describe("sectionOrder", () => {
+  it("normalizeSectionOrder keeps known keys, drops unknown and duplicates, appends missing", () => {
+    expect(normalizeSectionOrder(["faq", "inconnu", "faq", "benefits"])).toEqual(["faq", "benefits", "included", "testimonials"]);
+    expect(normalizeSectionOrder(null)).toEqual(SECTION_KEYS);
+    expect(normalizeSectionOrder("texte")).toEqual(SECTION_KEYS);
+  });
+
+  it("moveSection swaps adjacent sections and is a no-op at the edges", () => {
+    const order = [...SECTION_KEYS];
+    expect(moveSection(order, "included", -1)).toEqual(["included", "benefits", "testimonials", "faq"]);
+    expect(moveSection(order, "benefits", -1)).toEqual(order);
+    expect(moveSection(order, "faq", 1)).toEqual(order);
+    expect(moveSection(order, "benefits", 1)).toEqual(["included", "benefits", "testimonials", "faq"]);
+  });
+
+  it("normalizePageConfig preserves a custom section order", () => {
+    const cfg = normalizePageConfig({ benefits: ["Un atout"], sectionOrder: ["faq", "benefits", "included", "testimonials"] });
+    expect(cfg?.sectionOrder).toEqual(["faq", "benefits", "included", "testimonials"]);
+  });
+});
+
+describe("applyTemplate", () => {
+  it("fills only empty sections and sets order and template id", () => {
+    const t = templatesFor("formation")[0];
+    const cfg = applyTemplate(emptyPageConfig(), t);
+    expect(cfg.template).toBe(t.id);
+    expect(cfg.sectionOrder).toEqual(t.sectionOrder);
+    expect(cfg.benefits.length).toBeGreaterThan(0);
+    expect(cfg.ctaLabel).toBe(t.content.ctaLabel);
+  });
+
+  it("never overwrites content already entered by the creator", () => {
+    const t = templatesFor("formation")[0];
+    const existing = { ...emptyPageConfig(), benefits: ["Mon atout personnel"], ctaLabel: "Mon bouton" };
+    const cfg = applyTemplate(existing, t);
+    expect(cfg.benefits).toEqual(["Mon atout personnel"]);
+    expect(cfg.ctaLabel).toBe("Mon bouton");
+    // Les sections vides, elles, reçoivent le contenu d'exemple.
+    expect(cfg.included.length).toBeGreaterThan(0);
+  });
+
+  it("templatesFor falls back to file templates for unknown types", () => {
+    expect(templatesFor("formation").length).toBeGreaterThan(0);
+    expect(templatesFor("inconnu")).toEqual(templatesFor("file"));
+  });
+});
