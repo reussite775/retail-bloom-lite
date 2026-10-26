@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { emptyPageConfig, hasAnySection, normalizePageConfig } from "@/lib/page-config";
+import { emptyPageConfig, hasAnySection, moveSection, normalizePageConfig, normalizeSectionOrder, SECTION_KEYS } from "@/lib/page-config";
+import { applyTemplate, templatesFor } from "@/lib/sales-templates";
 
 describe("normalizePageConfig", () => {
   it("returns null for empty or invalid input (classic page unchanged)", () => {
