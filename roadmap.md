@@ -1,4 +1,5 @@
 # Roadmap
+- [ ] Vérifier dans le navigateur le déplacement des sections, leur persistance et les modèles sans écrasement dans l’aperçu et sur le site publié ; supprimer uniquement le produit de test créé pour ces vérifications.
 - [x] Liens personnalisés produits/boutiques : disponibilité, copie, modification, compatibilité UUID, brouillons et modification inter-créateurs vérifiés ; 12 tests ciblés réussis. Données temporaires nettoyées. Non publié.
 - [x] Corriger les liens produits vers le domaine public ; vrai produit vérifié sans session, brouillons couverts par un test ciblé (aucun brouillon existant). Aucun changement de données ou permissions.
 - [x] Préparer les e-mails de confirmation GestiPro avec le code officiel.
