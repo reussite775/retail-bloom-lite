@@ -82,7 +82,7 @@ describe("sectionOrder", () => {
 
 describe("applyTemplate", () => {
   it("fills only empty sections and sets order and template id", () => {
-    const t = templatesFor("formation")[0];
+    const t = templatesFor("formation")[0]!;
     const cfg = applyTemplate(emptyPageConfig(), t);
     expect(cfg.template).toBe(t.id);
     expect(cfg.sectionOrder).toEqual(t.sectionOrder);
@@ -91,7 +91,7 @@ describe("applyTemplate", () => {
   });
 
   it("never overwrites content already entered by the creator", () => {
-    const t = templatesFor("formation")[0];
+    const t = templatesFor("formation")[0]!;
     const existing = { ...emptyPageConfig(), benefits: ["Mon atout personnel"], ctaLabel: "Mon bouton" };
     const cfg = applyTemplate(existing, t);
     expect(cfg.benefits).toEqual(["Mon atout personnel"]);
