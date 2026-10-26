@@ -3,7 +3,7 @@ import DOMPurify from "dompurify";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { ArrowLeft, Monitor, Plus, Save, Smartphone, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowLeft, ArrowUp, Monitor, Plus, Save, Smartphone, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,7 +14,8 @@ import { checkCreatorSlug } from "@/lib/creator-links.functions";
 import { PublicSlugField } from "@/components/public-slug-field";
 import { RichDescription } from "@/components/rich-description";
 import { sanitizeRichText } from "@/lib/rich-text";
-import { emptyPageConfig, normalizePageConfig, type PageConfig } from "@/lib/page-config";
+import { emptyPageConfig, moveSection, normalizePageConfig, SECTION_LABELS, type PageConfig } from "@/lib/page-config";
+import { applyTemplate, templatesFor } from "@/lib/sales-templates";
 import { SalesPageView, PRODUCT_TYPE_LABELS } from "@/components/sales-page-view";
 import type { Json, Tables, TablesUpdate } from "@/integrations/supabase/types";
 
@@ -198,8 +199,56 @@ function StudioPage() {
             <div className="space-y-1.5"><Label>Image de couverture {product.cover_path && "(laisser vide pour garder l'actuelle)"}</Label><Input type="file" accept="image/*" onChange={(e) => setCover(e.target.files?.[0] ?? null)} /></div>
           </section>
 
+          <section className="space-y-3 rounded-xl border bg-card p-4">
+            <h2 className="border-b pb-1 text-sm font-bold uppercase tracking-wide text-primary">Modèle de page</h2>
+            <p className="text-xs text-muted-foreground">
+              Un modèle propose un ordre de sections et des contenus d'exemple. Il ne remplace jamais le contenu que vous avez déjà saisi.
+            </p>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {templatesFor(form.product_type).map((t) => (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => setForm({ ...form, config: applyTemplate(form.config, t) })}
+                  className={`rounded-lg border p-3 text-left transition ${form.config.template === t.id ? "border-primary bg-primary/10" : "bg-background hover:border-primary/50"}`}
+                >
+                  <span className={`block text-sm font-semibold ${form.config.template === t.id ? "text-primary" : ""}`}>{t.name}</span>
+                  <span className="mt-0.5 block text-xs text-muted-foreground">{t.description}</span>
+                </button>
+              ))}
+            </div>
+          </section>
+
           <section className="space-y-4 rounded-xl border bg-card p-4">
             <h2 className="border-b pb-1 text-sm font-bold uppercase tracking-wide text-primary">Sections de la page de vente</h2>
+            <div className="space-y-2">
+              <Label>Ordre des sections</Label>
+              {form.config.sectionOrder.map((key, i) => (
+                <div key={key} className="flex items-center gap-1 rounded-lg border px-3 py-1.5">
+                  <span className="flex-1 text-sm font-medium">{SECTION_LABELS[key]}</span>
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="ghost"
+                    aria-label={`Monter ${SECTION_LABELS[key]}`}
+                    disabled={i === 0}
+                    onClick={() => setConfig({ sectionOrder: moveSection(form.config.sectionOrder, key, -1) })}
+                  >
+                    <ArrowUp className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="ghost"
+                    aria-label={`Descendre ${SECTION_LABELS[key]}`}
+                    disabled={i === form.config.sectionOrder.length - 1}
+                    onClick={() => setConfig({ sectionOrder: moveSection(form.config.sectionOrder, key, 1) })}
+                  >
+                    <ArrowDown className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+            </div>
             <ListEditor label="Ce que le client va obtenir" items={form.config.benefits} onChange={(benefits) => setConfig({ benefits })} placeholder="Ex. : 100 prières prêtes à l'emploi" />
             <ListEditor label="Contenu inclus" items={form.config.included} onChange={(included) => setConfig({ included })} placeholder="Ex. : 1 fichier PDF de 80 pages" />
             <div className="space-y-2">
