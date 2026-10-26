@@ -3,7 +3,7 @@ import DOMPurify from "dompurify";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { ArrowLeft, Monitor, Plus, Save, Smartphone, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowLeft, ArrowUp, Monitor, Plus, Save, Smartphone, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,7 +14,8 @@ import { checkCreatorSlug } from "@/lib/creator-links.functions";
 import { PublicSlugField } from "@/components/public-slug-field";
 import { RichDescription } from "@/components/rich-description";
 import { sanitizeRichText } from "@/lib/rich-text";
-import { emptyPageConfig, normalizePageConfig, type PageConfig } from "@/lib/page-config";
+import { emptyPageConfig, moveSection, normalizePageConfig, SECTION_LABELS, type PageConfig } from "@/lib/page-config";
+import { applyTemplate, templatesFor } from "@/lib/sales-templates";
 import { SalesPageView, PRODUCT_TYPE_LABELS } from "@/components/sales-page-view";
 import type { Json, Tables, TablesUpdate } from "@/integrations/supabase/types";
 
