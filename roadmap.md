@@ -1,5 +1,5 @@
 # Roadmap
-- [ ] Vérifier dans le navigateur le déplacement des sections, leur persistance et les modèles sans écrasement dans l’aperçu et sur le site publié ; supprimer uniquement le produit de test créé pour ces vérifications.
+- [x] Vérifié le 27 octobre 2026 dans l’aperçu et sur getcommercestream.app : clics Monter/Descendre reflétés immédiatement, ordre et contenus conservés après enregistrement/quitter/recharger/réouvrir, modèles Progression et Expert sans écrasement ; brouillon de test 623a84b7-b1ae-4480-8f58-d12482891f3e supprimé via l’interface, absence confirmée en base. Aucun changement fonctionnel ni nouveau lancement des tests automatisés.
 - [x] Liens personnalisés produits/boutiques : disponibilité, copie, modification, compatibilité UUID, brouillons et modification inter-créateurs vérifiés ; 12 tests ciblés réussis. Données temporaires nettoyées. Non publié.
 - [x] Corriger les liens produits vers le domaine public ; vrai produit vérifié sans session, brouillons couverts par un test ciblé (aucun brouillon existant). Aucun changement de données ou permissions.
 - [x] Préparer les e-mails de confirmation GestiPro avec le code officiel.
