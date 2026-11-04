@@ -323,6 +323,118 @@ export type Database = {
           },
         ]
       }
+      digital_lessons: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          is_free: boolean
+          is_published: boolean
+          module_id: string
+          organization_id: string
+          position: number
+          product_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          content?: string
+          created_at?: string
+          id?: string
+          is_free?: boolean
+          is_published?: boolean
+          module_id: string
+          organization_id: string
+          position?: number
+          product_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          is_free?: boolean
+          is_published?: boolean
+          module_id?: string
+          organization_id?: string
+          position?: number
+          product_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "digital_lessons_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "digital_modules"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "digital_lessons_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "digital_lessons_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "digital_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      digital_modules: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          organization_id: string
+          position: number
+          product_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string
+          id?: string
+          organization_id: string
+          position?: number
+          product_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          organization_id?: string
+          position?: number
+          product_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "digital_modules_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "digital_modules_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "digital_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       digital_orders: {
         Row: {
           access_token: string
@@ -469,6 +581,85 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      digital_resources: {
+        Row: {
+          created_at: string
+          description: string
+          file_name: string | null
+          file_path: string | null
+          id: string
+          kind: string
+          lesson_id: string | null
+          mime_type: string | null
+          name: string
+          organization_id: string
+          position: number
+          product_id: string
+          role: string
+          size_bytes: number | null
+          updated_at: string
+          url: string | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string
+          file_name?: string | null
+          file_path?: string | null
+          id?: string
+          kind: string
+          lesson_id?: string | null
+          mime_type?: string | null
+          name: string
+          organization_id: string
+          position?: number
+          product_id: string
+          role?: string
+          size_bytes?: number | null
+          updated_at?: string
+          url?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          file_name?: string | null
+          file_path?: string | null
+          id?: string
+          kind?: string
+          lesson_id?: string | null
+          mime_type?: string | null
+          name?: string
+          organization_id?: string
+          position?: number
+          product_id?: string
+          role?: string
+          size_bytes?: number | null
+          updated_at?: string
+          url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "digital_resources_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "digital_lessons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "digital_resources_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "digital_resources_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "digital_products"
             referencedColumns: ["id"]
           },
         ]

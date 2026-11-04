@@ -48,6 +48,7 @@ import { Route as ApiPublicBkapayReconcileRouteImport } from './routes/api/publi
 import { Route as ApiPublicBkapayWebhookRouteImport } from './routes/api/public/bkapay/webhook'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
+import { Route as AppStudioProduitsIdContenuRouteImport } from './routes/_app.studio.produits_.$id_.contenu'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -244,6 +245,12 @@ const LovableEmailAuthWebhookRoute = LovableEmailAuthWebhookRouteImport.update({
   path: '/lovable/email/auth/webhook',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppStudioProduitsIdContenuRoute =
+  AppStudioProduitsIdContenuRouteImport.update({
+    id: '/produits_/$id_/contenu',
+    path: '/produits/$id/contenu',
+    getParentRoute: () => AppStudioRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -284,6 +291,7 @@ export interface FileRoutesByFullPath {
   '/api/public/bkapay/webhook': typeof ApiPublicBkapayWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
+  '/studio/produits/$id/contenu': typeof AppStudioProduitsIdContenuRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -322,6 +330,7 @@ export interface FileRoutesByTo {
   '/api/public/bkapay/webhook': typeof ApiPublicBkapayWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
+  '/studio/produits/$id/contenu': typeof AppStudioProduitsIdContenuRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -364,6 +373,7 @@ export interface FileRoutesById {
   '/api/public/bkapay/webhook': typeof ApiPublicBkapayWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
+  '/_app/studio/produits_/$id_/contenu': typeof AppStudioProduitsIdContenuRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -406,6 +416,7 @@ export interface FileRouteTypes {
     | '/api/public/bkapay/webhook'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
+    | '/studio/produits/$id/contenu'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -444,6 +455,7 @@ export interface FileRouteTypes {
     | '/api/public/bkapay/webhook'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
+    | '/studio/produits/$id/contenu'
   id:
     | '__root__'
     | '/'
@@ -485,6 +497,7 @@ export interface FileRouteTypes {
     | '/api/public/bkapay/webhook'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
+    | '/_app/studio/produits_/$id_/contenu'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -778,6 +791,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LovableEmailAuthWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_app/studio/produits_/$id_/contenu': {
+      id: '/_app/studio/produits_/$id_/contenu'
+      path: '/produits/$id/contenu'
+      fullPath: '/studio/produits/$id/contenu'
+      preLoaderRoute: typeof AppStudioProduitsIdContenuRouteImport
+      parentRoute: typeof AppStudioRoute
+    }
   }
 }
 
@@ -787,6 +807,7 @@ interface AppStudioRouteChildren {
   AppStudioVentesRoute: typeof AppStudioVentesRoute
   AppStudioIndexRoute: typeof AppStudioIndexRoute
   AppStudioProduitsIdRoute: typeof AppStudioProduitsIdRoute
+  AppStudioProduitsIdContenuRoute: typeof AppStudioProduitsIdContenuRoute
 }
 
 const AppStudioRouteChildren: AppStudioRouteChildren = {
@@ -795,6 +816,7 @@ const AppStudioRouteChildren: AppStudioRouteChildren = {
   AppStudioVentesRoute: AppStudioVentesRoute,
   AppStudioIndexRoute: AppStudioIndexRoute,
   AppStudioProduitsIdRoute: AppStudioProduitsIdRoute,
+  AppStudioProduitsIdContenuRoute: AppStudioProduitsIdContenuRoute,
 }
 
 const AppStudioRouteWithChildren = AppStudioRoute._addFileChildren(

@@ -172,9 +172,12 @@ function StudioPage() {
             <p className="truncate text-sm text-muted-foreground">{product.title} · {product.status === "published" ? "Publié" : product.status === "archived" ? "Archivé" : "Brouillon"}</p>
           </div>
         </div>
+        <div className="flex gap-2">
+        <Button asChild variant="outline"><Link to="/studio/produits/$id/contenu" params={{ id: product.id }}>{product.product_type === "formation" ? "Programme et ressources" : "Ressources"}</Link></Button>
         <Button onClick={() => save.mutate()} disabled={save.isPending || !slugAvailable}>
           <Save className="h-4 w-4" /> {save.isPending ? "Enregistrement…" : "Enregistrer"}
         </Button>
+        </div>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">

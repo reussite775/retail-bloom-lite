@@ -218,6 +218,13 @@
       "when": 1793834233186,
       "tag": "0030_digital_catalog_archive_categories_collections",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1793834809246,
+      "tag": "0031_digital_resources_modules_lessons",
+      "breakpoints": true
     }
   ]
 }

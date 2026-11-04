@@ -1,7 +1,7 @@
 import { useState } from "react";
 import DOMPurify from "dompurify";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Archive, ArchiveRestore, Copy, CopyPlus, FileDown, LayoutTemplate, Link2, Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { Archive, ArchiveRestore, Copy, CopyPlus, FileDown, FolderOpen, LayoutTemplate, Link2, Pencil, Plus, Search, Trash2 } from "lucide-react";
 import { CatalogManagerButtons, categoriesQuery, collectionsQuery, collectionItemsQuery } from "./digital-catalog-manager";
 import { DEFAULT_FILTERS, STATUS_LABELS, copiedPath, duplicateRow, filterCatalog, type CatalogFilters, type CatalogStatusFilter } from "@/lib/digital-catalog";
 import { Link } from "@tanstack/react-router";
@@ -155,8 +155,12 @@ export function DigitalProducts({ shopId }: { shopId: string }) {
 
   const remove = useMutation({
     mutationFn: async (p: DP) => {
+      // Resource files are listed before the product (and its resource rows) are deleted, then removed from storage.
+      const { data: res } = await supabase.from("digital_resources").select("file_path").eq("product_id", p.id);
       const { error } = await supabase.from("digital_products").delete().eq("id", p.id);
       if (error) throw error;
+      const resFiles = (res ?? []).map((r) => r.file_path).filter(Boolean) as string[];
+      if (resFiles.length) await supabase.storage.from("digital-files").remove(resFiles);
       if (p.file_path) await supabase.storage.from("digital-files").remove([p.file_path]);
       if (p.cover_path) await supabase.storage.from("digital-covers").remove([p.cover_path]);
     },
@@ -252,6 +256,9 @@ export function DigitalProducts({ shopId }: { shopId: string }) {
                 <Button size="icon" variant="ghost" aria-label="Modifier" onClick={() => openEdit(p)}><Pencil className="h-4 w-4" /></Button>
                 <Button asChild size="icon" variant="ghost" aria-label="Ouvrir le studio" title="Ouvrir le studio">
                   <Link to="/studio/produits/$id" params={{ id: p.id }}><LayoutTemplate className="h-4 w-4 text-primary" /></Link>
+                </Button>
+                <Button asChild size="icon" variant="ghost" aria-label="Contenu et ressources" title={p.product_type === "formation" ? "Programme et ressources" : "Ressources"}>
+                  <Link to="/studio/produits/$id/contenu" params={{ id: p.id }}><FolderOpen className="h-4 w-4 text-primary" /></Link>
                 </Button>
                 <Button size="icon" variant="ghost" aria-label="Supprimer" onClick={() => confirm(`Supprimer « ${p.title} » ?`) && remove.mutate(p)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
               </div>
