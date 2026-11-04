@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { authenticateCronRequest } from "@/integrations/supabase/cron-auth";
 
 // Scheduled safety net: if a BkaPay notification never arrives, ask BkaPay's authenticated
 // status API about each recent pending checkout. Activation happens only when BkaPay itself
@@ -7,8 +8,10 @@ export const Route = createFileRoute("/api/public/bkapay/reconcile")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const token = request.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
-        if (!token) return new Response("Unauthorized", { status: 401 });
+        // Only the managed scheduler may call this: its bearer secret is compared in constant time
+        // server-side (missing, malformed or wrong secret → 401; secret never logged or returned).
+        const authFailure = await authenticateCronRequest(request);
+        if (authFailure) return authFailure;
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         const since = new Date(Date.now() - 2 * 86400000).toISOString();
         const { data: rows } = await supabaseAdmin.from("payment_checkouts").select("id")
