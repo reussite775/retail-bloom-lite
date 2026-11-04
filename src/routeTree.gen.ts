@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as MesAchatsRouteImport } from './routes/mes-achats'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AppAbonnementRouteImport } from './routes/_app.abonnement'
 import { Route as AppAssistantRouteImport } from './routes/_app.assistant'
@@ -36,6 +37,7 @@ import { Route as AdminStatistiquesRouteImport } from './routes/admin.statistiqu
 import { Route as AdminUtilisateursRouteImport } from './routes/admin.utilisateurs'
 import { Route as AdminVentesNumeriquesRouteImport } from './routes/admin.ventes-numeriques'
 import { Route as ApiAssistantRouteImport } from './routes/api/assistant'
+import { Route as ApprendreProductRouteImport } from './routes/apprendre.$product'
 import { Route as BoutiqueSlugRouteImport } from './routes/boutique.$slug'
 import { Route as CommandeOrderIdRouteImport } from './routes/commande.$orderId'
 import { Route as PProductIdRouteImport } from './routes/p.$productId'
@@ -67,6 +69,11 @@ const AdminRoute = AdminRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MesAchatsRoute = MesAchatsRouteImport.update({
+  id: '/mes-achats',
+  path: '/mes-achats',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -184,6 +191,11 @@ const ApiAssistantRoute = ApiAssistantRouteImport.update({
   path: '/api/assistant',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApprendreProductRoute = ApprendreProductRouteImport.update({
+  id: '/apprendre/$product',
+  path: '/apprendre/$product',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const BoutiqueSlugRoute = BoutiqueSlugRouteImport.update({
   id: '/boutique/$slug',
   path: '/boutique/$slug',
@@ -256,6 +268,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/auth': typeof AuthRoute
+  '/mes-achats': typeof MesAchatsRoute
   '/reset-password': typeof ResetPasswordRoute
   '/abonnement': typeof AppAbonnementRoute
   '/assistant': typeof AppAssistantRoute
@@ -278,6 +291,7 @@ export interface FileRoutesByFullPath {
   '/admin/utilisateurs': typeof AdminUtilisateursRoute
   '/admin/ventes-numeriques': typeof AdminVentesNumeriquesRoute
   '/api/assistant': typeof ApiAssistantRoute
+  '/apprendre/$product': typeof ApprendreProductRoute
   '/boutique/$slug': typeof BoutiqueSlugRoute
   '/commande/$orderId': typeof CommandeOrderIdRoute
   '/p/$productId': typeof PProductIdRoute
@@ -296,6 +310,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/mes-achats': typeof MesAchatsRoute
   '/reset-password': typeof ResetPasswordRoute
   '/abonnement': typeof AppAbonnementRoute
   '/assistant': typeof AppAssistantRoute
@@ -317,6 +332,7 @@ export interface FileRoutesByTo {
   '/admin/utilisateurs': typeof AdminUtilisateursRoute
   '/admin/ventes-numeriques': typeof AdminVentesNumeriquesRoute
   '/api/assistant': typeof ApiAssistantRoute
+  '/apprendre/$product': typeof ApprendreProductRoute
   '/boutique/$slug': typeof BoutiqueSlugRoute
   '/commande/$orderId': typeof CommandeOrderIdRoute
   '/p/$productId': typeof PProductIdRoute
@@ -338,6 +354,7 @@ export interface FileRoutesById {
   '/_app': typeof AppRouteWithChildren
   '/admin': typeof AdminRouteWithChildren
   '/auth': typeof AuthRoute
+  '/mes-achats': typeof MesAchatsRoute
   '/reset-password': typeof ResetPasswordRoute
   '/_app/abonnement': typeof AppAbonnementRoute
   '/_app/assistant': typeof AppAssistantRoute
@@ -360,6 +377,7 @@ export interface FileRoutesById {
   '/admin/utilisateurs': typeof AdminUtilisateursRoute
   '/admin/ventes-numeriques': typeof AdminVentesNumeriquesRoute
   '/api/assistant': typeof ApiAssistantRoute
+  '/apprendre/$product': typeof ApprendreProductRoute
   '/boutique/$slug': typeof BoutiqueSlugRoute
   '/commande/$orderId': typeof CommandeOrderIdRoute
   '/p/$productId': typeof PProductIdRoute
@@ -381,6 +399,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/auth'
+    | '/mes-achats'
     | '/reset-password'
     | '/abonnement'
     | '/assistant'
@@ -403,6 +422,7 @@ export interface FileRouteTypes {
     | '/admin/utilisateurs'
     | '/admin/ventes-numeriques'
     | '/api/assistant'
+    | '/apprendre/$product'
     | '/boutique/$slug'
     | '/commande/$orderId'
     | '/p/$productId'
@@ -421,6 +441,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/mes-achats'
     | '/reset-password'
     | '/abonnement'
     | '/assistant'
@@ -442,6 +463,7 @@ export interface FileRouteTypes {
     | '/admin/utilisateurs'
     | '/admin/ventes-numeriques'
     | '/api/assistant'
+    | '/apprendre/$product'
     | '/boutique/$slug'
     | '/commande/$orderId'
     | '/p/$productId'
@@ -462,6 +484,7 @@ export interface FileRouteTypes {
     | '/_app'
     | '/admin'
     | '/auth'
+    | '/mes-achats'
     | '/reset-password'
     | '/_app/abonnement'
     | '/_app/assistant'
@@ -484,6 +507,7 @@ export interface FileRouteTypes {
     | '/admin/utilisateurs'
     | '/admin/ventes-numeriques'
     | '/api/assistant'
+    | '/apprendre/$product'
     | '/boutique/$slug'
     | '/commande/$orderId'
     | '/p/$productId'
@@ -505,8 +529,10 @@ export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
   AdminRoute: typeof AdminRouteWithChildren
   AuthRoute: typeof AuthRoute
+  MesAchatsRoute: typeof MesAchatsRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   ApiAssistantRoute: typeof ApiAssistantRoute
+  ApprendreProductRoute: typeof ApprendreProductRoute
   BoutiqueSlugRoute: typeof BoutiqueSlugRoute
   CommandeOrderIdRoute: typeof CommandeOrderIdRoute
   PProductIdRoute: typeof PProductIdRoute
@@ -544,6 +570,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mes-achats': {
+      id: '/mes-achats'
+      path: '/mes-achats'
+      fullPath: '/mes-achats'
+      preLoaderRoute: typeof MesAchatsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reset-password': {
@@ -705,6 +738,13 @@ declare module '@tanstack/react-router' {
       path: '/api/assistant'
       fullPath: '/api/assistant'
       preLoaderRoute: typeof ApiAssistantRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/apprendre/$product': {
+      id: '/apprendre/$product'
+      path: '/apprendre/$product'
+      fullPath: '/apprendre/$product'
+      preLoaderRoute: typeof ApprendreProductRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/boutique/$slug': {
@@ -886,8 +926,10 @@ const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
   AdminRoute: AdminRouteWithChildren,
   AuthRoute: AuthRoute,
+  MesAchatsRoute: MesAchatsRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   ApiAssistantRoute: ApiAssistantRoute,
+  ApprendreProductRoute: ApprendreProductRoute,
   BoutiqueSlugRoute: BoutiqueSlugRoute,
   CommandeOrderIdRoute: CommandeOrderIdRoute,
   PProductIdRoute: PProductIdRoute,

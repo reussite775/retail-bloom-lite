@@ -1,7 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { CheckCircle2, Clock, Download, MessageCircle, XCircle } from "lucide-react";
+import { useEffect } from "react";
+import { CheckCircle2, Clock, Download, MessageCircle, PlayCircle, XCircle } from "lucide-react";
+import { savePurchase } from "@/lib/learner-access";
 import { Button } from "@/components/ui/button";
 import { money } from "@/lib/format";
 import { getDigitalOrder } from "@/lib/digital-orders.functions";
@@ -38,6 +40,7 @@ function OrderTracking() {
     refetchInterval: (query) => (query.state.data?.status === "pending" ? 6000 : false),
   });
   const o = q.data;
+  useEffect(() => { if (o?.status === "paid" && t) savePurchase({ id: orderId, t }); }, [o?.status, orderId, t]);
 
   return (
     <div className="min-h-screen bg-muted/40 px-4 py-10">
@@ -77,6 +80,13 @@ function OrderTracking() {
 
               {o.status === "paid" && (
                 <div className="mt-6 space-y-3">
+                  {o.productRef && (o.productType === "formation" || o.productType === "file") && (
+                    <Button asChild size="lg" className="w-full">
+                      <Link to="/apprendre/$product" params={{ product: o.productRef }} search={{ o: o.id, t, l: undefined }}>
+                        <PlayCircle className="h-4 w-4" /> {o.productType === "formation" ? "Accéder à ma formation" : "Accéder à mes fichiers"}
+                      </Link>
+                    </Button>
+                  )}
                   {o.downloadUrl && (
                     <Button asChild size="lg" className="w-full">
                       <a href={o.downloadUrl}><Download className="h-4 w-4" /> Télécharger {o.fileName ?? "le fichier"}</a>

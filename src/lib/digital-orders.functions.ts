@@ -97,6 +97,7 @@ export const getDigitalOrder = createServerFn({ method: "POST" })
       createdAt: o.created_at, paidAt: o.paid_at, shopName: org?.name ?? "",
       shopContact: o.status === "paid" ? (org?.contact ?? "") : "",
       downloadUrl, fileName,
+      productRef: o.status === "paid" ? o.product_id : null,
     };
   });
 

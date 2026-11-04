@@ -323,6 +323,92 @@ export type Database = {
           },
         ]
       }
+      digital_learning_state: {
+        Row: {
+          last_lesson_id: string | null
+          order_id: string
+          organization_id: string
+          updated_at: string
+        }
+        Insert: {
+          last_lesson_id?: string | null
+          order_id: string
+          organization_id: string
+          updated_at?: string
+        }
+        Update: {
+          last_lesson_id?: string | null
+          order_id?: string
+          organization_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "digital_learning_state_last_lesson_id_fkey"
+            columns: ["last_lesson_id"]
+            isOneToOne: false
+            referencedRelation: "digital_lessons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "digital_learning_state_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "digital_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "digital_learning_state_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      digital_lesson_progress: {
+        Row: {
+          completed_at: string
+          lesson_id: string
+          order_id: string
+          organization_id: string
+        }
+        Insert: {
+          completed_at?: string
+          lesson_id: string
+          order_id: string
+          organization_id: string
+        }
+        Update: {
+          completed_at?: string
+          lesson_id?: string
+          order_id?: string
+          organization_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "digital_lesson_progress_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "digital_lessons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "digital_lesson_progress_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "digital_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "digital_lesson_progress_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       digital_lessons: {
         Row: {
           content: string

@@ -225,6 +225,13 @@
       "when": 1793834809246,
       "tag": "0031_digital_resources_modules_lessons",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1793835560964,
+      "tag": "0032_digital_learning_progress",
+      "breakpoints": true
     }
   ]
 }
