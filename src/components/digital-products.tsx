@@ -1,7 +1,9 @@
 import { useState } from "react";
 import DOMPurify from "dompurify";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Copy, FileDown, LayoutTemplate, Link2, Pencil, Plus, Trash2 } from "lucide-react";
+import { Archive, ArchiveRestore, Copy, CopyPlus, FileDown, LayoutTemplate, Link2, Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { CatalogManagerButtons, categoriesQuery, collectionsQuery, collectionItemsQuery } from "./digital-catalog-manager";
+import { DEFAULT_FILTERS, STATUS_LABELS, copiedPath, duplicateRow, filterCatalog, type CatalogFilters, type CatalogStatusFilter } from "@/lib/digital-catalog";
 import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -55,11 +57,20 @@ export function DigitalProducts({ shopId }: { shopId: string }) {
   const { data = [], isLoading } = useQuery(digitalQuery);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<DP | null>(null);
-  const [form, setForm] = useState<{ title: string; description: string; price: string; slug: string; product_type: ProductType }>({ title: "", description: "", price: "", slug: "", product_type: "file" });
+  const [form, setForm] = useState<{ title: string; description: string; price: string; slug: string; product_type: ProductType; category_id: string }>({ title: "", description: "", price: "", slug: "", product_type: "file", category_id: "" });
   const [cover, setCover] = useState<File | null>(null);
   const [file, setFile] = useState<File | null>(null);
+  const { data: categories = [] } = useQuery(categoriesQuery);
+  const { data: collections = [] } = useQuery(collectionsQuery);
+  const { data: collectionItems = [] } = useQuery(collectionItemsQuery);
+  const [filters, setFilters] = useState<CatalogFilters>(DEFAULT_FILTERS);
+  const membership = new Map<string, Set<string>>();
+  collectionItems.forEach((i) => { if (!membership.has(i.product_id)) membership.set(i.product_id, new Set()); membership.get(i.product_id)!.add(i.collection_id); });
+  const visible = filterCatalog(data, filters, membership);
+  const counts = { active: data.filter((p) => p.status !== "archived").length, draft: data.filter((p) => p.status === "draft").length, published: data.filter((p) => p.status === "published").length, archived: data.filter((p) => p.status === "archived").length };
+  const catName = (id: string | null) => categories.find((c) => c.id === id)?.name;
 
-  const refresh = () => qc.invalidateQueries({ queryKey: ["digital_products"] });
+  const refresh = () => { qc.invalidateQueries({ queryKey: ["digital_products"] }); qc.invalidateQueries({ queryKey: ["digital_collection_items"] }); };
 
   const save = useMutation({
     mutationFn: async (publish: boolean | null) => {
@@ -68,7 +79,7 @@ export function DigitalProducts({ shopId }: { shopId: string }) {
       if (cover && !cover.type.startsWith("image/")) throw new Error("La couverture doit être une image");
       if (!await checkSlug({ data: { kind: "product", slug: form.slug, productId: editing?.id } })) throw new Error("Nom public invalide, réservé ou déjà utilisé");
       const id = editing?.id ?? crypto.randomUUID();
-      const row: TablesUpdate<"digital_products"> = { title, slug: form.slug, product_type: form.product_type, description: sanitizeRichText(DOMPurify.sanitize(form.description, { USE_PROFILES: { html: true } })), price: Math.max(0, Number(form.price) || 0) };
+      const row: TablesUpdate<"digital_products"> = { title, slug: form.slug, product_type: form.product_type, description: sanitizeRichText(DOMPurify.sanitize(form.description, { USE_PROFILES: { html: true } })), price: Math.max(0, Number(form.price) || 0), category_id: form.category_id || null };
       if (cover) {
         const path = `${shopId}/${id}/cover-${Date.now()}.${ext(cover)}`;
         const { error } = await supabase.storage.from("digital-covers").upload(path, cover, { contentType: cover.type });
@@ -102,6 +113,46 @@ export function DigitalProducts({ shopId }: { shopId: string }) {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  // Archive keeps every row, order and file; archived products are neither public nor purchasable.
+  // Restoring returns the product to draft so nothing goes back on sale without the creator's action.
+  const archive = useMutation({
+    mutationFn: async (p: DP) => {
+      const status = p.status === "archived" ? "draft" : "archived";
+      const { error } = await supabase.from("digital_products").update({ status }).eq("id", p.id);
+      if (error) throw error;
+      return status;
+    },
+    onSuccess: (s) => { refresh(); toast.success(s === "archived" ? "Produit archivé" : "Produit restauré en brouillon"); },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  // Copies content, configuration and storage assets into a new draft; orders and buyers are never copied.
+  const duplicate = useMutation({
+    mutationFn: async (p: DP) => {
+      const newId = crypto.randomUUID();
+      const copied: { bucket: string; path: string }[] = [];
+      const copyAsset = async (bucket: string, from: string | null) => {
+        if (!from) return null;
+        const to = copiedPath(shopId, newId, from);
+        const { error } = await supabase.storage.from(bucket).copy(from, to);
+        if (error) throw new Error("Copie du fichier impossible : " + error.message);
+        copied.push({ bucket, path: to });
+        return to;
+      };
+      try {
+        const cover_path = await copyAsset("digital-covers", p.cover_path);
+        const file_path = await copyAsset("digital-files", p.file_path);
+        const { error } = await supabase.from("digital_products").insert(duplicateRow({ ...p, price: Number(p.price) }, newId, { cover_path, file_path }));
+        if (error) throw error;
+      } catch (e) {
+        for (const c of copied) await supabase.storage.from(c.bucket).remove([c.path]);
+        throw e;
+      }
+    },
+    onSuccess: () => { refresh(); setFilters((f) => ({ ...f, status: f.status === "archived" || f.status === "published" ? "draft" : f.status })); toast.success("Copie créée en brouillon"); },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const remove = useMutation({
     mutationFn: async (p: DP) => {
       const { error } = await supabase.from("digital_products").delete().eq("id", p.id);
@@ -123,27 +174,65 @@ export function DigitalProducts({ shopId }: { shopId: string }) {
   const link = (p: DP) => digitalProductLink(p.slug ?? p.id);
   const copy = async (p: DP) => { try { await navigator.clipboard.writeText(link(p)); toast.success("Lien copié"); } catch { toast.error("Copie impossible. Sélectionnez le lien."); } };
 
-  const openNew = () => { setEditing(null); setForm({ title: "", description: "", price: "", slug: "", product_type: "file" }); setCover(null); setFile(null); setOpen(true); };
-  const openEdit = (p: DP) => { setEditing(p); setForm({ title: p.title, description: p.description, price: String(p.price), slug: p.slug ?? suggestedSlug(p.title), product_type: (p.product_type as ProductType) || "file" }); setCover(null); setFile(null); setOpen(true); };
+  const openNew = () => { setEditing(null); setForm({ title: "", description: "", price: "", slug: "", product_type: "file", category_id: "" }); setCover(null); setFile(null); setOpen(true); };
+  const openEdit = (p: DP) => { setEditing(p); setForm({ title: p.title, description: p.description, price: String(p.price), slug: p.slug ?? suggestedSlug(p.title), product_type: (p.product_type as ProductType) || "file", category_id: p.category_id ?? "" }); setCover(null); setFile(null); setOpen(true); };
+  const selectCls = "h-9 rounded-md border bg-background px-2 text-sm";
+  const statusTabs: { value: CatalogStatusFilter; label: string; n: number }[] = [
+    { value: "active", label: "Actifs", n: counts.active },
+    { value: "draft", label: "Brouillons", n: counts.draft },
+    { value: "published", label: "Publiés", n: counts.published },
+    { value: "archived", label: "Archivés", n: counts.archived },
+  ];
 
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="flex items-center gap-2 text-xl font-bold"><FileDown className="h-5 w-5 text-primary" /> Produits numériques</h2>
-        <Button onClick={openNew}><Plus className="h-4 w-4" /> Nouveau produit</Button>
+        <div className="flex flex-wrap gap-2">
+          <CatalogManagerButtons shopId={shopId} products={data} />
+          <Button onClick={openNew}><Plus className="h-4 w-4" /> Nouveau produit</Button>
+        </div>
       </div>
+      {data.length > 0 && (
+        <div className="space-y-3 rounded-xl border bg-card p-3">
+          <div className="flex flex-wrap gap-1" role="tablist" aria-label="Statut">
+            {statusTabs.map((t) => (
+              <button key={t.value} type="button" role="tab" aria-selected={filters.status === t.value} onClick={() => setFilters({ ...filters, status: t.value })} className={`rounded-full px-3 py-1 text-sm font-medium transition ${filters.status === t.value ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-muted/70"}`}>{t.label} <span className="tabular opacity-80">{t.n}</span></button>
+            ))}
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <div className="relative min-w-[180px] flex-1"><Search className="pointer-events-none absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" /><Input aria-label="Rechercher un produit" placeholder="Rechercher par nom…" value={filters.q} onChange={(e) => setFilters({ ...filters, q: e.target.value })} className="pl-8" /></div>
+            <select aria-label="Type" className={selectCls} value={filters.type} onChange={(e) => setFilters({ ...filters, type: e.target.value })}>
+              <option value="all">Tous les types</option>
+              {PRODUCT_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+            </select>
+            <select aria-label="Catégorie" className={selectCls} value={filters.categoryId} onChange={(e) => setFilters({ ...filters, categoryId: e.target.value })}>
+              <option value="all">Toutes les catégories</option>
+              <option value="none">Sans catégorie</option>
+              {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+            <select aria-label="Collection" className={selectCls} value={filters.collectionId} onChange={(e) => setFilters({ ...filters, collectionId: e.target.value })}>
+              <option value="all">Toutes les collections</option>
+              {collections.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+            {JSON.stringify(filters) !== JSON.stringify(DEFAULT_FILTERS) && <Button variant="ghost" size="sm" onClick={() => setFilters(DEFAULT_FILTERS)}>Réinitialiser</Button>}
+          </div>
+        </div>
+      )}
       {isLoading && <p className="text-sm text-muted-foreground">Chargement…</p>}
       {!isLoading && data.length === 0 && <div className="rounded-xl border bg-card p-8 text-center text-sm text-muted-foreground">Aucun produit numérique. Créez votre premier produit (e-book, formation, modèle…).</div>}
+      {!isLoading && data.length > 0 && visible.length === 0 && <div className="rounded-xl border bg-card p-6 text-center text-sm text-muted-foreground">Aucun produit ne correspond à ces filtres.</div>}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {data.map((p) => (
+        {visible.map((p) => (
           <div key={p.id} className="overflow-hidden rounded-xl border bg-card">
             {p.coverUrl ? <img src={p.coverUrl} alt={p.title} className="aspect-video w-full object-cover" /> : <div className="flex aspect-video items-center justify-center bg-primary/10"><FileDown className="h-10 w-10 text-primary" /></div>}
             <div className="space-y-3 p-4">
               <div className="flex items-start justify-between gap-2">
                 <h3 className="font-bold leading-tight">{p.title}</h3>
                 <span className="flex shrink-0 flex-col items-end gap-1">
-                  <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${p.status === "published" ? "bg-primary/15 text-primary" : "bg-muted text-muted-foreground"}`}>{p.status === "published" ? "Publié" : "Brouillon"}</span>
+                  <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${p.status === "published" ? "bg-primary/15 text-primary" : p.status === "archived" ? "bg-destructive/10 text-destructive" : "bg-muted text-muted-foreground"}`}>{STATUS_LABELS[p.status] ?? "Brouillon"}</span>
                   <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">{typeLabel(p.product_type)}</span>
+                  {catName(p.category_id) && <span className="max-w-[9rem] truncate rounded-full border px-2 py-0.5 text-xs text-muted-foreground">{catName(p.category_id)}</span>}
                 </span>
               </div>
               <p className="font-display text-lg font-extrabold tabular">{money(p.price)}</p>
@@ -154,8 +243,12 @@ export function DigitalProducts({ shopId }: { shopId: string }) {
                   <Button size="icon" variant="ghost" aria-label="Copier le lien" onClick={() => copy(p)} className="ml-auto shrink-0 text-primary"><Copy className="h-3.5 w-3.5" /></Button>
                 </div>
               )}
-              <div className="flex gap-1">
-                <Button size="sm" variant={p.status === "published" ? "outline" : "default"} className="flex-1" disabled={toggle.isPending} onClick={() => toggle.mutate(p)}>{p.status === "published" ? "Dépublier" : "Publier"}</Button>
+              <div className="flex flex-wrap gap-1">
+                {p.status === "archived"
+                  ? <Button size="sm" variant="outline" className="flex-1" disabled={archive.isPending} onClick={() => archive.mutate(p)}><ArchiveRestore className="h-4 w-4" /> Restaurer</Button>
+                  : <Button size="sm" variant={p.status === "published" ? "outline" : "default"} className="flex-1" disabled={toggle.isPending} onClick={() => toggle.mutate(p)}>{p.status === "published" ? "Dépublier" : "Publier"}</Button>}
+                <Button size="icon" variant="ghost" aria-label="Dupliquer" title="Dupliquer" disabled={duplicate.isPending} onClick={() => duplicate.mutate(p)}><CopyPlus className="h-4 w-4" /></Button>
+                {p.status !== "archived" && <Button size="icon" variant="ghost" aria-label="Archiver" title="Archiver" disabled={archive.isPending} onClick={() => confirm(`Archiver « ${p.title} » ? Il ne sera plus en vente ; ses commandes sont conservées.`) && archive.mutate(p)}><Archive className="h-4 w-4" /></Button>}
                 <Button size="icon" variant="ghost" aria-label="Modifier" onClick={() => openEdit(p)}><Pencil className="h-4 w-4" /></Button>
                 <Button asChild size="icon" variant="ghost" aria-label="Ouvrir le studio" title="Ouvrir le studio">
                   <Link to="/studio/produits/$id" params={{ id: p.id }}><LayoutTemplate className="h-4 w-4 text-primary" /></Link>
@@ -182,6 +275,13 @@ export function DigitalProducts({ shopId }: { shopId: string }) {
                 </div>
               </div>
               <div className="space-y-1.5"><Label>Titre</Label><Input maxLength={200} value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value, slug: !editing && (!form.slug || form.slug === suggestedSlug(form.title)) ? suggestedSlug(e.target.value) : form.slug })} /></div>
+              <div className="space-y-1.5">
+                <Label htmlFor="dp-category">Catégorie</Label>
+                <select id="dp-category" className="h-9 w-full rounded-md border bg-background px-2 text-sm" value={form.category_id} onChange={(e) => setForm({ ...form, category_id: e.target.value })}>
+                  <option value="">Sans catégorie</option>
+                  {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                </select>
+              </div>
               <PublicSlugField kind="product" value={form.slug} onChange={(slug) => setForm({ ...form, slug })} productId={editing?.id} onAvailability={setSlugAvailable} />
             </section>
             <section className="space-y-3">

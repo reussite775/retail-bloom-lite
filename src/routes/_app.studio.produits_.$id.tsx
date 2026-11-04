@@ -169,7 +169,7 @@ function StudioPage() {
           </Button>
           <div className="min-w-0">
             <h1 className="text-xl font-extrabold sm:text-2xl">Studio de création</h1>
-            <p className="truncate text-sm text-muted-foreground">{product.title} · {product.status === "published" ? "Publié" : "Brouillon"}</p>
+            <p className="truncate text-sm text-muted-foreground">{product.title} · {product.status === "published" ? "Publié" : product.status === "archived" ? "Archivé" : "Brouillon"}</p>
           </div>
         </div>
         <Button onClick={() => save.mutate()} disabled={save.isPending || !slugAvailable}>

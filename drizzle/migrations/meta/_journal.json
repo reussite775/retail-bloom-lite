@@ -211,6 +211,13 @@
       "when": 1793826257875,
       "tag": "0029_payment_checkouts_allow_expired_status",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1793834233186,
+      "tag": "0030_digital_catalog_archive_categories_collections",
+      "breakpoints": true
     }
   ]
 }

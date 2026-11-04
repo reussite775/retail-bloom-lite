@@ -213,6 +213,116 @@ export type Database = {
           },
         ]
       }
+      digital_categories: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          organization_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          organization_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          organization_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "digital_categories_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      digital_collection_items: {
+        Row: {
+          collection_id: string
+          created_at: string
+          organization_id: string
+          position: number
+          product_id: string
+        }
+        Insert: {
+          collection_id: string
+          created_at?: string
+          organization_id: string
+          position?: number
+          product_id: string
+        }
+        Update: {
+          collection_id?: string
+          created_at?: string
+          organization_id?: string
+          position?: number
+          product_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "digital_collection_items_collection_id_fkey"
+            columns: ["collection_id"]
+            isOneToOne: false
+            referencedRelation: "digital_collections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "digital_collection_items_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "digital_collection_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "digital_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      digital_collections: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          name: string
+          organization_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string
+          id?: string
+          name: string
+          organization_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          name?: string
+          organization_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "digital_collections_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       digital_orders: {
         Row: {
           access_token: string
@@ -293,6 +403,7 @@ export type Database = {
       }
       digital_products: {
         Row: {
+          category_id: string | null
           cover_path: string | null
           created_at: string
           created_by: string | null
@@ -310,6 +421,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          category_id?: string | null
           cover_path?: string | null
           created_at?: string
           created_by?: string | null
@@ -327,6 +439,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          category_id?: string | null
           cover_path?: string | null
           created_at?: string
           created_by?: string | null
@@ -344,6 +457,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "digital_products_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "digital_categories"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "digital_products_organization_id_fkey"
             columns: ["organization_id"]

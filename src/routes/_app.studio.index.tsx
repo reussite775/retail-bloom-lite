@@ -31,7 +31,7 @@ function StudioHome() {
   const stats = [
     { label: "Produits numériques", value: list.length },
     { label: "Produits publiés", value: published },
-    { label: "Brouillons", value: list.length - published },
+    { label: "Brouillons", value: list.filter((p) => p.status === "draft").length },
   ];
   return (
     <div className="mx-auto max-w-6xl space-y-6">
