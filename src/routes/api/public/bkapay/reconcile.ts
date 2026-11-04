@@ -14,23 +14,23 @@ export const Route = createFileRoute("/api/public/bkapay/reconcile")({
         if (authFailure) return authFailure;
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         const since = new Date(Date.now() - 2 * 86400000).toISOString();
-        const { data: rows } = await supabaseAdmin.from("payment_checkouts").select("id")
-          .eq("status", "pending").not("session_id", "is", null)
-          .gte("created_at", since).order("created_at", { ascending: false }).limit(30);
-        const { reconcileCheckout } = await import("@/lib/bkapay.server");
+        // The scheduler waits only a few seconds: load and check every pending payment in parallel
+        // so one run costs about one BkaPay round-trip. Each check stays idempotent.
+        const [{ data: rows }, { data: digital }, { reconcileCheckout, reconcileDigitalOrder }] = await Promise.all([
+          supabaseAdmin.from("payment_checkouts").select("id")
+            .eq("status", "pending").not("session_id", "is", null)
+            .gte("created_at", since).order("created_at", { ascending: false }).limit(30),
+          supabaseAdmin.from("digital_orders").select("id")
+            .eq("status", "pending").not("session_id", "is", null)
+            .gte("created_at", since).order("created_at", { ascending: false }).limit(30),
+          import("@/lib/bkapay.server"),
+        ]);
+        const outcomes = await Promise.all([
+          ...(rows ?? []).map((r) => reconcileCheckout(r.id).catch(() => "error" as const)),
+          ...(digital ?? []).map((r) => reconcileDigitalOrder(r.id).then((res) => `digital_${res}`).catch(() => "digital_error")),
+        ]);
         const results: Record<string, number> = {};
-        for (const r of rows ?? []) {
-          const res = await reconcileCheckout(r.id);
-          results[res] = (results[res] ?? 0) + 1;
-        }
-        const { data: digital } = await supabaseAdmin.from("digital_orders").select("id")
-          .eq("status", "pending").not("session_id", "is", null)
-          .gte("created_at", since).order("created_at", { ascending: false }).limit(30);
-        const { reconcileDigitalOrder } = await import("@/lib/bkapay.server");
-        for (const r of digital ?? []) {
-          const res = await reconcileDigitalOrder(r.id);
-          results[`digital_${res}`] = (results[`digital_${res}`] ?? 0) + 1;
-        }
+        for (const res of outcomes) results[res] = (results[res] ?? 0) + 1;
         return Response.json({ checked: (rows?.length ?? 0) + (digital?.length ?? 0), results });
       },
     },
