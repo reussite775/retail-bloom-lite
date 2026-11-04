@@ -57,3 +57,26 @@ describe("progress and resume", () => {
     expect(mergePurchases([{ id: "1", t: "x" }, { id: "2", t: "y" }], { id: "2", t: "y" })).toEqual([{ id: "2", t: "y" }, { id: "1", t: "x" }]);
   });
 });
+
+import { ownsOrder } from "@/lib/learner-access";
+describe("ownsOrder (Mes achats)", () => {
+  const me = { id: "u1", email: "Client@Mail.com", emailVerified: true };
+  it("matches a paid order by verified e-mail, case-insensitive", () => {
+    expect(ownsOrder({ status: "paid", buyer_email: "client@mail.com ", claimedBy: null }, me)).toBe(true);
+  });
+  it("never shows unpaid orders", () => {
+    expect(ownsOrder({ status: "pending", buyer_email: "client@mail.com", claimedBy: null }, me)).toBe(false);
+    expect(ownsOrder({ status: "failed", buyer_email: "client@mail.com", claimedBy: "u1" }, me)).toBe(false);
+  });
+  it("ignores e-mail match when the e-mail is not verified", () => {
+    expect(ownsOrder({ status: "paid", buyer_email: "client@mail.com", claimedBy: null }, { ...me, emailVerified: false })).toBe(false);
+  });
+  it("a claim by another client wins over the e-mail match", () => {
+    expect(ownsOrder({ status: "paid", buyer_email: "client@mail.com", claimedBy: "u2" }, me)).toBe(false);
+    expect(ownsOrder({ status: "paid", buyer_email: "", claimedBy: "u1" }, me)).toBe(true);
+  });
+  it("other clients' orders and orders without e-mail are not shown", () => {
+    expect(ownsOrder({ status: "paid", buyer_email: "autre@mail.com", claimedBy: null }, me)).toBe(false);
+    expect(ownsOrder({ status: "paid", buyer_email: "", claimedBy: null }, me)).toBe(false);
+  });
+});

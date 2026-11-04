@@ -521,6 +521,32 @@ export type Database = {
           },
         ]
       }
+      digital_order_claims: {
+        Row: {
+          created_at: string
+          order_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          order_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          order_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "digital_order_claims_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "digital_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       digital_orders: {
         Row: {
           access_token: string

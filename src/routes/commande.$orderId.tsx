@@ -2,7 +2,11 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect } from "react";
-import { CheckCircle2, Clock, Download, MessageCircle, PlayCircle, XCircle } from "lucide-react";
+import { useMutation } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { useAuth } from "@/lib/auth";
+import { claimOrder } from "@/lib/learner.functions";
+import { CheckCircle2, Clock, Download, Library, MessageCircle, PlayCircle, XCircle } from "lucide-react";
 import { savePurchase } from "@/lib/learner-access";
 import { Button } from "@/components/ui/button";
 import { money } from "@/lib/format";
@@ -41,6 +45,13 @@ function OrderTracking() {
   });
   const o = q.data;
   useEffect(() => { if (o?.status === "paid" && t) savePurchase({ id: orderId, t }); }, [o?.status, orderId, t]);
+  const { session } = useAuth();
+  const claimFn = useServerFn(claimOrder);
+  const claim = useMutation({
+    mutationFn: () => claimFn({ data: { id: orderId, t } }),
+    onSuccess: () => toast.success("Achat ajouté à votre bibliothèque"),
+    onError: (e: Error) => toast.error(e.message),
+  });
 
   return (
     <div className="min-h-screen bg-muted/40 px-4 py-10">
@@ -80,10 +91,10 @@ function OrderTracking() {
 
               {o.status === "paid" && (
                 <div className="mt-6 space-y-3">
-                  {o.productRef && (o.productType === "formation" || o.productType === "file") && (
+                  {o.productRef && (
                     <Button asChild size="lg" className="w-full">
                       <Link to="/apprendre/$product" params={{ product: o.productRef }} search={{ o: o.id, t, l: undefined }}>
-                        <PlayCircle className="h-4 w-4" /> {o.productType === "formation" ? "Accéder à ma formation" : "Accéder à mes fichiers"}
+                        <PlayCircle className="h-4 w-4" /> {o.productType === "formation" ? "Accéder à ma formation" : o.productType === "file" ? "Accéder à mes fichiers" : "Accéder à mon contenu"}
                       </Link>
                     </Button>
                   )}
@@ -98,6 +109,13 @@ function OrderTracking() {
                     </p>
                   )}
                   {o.shopContact && <ContactSeller contact={o.shopContact} order={o.id} title={o.productTitle} />}
+                  {session ? (
+                    <Button variant="outline" className="w-full" disabled={claim.isPending || claim.isSuccess} onClick={() => claim.mutate()}>
+                      <Library className="h-4 w-4" /> {claim.isSuccess ? "Ajouté à ma bibliothèque" : "Ajouter à ma bibliothèque"}
+                    </Button>
+                  ) : (
+                    <Button asChild variant="outline" className="w-full"><a href="/auth?client=1"><Library className="h-4 w-4" /> Créer mon espace client pour retrouver mes achats</a></Button>
+                  )}
                   <p className="text-center text-xs text-muted-foreground">Gardez ce lien : il vous permet de retrouver votre achat.</p>
                 </div>
               )}

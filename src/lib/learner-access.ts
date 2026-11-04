@@ -76,3 +76,17 @@ export function savePurchase(p: SavedPurchase) {
     localStorage.setItem(PURCHASES_KEY, JSON.stringify(mergePurchases(Array.isArray(list) ? list : [], p)));
   } catch { /* storage unavailable: the purchase link still works */ }
 }
+
+/**
+ * Library ownership: a PAID order belongs to a signed-in client when it was explicitly
+ * claimed by them, or (if nobody claimed it) when its buyer e-mail equals their verified e-mail.
+ */
+export function ownsOrder(
+  order: { status: string; buyer_email: string; claimedBy: string | null },
+  user: { id: string; email: string | null; emailVerified: boolean },
+): boolean {
+  if (order.status !== "paid") return false;
+  if (order.claimedBy) return order.claimedBy === user.id;
+  const email = (user.email ?? "").trim().toLowerCase();
+  return user.emailVerified && !!email && order.buyer_email.trim().toLowerCase() === email;
+}

@@ -82,7 +82,7 @@ export const membershipQuery = (uid: string) =>
     queryFn: async () => {
       const { data, error } = await supabase.from("organization_members").select("organization_id, role").eq("user_id", uid).maybeSingle();
       if (error) throw error;
-      return { shopId: data?.organization_id ?? uid, isAdmin: !data || data.role === "admin" };
+      return { shopId: data?.organization_id ?? uid, isAdmin: !data || data.role === "admin", hasShop: !!data };
     },
   });
 

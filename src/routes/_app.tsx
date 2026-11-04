@@ -81,7 +81,11 @@ function AppLayout() {
     if (!loading && !session) navigate({ to: "/auth" });
   }, [loading, session, navigate]);
 
-  if (loading || !session || member.isLoading || profile.isLoading || superAdmin.isLoading || forbidden) {
+  // Client (buyer) accounts have no shop: send them to their purchases library.
+  const noShop = member.data?.hasShop === false && superAdmin.data === false;
+  useEffect(() => { if (noShop) navigate({ to: "/mes-achats", replace: true }); }, [noShop, navigate]);
+
+  if (loading || !session || member.isLoading || profile.isLoading || superAdmin.isLoading || forbidden || noShop) {
     return <div className="grid min-h-screen place-items-center text-muted-foreground">Chargement…</div>;
   }
 

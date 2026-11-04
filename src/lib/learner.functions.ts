@@ -1,7 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { sanitizeRichText } from "@/lib/rich-text";
-import { canOpenLesson, orderUnlocks } from "@/lib/learner-access";
+import { canOpenLesson, orderUnlocks, ownsOrder } from "@/lib/learner-access";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 /*
  * Public learner endpoints. Buyers have no account: access is granted ONLY by a paid
@@ -152,4 +153,58 @@ export const listMyPurchases = createServerFn({ method: "POST" })
         shopName: org?.name ?? "", paidAt: o.paid_at, coverUrl, lessonsTotal: total ?? 0, lessonsDone: Math.min(done ?? 0, total ?? 0), lastLessonId: st?.last_lesson_id ?? null,
       };
     }));
+  });
+
+async function verifiedUser(userId: string) {
+  const sb = await admin();
+  const { data } = await sb.auth.admin.getUserById(userId);
+  const u = data?.user;
+  return { sb, user: { id: userId, email: u?.email ?? null, emailVerified: !!u?.email_confirmed_at } };
+}
+
+/** Signed-in client library: only paid orders owned by the caller (claim or verified e-mail). */
+export const listMyLibrary = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { sb, user } = await verifiedUser(context.userId);
+    const { data: claims } = await sb.from("digital_order_claims").select("order_id").eq("user_id", user.id);
+    const claimedIds = (claims ?? []).map((c) => c.order_id);
+    const cols = "id, access_token, status, product_id, product_title, product_type, buyer_email, paid_at, organization_id";
+    const [byEmail, byClaim] = await Promise.all([
+      user.emailVerified && user.email ? sb.from("digital_orders").select(cols).eq("status", "paid").ilike("buyer_email", user.email.replace(/[%_\\]/g, "\\$&")) : Promise.resolve({ data: [] as never[] }),
+      claimedIds.length ? sb.from("digital_orders").select(cols).eq("status", "paid").in("id", claimedIds) : Promise.resolve({ data: [] as never[] }),
+    ]);
+    const all = new Map([...(byEmail.data ?? []), ...(byClaim.data ?? [])].map((o) => [o.id, o]));
+    if (!all.size) return [];
+    const { data: allClaims } = await sb.from("digital_order_claims").select("order_id, user_id").in("order_id", [...all.keys()]);
+    const claimedBy = new Map((allClaims ?? []).map((c) => [c.order_id, c.user_id]));
+    const owned = [...all.values()].filter((o) => o.product_id && ownsOrder({ status: o.status, buyer_email: o.buyer_email, claimedBy: claimedBy.get(o.id) ?? null }, user));
+    const items = await Promise.all(owned.map(async (o) => {
+      const [{ data: p }, { data: org }] = await Promise.all([
+        sb.from("digital_products").select("id, slug, title, cover_path, organization_id").eq("id", o.product_id!).maybeSingle(),
+        sb.from("organizations").select("name").eq("id", o.organization_id).maybeSingle(),
+      ]);
+      // The product must still exist and belong to the shop that sold it.
+      if (!p || p.organization_id !== o.organization_id) return null;
+      const coverUrl = p.cover_path ? (await sb.storage.from("digital-covers").createSignedUrl(p.cover_path, SIGN_SECONDS)).data?.signedUrl ?? null : null;
+      return { orderId: o.id, token: o.access_token, product: p.slug ?? p.id, title: p.title, type: o.product_type, shopName: org?.name ?? "", paidAt: o.paid_at, coverUrl };
+    }));
+    return items.filter((x): x is NonNullable<typeof x> => !!x).sort((a, b) => (b.paidAt ?? "").localeCompare(a.paidAt ?? ""));
+  });
+
+/** Links a paid order (proved by its secret link) to the signed-in client's library. */
+export const claimOrder = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ id: z.string().regex(UUID), t: z.string().regex(/^[a-f0-9]{16,128}$/) }).parse(d))
+  .handler(async ({ data, context }) => {
+    const sb = await admin();
+    const { data: o } = await sb.from("digital_orders").select("id, access_token, status").eq("id", data.id).maybeSingle();
+    if (!o || o.access_token !== data.t || o.status !== "paid") throw new Error("Commande introuvable ou non payée");
+    const { data: existing } = await sb.from("digital_order_claims").select("user_id").eq("order_id", o.id).maybeSingle();
+    if (existing && existing.user_id !== context.userId) throw new Error("Cet achat est déjà rattaché à un autre compte client");
+    if (!existing) {
+      const { error } = await sb.from("digital_order_claims").insert({ order_id: o.id, user_id: context.userId });
+      if (error) throw new Error("Rattachement impossible");
+    }
+    return { ok: true };
   });
