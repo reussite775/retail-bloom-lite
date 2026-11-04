@@ -28,6 +28,24 @@ export const Route = createFileRoute("/api/public/bkapay/webhook")({
         const body = await request.text();
         const sig = request.headers.get("x-bkapay-signature") ?? "";
         const ts = request.headers.get("x-bkapay-timestamp") ?? "";
+
+        // Digital-product purchases: the payload only locates the order; payment is confirmed
+        // exclusively through BkaPay's authenticated status API (reconcileDigitalOrder).
+        {
+          let p: any = null;
+          try { p = JSON.parse(body); } catch { /* ignore */ }
+          const pd = p?.data ?? p ?? {};
+          const order = String(pd.order_id ?? pd.orderId ?? pd.reference ?? p?.order_id ?? "");
+          const sess = pd.sessionId ?? pd.session_id ?? pd.session?.id ?? null;
+          const { findDigitalOrderId, reconcileDigitalOrder } = await import("@/lib/bkapay.server");
+          const digitalId = await findDigitalOrderId(order, sess);
+          if (digitalId) {
+            const r = await reconcileDigitalOrder(digitalId);
+            if (r === "error") return new Response("Retry later", { status: 503 });
+            return new Response("ok");
+          }
+        }
+
         if (!sig || !validSignature(body, ts, sig, secret)) {
           // The payload is NOT trusted. We only use it to locate our checkout, then ask
           // BkaPay's authenticated status API (secret key) whether that session is really paid.

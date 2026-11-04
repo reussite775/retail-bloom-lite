@@ -20,7 +20,15 @@ export const Route = createFileRoute("/api/public/bkapay/reconcile")({
           const res = await reconcileCheckout(r.id);
           results[res] = (results[res] ?? 0) + 1;
         }
-        return Response.json({ checked: rows?.length ?? 0, results });
+        const { data: digital } = await supabaseAdmin.from("digital_orders").select("id")
+          .eq("status", "pending").not("session_id", "is", null)
+          .gte("created_at", since).order("created_at", { ascending: false }).limit(30);
+        const { reconcileDigitalOrder } = await import("@/lib/bkapay.server");
+        for (const r of digital ?? []) {
+          const res = await reconcileDigitalOrder(r.id);
+          results[`digital_${res}`] = (results[`digital_${res}`] ?? 0) + 1;
+        }
+        return Response.json({ checked: (rows?.length ?? 0) + (digital?.length ?? 0), results });
       },
     },
   },

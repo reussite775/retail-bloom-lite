@@ -34,8 +34,10 @@ import { Route as AdminParametresRouteImport } from './routes/admin.parametres'
 import { Route as AdminRelancesRouteImport } from './routes/admin.relances'
 import { Route as AdminStatistiquesRouteImport } from './routes/admin.statistiques'
 import { Route as AdminUtilisateursRouteImport } from './routes/admin.utilisateurs'
+import { Route as AdminVentesNumeriquesRouteImport } from './routes/admin.ventes-numeriques'
 import { Route as ApiAssistantRouteImport } from './routes/api/assistant'
 import { Route as BoutiqueSlugRouteImport } from './routes/boutique.$slug'
+import { Route as CommandeOrderIdRouteImport } from './routes/commande.$orderId'
 import { Route as PProductIdRouteImport } from './routes/p.$productId'
 import { Route as AppStudioIndexRouteImport } from './routes/_app.studio.index'
 import { Route as AppStudioAffiliesRouteImport } from './routes/_app.studio.affilies'
@@ -171,6 +173,11 @@ const AdminUtilisateursRoute = AdminUtilisateursRouteImport.update({
   path: '/utilisateurs',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminVentesNumeriquesRoute = AdminVentesNumeriquesRouteImport.update({
+  id: '/ventes-numeriques',
+  path: '/ventes-numeriques',
+  getParentRoute: () => AdminRoute,
+} as any)
 const ApiAssistantRoute = ApiAssistantRouteImport.update({
   id: '/api/assistant',
   path: '/api/assistant',
@@ -179,6 +186,11 @@ const ApiAssistantRoute = ApiAssistantRouteImport.update({
 const BoutiqueSlugRoute = BoutiqueSlugRouteImport.update({
   id: '/boutique/$slug',
   path: '/boutique/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CommandeOrderIdRoute = CommandeOrderIdRouteImport.update({
+  id: '/commande/$orderId',
+  path: '/commande/$orderId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PProductIdRoute = PProductIdRouteImport.update({
@@ -257,8 +269,10 @@ export interface FileRoutesByFullPath {
   '/admin/relances': typeof AdminRelancesRoute
   '/admin/statistiques': typeof AdminStatistiquesRoute
   '/admin/utilisateurs': typeof AdminUtilisateursRoute
+  '/admin/ventes-numeriques': typeof AdminVentesNumeriquesRoute
   '/api/assistant': typeof ApiAssistantRoute
   '/boutique/$slug': typeof BoutiqueSlugRoute
+  '/commande/$orderId': typeof CommandeOrderIdRoute
   '/p/$productId': typeof PProductIdRoute
   '/admin/': typeof AdminIndexRoute
   '/studio/affilies': typeof AppStudioAffiliesRoute
@@ -293,8 +307,10 @@ export interface FileRoutesByTo {
   '/admin/relances': typeof AdminRelancesRoute
   '/admin/statistiques': typeof AdminStatistiquesRoute
   '/admin/utilisateurs': typeof AdminUtilisateursRoute
+  '/admin/ventes-numeriques': typeof AdminVentesNumeriquesRoute
   '/api/assistant': typeof ApiAssistantRoute
   '/boutique/$slug': typeof BoutiqueSlugRoute
+  '/commande/$orderId': typeof CommandeOrderIdRoute
   '/p/$productId': typeof PProductIdRoute
   '/admin': typeof AdminIndexRoute
   '/studio/affilies': typeof AppStudioAffiliesRoute
@@ -333,8 +349,10 @@ export interface FileRoutesById {
   '/admin/relances': typeof AdminRelancesRoute
   '/admin/statistiques': typeof AdminStatistiquesRoute
   '/admin/utilisateurs': typeof AdminUtilisateursRoute
+  '/admin/ventes-numeriques': typeof AdminVentesNumeriquesRoute
   '/api/assistant': typeof ApiAssistantRoute
   '/boutique/$slug': typeof BoutiqueSlugRoute
+  '/commande/$orderId': typeof CommandeOrderIdRoute
   '/p/$productId': typeof PProductIdRoute
   '/admin/': typeof AdminIndexRoute
   '/_app/studio/affilies': typeof AppStudioAffiliesRoute
@@ -373,8 +391,10 @@ export interface FileRouteTypes {
     | '/admin/relances'
     | '/admin/statistiques'
     | '/admin/utilisateurs'
+    | '/admin/ventes-numeriques'
     | '/api/assistant'
     | '/boutique/$slug'
+    | '/commande/$orderId'
     | '/p/$productId'
     | '/admin/'
     | '/studio/affilies'
@@ -409,8 +429,10 @@ export interface FileRouteTypes {
     | '/admin/relances'
     | '/admin/statistiques'
     | '/admin/utilisateurs'
+    | '/admin/ventes-numeriques'
     | '/api/assistant'
     | '/boutique/$slug'
+    | '/commande/$orderId'
     | '/p/$productId'
     | '/admin'
     | '/studio/affilies'
@@ -448,8 +470,10 @@ export interface FileRouteTypes {
     | '/admin/relances'
     | '/admin/statistiques'
     | '/admin/utilisateurs'
+    | '/admin/ventes-numeriques'
     | '/api/assistant'
     | '/boutique/$slug'
+    | '/commande/$orderId'
     | '/p/$productId'
     | '/admin/'
     | '/_app/studio/affilies'
@@ -471,6 +495,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   ApiAssistantRoute: typeof ApiAssistantRoute
   BoutiqueSlugRoute: typeof BoutiqueSlugRoute
+  CommandeOrderIdRoute: typeof CommandeOrderIdRoute
   PProductIdRoute: typeof PProductIdRoute
   ApiPublicBkapayReconcileRoute: typeof ApiPublicBkapayReconcileRoute
   ApiPublicBkapayWebhookRoute: typeof ApiPublicBkapayWebhookRoute
@@ -655,6 +680,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminUtilisateursRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/ventes-numeriques': {
+      id: '/admin/ventes-numeriques'
+      path: '/ventes-numeriques'
+      fullPath: '/admin/ventes-numeriques'
+      preLoaderRoute: typeof AdminVentesNumeriquesRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/api/assistant': {
       id: '/api/assistant'
       path: '/api/assistant'
@@ -667,6 +699,13 @@ declare module '@tanstack/react-router' {
       path: '/boutique/$slug'
       fullPath: '/boutique/$slug'
       preLoaderRoute: typeof BoutiqueSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/commande/$orderId': {
+      id: '/commande/$orderId'
+      path: '/commande/$orderId'
+      fullPath: '/commande/$orderId'
+      preLoaderRoute: typeof CommandeOrderIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/p/$productId': {
@@ -804,6 +843,7 @@ interface AdminRouteChildren {
   AdminRelancesRoute: typeof AdminRelancesRoute
   AdminStatistiquesRoute: typeof AdminStatistiquesRoute
   AdminUtilisateursRoute: typeof AdminUtilisateursRoute
+  AdminVentesNumeriquesRoute: typeof AdminVentesNumeriquesRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
@@ -813,6 +853,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminRelancesRoute: AdminRelancesRoute,
   AdminStatistiquesRoute: AdminStatistiquesRoute,
   AdminUtilisateursRoute: AdminUtilisateursRoute,
+  AdminVentesNumeriquesRoute: AdminVentesNumeriquesRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
 
@@ -826,6 +867,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   ApiAssistantRoute: ApiAssistantRoute,
   BoutiqueSlugRoute: BoutiqueSlugRoute,
+  CommandeOrderIdRoute: CommandeOrderIdRoute,
   PProductIdRoute: PProductIdRoute,
   ApiPublicBkapayReconcileRoute: ApiPublicBkapayReconcileRoute,
   ApiPublicBkapayWebhookRoute: ApiPublicBkapayWebhookRoute,

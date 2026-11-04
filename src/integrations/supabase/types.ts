@@ -213,6 +213,84 @@ export type Database = {
           },
         ]
       }
+      digital_orders: {
+        Row: {
+          access_token: string
+          amount: number
+          buyer_email: string
+          buyer_name: string
+          buyer_phone: string
+          created_at: string
+          currency: string
+          id: string
+          organization_id: string
+          paid_at: string | null
+          product_id: string | null
+          product_title: string
+          product_type: string
+          raw_event: Json | null
+          session_id: string | null
+          status: string
+          transaction_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          access_token?: string
+          amount: number
+          buyer_email?: string
+          buyer_name: string
+          buyer_phone: string
+          created_at?: string
+          currency?: string
+          id?: string
+          organization_id: string
+          paid_at?: string | null
+          product_id?: string | null
+          product_title: string
+          product_type?: string
+          raw_event?: Json | null
+          session_id?: string | null
+          status?: string
+          transaction_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          access_token?: string
+          amount?: number
+          buyer_email?: string
+          buyer_name?: string
+          buyer_phone?: string
+          created_at?: string
+          currency?: string
+          id?: string
+          organization_id?: string
+          paid_at?: string | null
+          product_id?: string | null
+          product_title?: string
+          product_type?: string
+          raw_event?: Json | null
+          session_id?: string | null
+          status?: string
+          transaction_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "digital_orders_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "digital_orders_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "digital_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       digital_products: {
         Row: {
           cover_path: string | null

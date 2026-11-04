@@ -52,3 +52,67 @@ export async function reconcileCheckout(checkoutId: string, event: unknown = nul
   }
   return status === "failed" || status === "expired" ? status : "pending";
 }
+
+type DigitalOrder = { id: string; amount: number | string; currency: string; status: string; session_id: string | null };
+
+/**
+ * Same rule for digital-product purchases: an order becomes "paid" only when BkaPay's
+ * authenticated status API reports "completed" for this order id, amount and currency.
+ * The conditional update (status = 'pending') makes it idempotent.
+ */
+export async function reconcileDigitalOrder(orderId: string): Promise<ReconcileResult> {
+  const { data: o } = await supabaseAdmin.from("digital_orders")
+    .select("id, amount, currency, status, session_id").eq("id", orderId).maybeSingle<DigitalOrder>();
+  if (!o) return "error";
+  if (o.status === "paid") return "already_paid";
+  if (!o.session_id) return "pending";
+  const apiKey = process.env["BKAPAY_SECRET_KEY"];
+  if (!apiKey) return "error";
+  const res = await fetch(`https://bkapay.com/api/v1/payment-sessions/${encodeURIComponent(o.session_id)}/status`, {
+    headers: { Authorization: `Bearer ${apiKey}`, Accept: "application/json" },
+  }).catch(() => null);
+  if (!res) return "error";
+  const s = (await res.json().catch(() => ({}))) as any;
+  const status = String(s.status ?? "").toLowerCase();
+
+  if (status === "completed") {
+    const orderRef = String(s.orderId ?? s.order_id ?? "");
+    const amount = Number(s.amount);
+    const currency = String(s.currency ?? "").toUpperCase();
+    const okCurrency = currency === o.currency || (o.currency === "XOF" && ["FCFA", "CFA", "XOF"].includes(currency));
+    if (orderRef !== o.id || amount !== Number(o.amount) || !okCurrency) {
+      console.error("bkapay digital: mismatch", { order: o.id, orderRef, amount, currency });
+      return "mismatch";
+    }
+    const tx = s.transactionId ?? s.transaction_id;
+    if (tx) {
+      const { data: dup } = await supabaseAdmin.from("digital_orders").select("id")
+        .eq("transaction_id", String(tx)).neq("id", o.id).maybeSingle();
+      if (dup) return "mismatch";
+    }
+    const { data: updated, error } = await supabaseAdmin.from("digital_orders")
+      .update({ status: "paid", paid_at: new Date().toISOString(), transaction_id: tx ? String(tx) : null, raw_event: { source: "bkapay_status_api", ...s } })
+      .eq("id", o.id).eq("status", "pending").select("id");
+    if (error) { console.error("bkapay digital: update failed", error.message); return "error"; }
+    return updated && updated.length > 0 ? "activated" : "already_paid";
+  }
+  if ((status === "failed" || status === "expired") && o.status === "pending") {
+    await supabaseAdmin.from("digital_orders").update({ status }).eq("id", o.id).eq("status", "pending");
+    return status;
+  }
+  return status === "failed" || status === "expired" ? status : "pending";
+}
+
+/** Finds a digital order referenced by a BkaPay notification (order id or session id). */
+export async function findDigitalOrderId(order: string, session: unknown): Promise<string | null> {
+  const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (UUID.test(order)) {
+    const { data } = await supabaseAdmin.from("digital_orders").select("id").eq("id", order).maybeSingle();
+    if (data) return data.id;
+  }
+  if (session) {
+    const { data } = await supabaseAdmin.from("digital_orders").select("id").eq("session_id", String(session)).maybeSingle();
+    if (data) return data.id;
+  }
+  return null;
+}

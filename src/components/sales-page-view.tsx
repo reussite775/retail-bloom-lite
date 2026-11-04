@@ -135,14 +135,10 @@ export function SalesPageView({ data, onCta }: { data: SalesPageData; onCta?: ()
             <p className="whitespace-pre-line break-words text-sm text-muted-foreground">{data.description}</p>
           ))}
         {cfg && <SalesPageSections config={cfg} />}
-        {cfg?.ctaLabel && (
-          <Button type="button" size="lg" className="w-full" onClick={onCta}>
-            {cfg.ctaLabel}
-          </Button>
-        )}
-        <div className="rounded-lg bg-muted p-3 text-center text-sm text-muted-foreground">
-          L'achat en ligne sera bientôt disponible.
-        </div>
+        <Button type="button" size="lg" className="w-full" onClick={onCta}>
+          {cfg?.ctaLabel || "Acheter maintenant"}
+        </Button>
+        <p className="text-center text-xs text-muted-foreground">Paiement sécurisé par BkaPay (Mobile Money)</p>
       </div>
     </div>
   );

@@ -2,6 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { getPublicDigitalProduct } from "@/lib/digital.functions";
 import { plainText } from "@/lib/rich-text";
 import { SalesPageView } from "@/components/sales-page-view";
+import { BuyDigitalDialog } from "@/components/buy-digital-dialog";
+import { useState } from "react";
 
 export const Route = createFileRoute("/p/$productId")({
   loader: ({ params }) => getPublicDigitalProduct({ data: { id: params.productId } }),
@@ -25,6 +27,7 @@ export const Route = createFileRoute("/p/$productId")({
 
 function ProductPage() {
   const p = Route.useLoaderData();
+  const [buying, setBuying] = useState(false);
   if (!p) {
     return (
       <div className="flex min-h-screen items-center justify-center p-6 text-center">
@@ -49,7 +52,9 @@ function ProductPage() {
             productType: p.product_type,
             pageConfig: p.pageConfig,
           }}
+          onCta={() => setBuying(true)}
         />
+        <BuyDigitalDialog open={buying} onOpenChange={setBuying} product={p.id} title={p.title} price={p.price} />
       </div>
       <p className="mt-6 text-center text-xs text-muted-foreground">Propulsé par GestiPro</p>
     </div>
