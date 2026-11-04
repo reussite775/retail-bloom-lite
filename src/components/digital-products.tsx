@@ -147,7 +147,7 @@ export function DigitalProducts({ shopId }: { shopId: string }) {
                 </span>
               </div>
               <p className="font-display text-lg font-extrabold tabular">{money(p.price)}</p>
-              {p.file_name ? <button onClick={() => download(p)} className="block truncate text-left text-xs text-primary hover:underline">{p.file_name}</button> : <p className="text-xs text-destructive">Aucun fichier</p>}
+              {p.file_name ? <button onClick={() => download(p)} className="block truncate text-left text-xs text-primary hover:underline">{p.file_name}</button> : (p.product_type ?? "file") === "file" ? <p className="text-xs text-destructive">Aucun fichier</p> : <p className="text-xs text-muted-foreground">Sans fichier (facultatif)</p>}
               {p.status === "published" && (
                 <div className="flex items-center gap-2 rounded-lg bg-muted p-2 text-xs">
                   <Link2 className="h-3.5 w-3.5 shrink-0" /><span className="min-w-0 break-all">{link(p)}</span>

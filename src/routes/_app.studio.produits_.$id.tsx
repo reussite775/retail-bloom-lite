@@ -36,6 +36,16 @@ export const Route = createFileRoute("/_app/studio/produits_/$id")({
 
 type DP = Tables<"digital_products">;
 
+// Exemples de saisie adaptés au type de produit (indications seulement, rien n'est enregistré).
+type TypeHint = { benefit: string; included: string; cta: string };
+const TYPE_HINTS: Record<"file" | "formation" | "service" | "coaching", TypeHint> = {
+  file: { benefit: "Ex. : 100 prières prêtes à l'emploi", included: "Ex. : 1 fichier PDF de 80 pages", cta: "Ex. : Je télécharge maintenant" },
+  formation: { benefit: "Ex. : Savoir lancer sa boutique en 30 jours", included: "Ex. : 12 vidéos + supports PDF", cta: "Ex. : Je m'inscris à la formation" },
+  service: { benefit: "Ex. : Un logo professionnel livré en 72 h", included: "Ex. : 2 propositions + 3 retouches", cta: "Ex. : Je commande ce service" },
+  coaching: { benefit: "Ex. : Un plan d'action clair pour votre projet", included: "Ex. : 4 séances d'1 h en visio + suivi WhatsApp", cta: "Ex. : Je réserve ma séance" },
+};
+const hintsFor = (t: string): TypeHint => (t in TYPE_HINTS ? TYPE_HINTS[t as keyof typeof TYPE_HINTS] : TYPE_HINTS.file);
+
 type Form = {
   title: string;
   product_type: string;
@@ -153,13 +163,13 @@ function StudioPage() {
   return (
     <div className="mx-auto max-w-7xl space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <Button asChild size="icon" variant="ghost" aria-label="Retour aux produits">
+        <div className="flex min-w-0 items-center gap-3">
+          <Button asChild size="icon" variant="ghost" aria-label="Retour aux produits" className="shrink-0">
             <Link to="/studio/produits"><ArrowLeft className="h-4 w-4" /></Link>
           </Button>
-          <div>
-            <h1 className="text-2xl font-extrabold">Studio de création</h1>
-            <p className="text-sm text-muted-foreground">{product.title} · {product.status === "published" ? "Publié" : "Brouillon"}</p>
+          <div className="min-w-0">
+            <h1 className="text-xl font-extrabold sm:text-2xl">Studio de création</h1>
+            <p className="truncate text-sm text-muted-foreground">{product.title} · {product.status === "published" ? "Publié" : "Brouillon"}</p>
           </div>
         </div>
         <Button onClick={() => save.mutate()} disabled={save.isPending || !slugAvailable}>
@@ -249,8 +259,8 @@ function StudioPage() {
                 </div>
               ))}
             </div>
-            <ListEditor label="Ce que le client va obtenir" items={form.config.benefits} onChange={(benefits) => setConfig({ benefits })} placeholder="Ex. : 100 prières prêtes à l'emploi" />
-            <ListEditor label="Contenu inclus" items={form.config.included} onChange={(included) => setConfig({ included })} placeholder="Ex. : 1 fichier PDF de 80 pages" />
+            <ListEditor label="Ce que le client va obtenir" items={form.config.benefits} onChange={(benefits) => setConfig({ benefits })} placeholder={hintsFor(form.product_type).benefit} />
+            <ListEditor label="Contenu inclus" items={form.config.included} onChange={(included) => setConfig({ included })} placeholder={hintsFor(form.product_type).included} />
             <div className="space-y-2">
               <Label>Témoignages</Label>
               {form.config.testimonials.map((t, i) => (
@@ -275,7 +285,7 @@ function StudioPage() {
             </div>
             <div className="space-y-1.5">
               <Label>Texte du bouton d'action</Label>
-              <Input maxLength={40} value={form.config.ctaLabel} placeholder="Ex. : Je commande maintenant" onChange={(e) => setConfig({ ctaLabel: e.target.value })} />
+              <Input maxLength={40} value={form.config.ctaLabel} placeholder={hintsFor(form.product_type).cta} onChange={(e) => setConfig({ ctaLabel: e.target.value })} />
             </div>
           </section>
         </div>
@@ -300,7 +310,7 @@ function StudioPage() {
                 productType: form.product_type,
                 pageConfig: normalizePageConfig(form.config),
               }}
-              onCta={() => toast.info("L'achat en ligne sera bientôt disponible.")}
+              onCta={() => toast.info("Aperçu : sur la page publique, ce bouton ouvre le formulaire d'achat et le paiement BkaPay.")}
             />
           </div>
           <p className="text-center text-xs text-muted-foreground">L'aperçu reflète exactement la page publique.</p>
