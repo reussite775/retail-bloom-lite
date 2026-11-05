@@ -40,13 +40,25 @@ export function claimDecision(
   return "ok";
 }
 
-/** A paid order unlocks a product only with its exact secret token and matching product. */
+/** Claimed orders require the authenticated owner; unclaimed orders require their secret. */
 export function orderUnlocks(
   order: { access_token: string; status: string; product_id: string | null } | null | undefined,
   token: string | undefined,
   productId: string,
+  claimedBy: string | null = null,
+  authenticatedUserId: string | null = null,
 ): boolean {
-  return !!order && !!token && safeEqual(order.access_token, token) && order.status === "paid" && order.product_id === productId;
+  if (!order || order.status !== "paid" || order.product_id !== productId) return false;
+  if (claimedBy) return authenticatedUserId === claimedBy;
+  return !!token && safeEqual(order.access_token, token);
+}
+
+export function contentUrl(product: string, resource: string, o?: string, t?: string, download = false) {
+  const query = new URLSearchParams({ product, resource });
+  if (o) query.set("o", o);
+  if (t) query.set("t", t);
+  if (download) query.set("download", "1");
+  return `/api/digital-content?${query}`;
 }
 
 /** Embeddable player URL for YouTube / Vimeo links, otherwise null. */

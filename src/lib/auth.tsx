@@ -29,6 +29,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // The initial state is decided below, once restoration is finished.
       if (event === "INITIAL_SESSION" || !active) return;
       if (event === "SIGNED_OUT") {
+        // Clear the HTTP-only download bridge as well as the browser session.
+        void fetch("/api/digital-content", { method: "DELETE" }).catch(() => undefined);
         // Remove the shop data kept on the device for offline use.
         queryClient.clear();
         localStorage.removeItem("boutik-cache");

@@ -1,14 +1,13 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { sanitizeRichText } from "@/lib/rich-text";
-import { canOpenLesson, claimDecision, orderUnlocks, ownsOrder, safeEqual } from "@/lib/learner-access";
+import { canOpenLesson, claimDecision, contentUrl, ownsOrder, safeEqual } from "@/lib/learner-access";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 /*
- * Public learner endpoints. Buyers have no account: access is granted ONLY by a paid
- * digital_orders row + its secret access_token (the same link given after payment).
- * Everything is decided here on the server; private files are returned as short-lived
- * signed URLs only after the check. Unpublished lessons are never returned to buyers.
+ * Public previews and purchase endpoints: claimed purchases require the authenticated
+ * claimant; unclaimed purchases keep bearer access. Download URLs recheck ownership
+ * on the server at each request. Unpublished lessons are never returned to buyers.
  */
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -21,35 +20,30 @@ type Admin = (typeof import("@/integrations/supabase/client.server"))["supabaseA
 const admin = async (): Promise<Admin> => (await import("@/integrations/supabase/client.server")).supabaseAdmin;
 
 async function resolve(sb: Admin, product: string, o?: string, t?: string) {
+  const { authorizePurchase, purchaseIdentity } = await import("@/lib/purchase-access.server");
+  const userId = await purchaseIdentity(sb);
   let q = sb.from("digital_products").select("id, slug, title, description, price, product_type, status, cover_path, file_path, file_name, organization_id");
   q = UUID.test(product) ? q.eq("id", product) : q.eq("slug", product.toLowerCase());
   const { data: p } = await q.maybeSingle();
   if (!p) return null;
   let purchased = false;
   let order: { id: string; buyer_name: string } | null = null;
-  if (o && t) {
-    const { data: ord } = await sb.from("digital_orders").select("id, access_token, status, product_id, buyer_name").eq("id", o).maybeSingle();
-    if (orderUnlocks(ord, t, p.id)) { purchased = true; order = { id: ord!.id, buyer_name: ord!.buyer_name }; }
-  }
+  const ord = await authorizePurchase(sb, o, t, p.id, p.organization_id, userId);
+  if (ord) { purchased = true; order = { id: ord.id, buyer_name: ord.buyer_name }; }
   const productPublished = p.status === "published";
   // Without a valid purchase, only products still on sale are visible.
   if (!purchased && !productPublished) return null;
   return { p, purchased, order, productPublished };
 }
 
-async function sign(sb: Admin, path: string, download?: string | true) {
-  const { data } = await sb.storage.from("digital-files").createSignedUrl(path, SIGN_SECONDS, download ? { download } : undefined);
-  return data?.signedUrl ?? null;
-}
-
 type ResRow = { id: string; kind: string; role: string; name: string; description: string; file_path: string | null; file_name: string | null; mime_type: string | null; size_bytes: number | null; url: string | null; position: number };
-async function deliverResources(sb: Admin, rows: ResRow[]) {
+async function deliverResources(rows: ResRow[], product: string, o?: string, t?: string) {
   const sorted = [...rows].sort((a, b) => a.position - b.position);
   return Promise.all(sorted.map(async (r) => ({
     id: r.id, kind: r.kind, role: r.role, name: r.name, description: r.description,
     file_name: r.file_name, mime_type: r.mime_type, size_bytes: r.size_bytes,
-    url: r.kind === "link" ? r.url : r.file_path ? await sign(sb, r.file_path) : null,
-    downloadUrl: r.kind === "file" && r.file_path ? await sign(sb, r.file_path, r.file_name ?? true) : null,
+    url: r.kind === "link" ? r.url : r.file_path ? contentUrl(product, r.id, o, t) : null,
+    downloadUrl: r.kind === "file" && r.file_path ? contentUrl(product, r.id, o, t, true) : null,
   })));
 }
 
@@ -68,7 +62,7 @@ export const getCourse = createServerFn({ method: "POST" })
     const byPos = <T extends { position: number; created_at: string }>(a: T, b: T) => a.position - b.position || a.created_at.localeCompare(b.created_at);
     const modules = (mods ?? []).sort(byPos);
     const modOrder = new Map(modules.map((m, i) => [m.id, i]));
-    const lessons = (les ?? []).sort((a, b) => (modOrder.get(a.module_id)! - modOrder.get(b.module_id)!) || byPos(a, b));
+    const lessons = (les ?? []).sort((a, b) => ((modOrder.get(a.module_id) ?? 0) - (modOrder.get(b.module_id) ?? 0)) || byPos(a, b));
 
     let completed: string[] = [];
     let lastLessonId: string | null = null;
@@ -82,8 +76,8 @@ export const getCourse = createServerFn({ method: "POST" })
       ]);
       completed = (prog ?? []).map((x) => x.lesson_id);
       lastLessonId = st?.last_lesson_id ?? null;
-      downloads = await deliverResources(sb, (res ?? []) as ResRow[]);
-      if (p.file_path) mainFile = { name: p.file_name ?? "Fichier principal", url: await sign(sb, p.file_path, p.file_name ?? true) };
+      downloads = await deliverResources((res ?? []) as ResRow[], p.id, data.o, data.t);
+      if (p.file_path) mainFile = { name: p.file_name ?? "Fichier principal", url: contentUrl(p.id, "main", data.o, data.t, true) };
     }
     let coverUrl: string | null = null;
     if (p.cover_path) coverUrl = (await sb.storage.from("digital-covers").createSignedUrl(p.cover_path, SIGN_SECONDS)).data?.signedUrl ?? null;
@@ -111,11 +105,11 @@ export const getLesson = createServerFn({ method: "POST" })
     if (r.purchased && r.order) {
       await sb.from("digital_learning_state").upsert({ order_id: r.order.id, organization_id: r.p.organization_id, last_lesson_id: l.id, updated_at: new Date().toISOString() });
     }
-    return { ok: true as const, lesson: { id: l.id, title: l.title, is_free: l.is_free, content: sanitizeRichText(l.content) }, resources: await deliverResources(sb, (res ?? []) as ResRow[]) };
+    return { ok: true as const, lesson: { id: l.id, title: l.title, is_free: l.is_free, content: sanitizeRichText(l.content) }, resources: await deliverResources((res ?? []) as ResRow[], r.p.id, data.o, data.t) };
   });
 
 export const setLessonDone = createServerFn({ method: "POST" })
-  .inputValidator((d) => z.object({ product: ident, lesson: z.string().regex(UUID), o: z.string().regex(UUID), t: z.string().regex(/^[a-f0-9]{16,128}$/), done: z.boolean() }).parse(d))
+  .inputValidator((d) => z.object({ product: ident, lesson: z.string().regex(UUID), o: z.string().regex(UUID), t: token, done: z.boolean() }).parse(d))
   .handler(async ({ data }) => {
     const sb = await admin();
     const r = await resolve(sb, data.product, data.o, data.t);
@@ -138,18 +132,21 @@ export const listMyPurchases = createServerFn({ method: "POST" })
     if (!data.items.length) return [];
     const sb = await admin();
     const { data: orders } = await sb.from("digital_orders").select("id, access_token, status, product_id, product_title, product_type, paid_at, organization_id").in("id", data.items.map((i) => i.id));
-    const valid = (orders ?? []).filter((o) => o.product_id && o.status === "paid" && safeEqual(o.access_token, data.items.find((i) => i.id === o.id)?.t));
+    const { data: claims, error: claimsError } = await sb.from("digital_order_claims").select("order_id").in("order_id", data.items.map((i) => i.id));
+    if (claimsError) throw new Error("Vérification impossible");
+    const claimed = new Set((claims ?? []).map((c) => c.order_id));
+    const valid = (orders ?? []).filter((o) => !claimed.has(o.id) && o.product_id && o.status === "paid" && safeEqual(o.access_token, data.items.find((i) => i.id === o.id)?.t));
     return Promise.all(valid.map(async (o) => {
       const [{ data: p }, { data: org }, { count: total }, { count: done }, { data: st }] = await Promise.all([
-        sb.from("digital_products").select("id, slug, title, cover_path").eq("id", o.product_id!).maybeSingle(),
+        sb.from("digital_products").select("id, slug, title, cover_path").eq("id", o.product_id ?? "").maybeSingle(),
         sb.from("organizations").select("name").eq("id", o.organization_id).maybeSingle(),
-        sb.from("digital_lessons").select("id", { count: "exact", head: true }).eq("product_id", o.product_id!).eq("is_published", true),
+        sb.from("digital_lessons").select("id", { count: "exact", head: true }).eq("product_id", o.product_id ?? "").eq("is_published", true),
         sb.from("digital_lesson_progress").select("lesson_id", { count: "exact", head: true }).eq("order_id", o.id),
         sb.from("digital_learning_state").select("last_lesson_id").eq("order_id", o.id).maybeSingle(),
       ]);
       const coverUrl = p?.cover_path ? (await sb.storage.from("digital-covers").createSignedUrl(p.cover_path, SIGN_SECONDS)).data?.signedUrl ?? null : null;
       return {
-        orderId: o.id, token: o.access_token, product: p?.slug ?? o.product_id!, title: p?.title ?? o.product_title, type: o.product_type,
+        orderId: o.id, token: o.access_token, product: p?.slug ?? o.product_id ?? "", title: p?.title ?? o.product_title, type: o.product_type,
         shopName: org?.name ?? "", paidAt: o.paid_at, coverUrl, lessonsTotal: total ?? 0, lessonsDone: Math.min(done ?? 0, total ?? 0), lastLessonId: st?.last_lesson_id ?? null,
       };
     }));
@@ -181,13 +178,13 @@ export const listMyLibrary = createServerFn({ method: "GET" })
     const owned = [...all.values()].filter((o) => o.product_id && ownsOrder({ status: o.status, buyer_email: o.buyer_email, claimedBy: claimedBy.get(o.id) ?? null }, user));
     const items = await Promise.all(owned.map(async (o) => {
       const [{ data: p }, { data: org }] = await Promise.all([
-        sb.from("digital_products").select("id, slug, title, cover_path, organization_id").eq("id", o.product_id!).maybeSingle(),
+        sb.from("digital_products").select("id, slug, title, cover_path, organization_id").eq("id", o.product_id ?? "").maybeSingle(),
         sb.from("organizations").select("name").eq("id", o.organization_id).maybeSingle(),
       ]);
       // The product must still exist and belong to the shop that sold it.
       if (!p || p.organization_id !== o.organization_id) return null;
       const coverUrl = p.cover_path ? (await sb.storage.from("digital-covers").createSignedUrl(p.cover_path, SIGN_SECONDS)).data?.signedUrl ?? null : null;
-      return { orderId: o.id, token: o.access_token, product: p.slug ?? p.id, title: p.title, type: o.product_type, shopName: org?.name ?? "", paidAt: o.paid_at, coverUrl };
+      return { orderId: o.id, token: claimedBy.has(o.id) ? "" : o.access_token, product: p.slug ?? p.id, title: p.title, type: o.product_type, shopName: org?.name ?? "", paidAt: o.paid_at, coverUrl };
     }));
     return items.filter((x): x is NonNullable<typeof x> => !!x).sort((a, b) => (b.paidAt ?? "").localeCompare(a.paidAt ?? ""));
   });
@@ -205,7 +202,7 @@ export const claimOrder = createServerFn({ method: "POST" })
     if (d === "taken") throw new Error("Cet achat est déjà rattaché à un autre compte client");
     if (d === "other_email") throw new Error("Cet achat a été fait avec une autre adresse e-mail. Connectez-vous avec l'e-mail utilisé lors de l'achat pour le retrouver.");
     if (d === "ok") {
-      const { error } = await sb.from("digital_order_claims").insert({ order_id: o!.id, user_id: context.userId });
+      const { error } = await sb.from("digital_order_claims").insert({ order_id: data.id, user_id: context.userId });
       if (error) throw new Error("Rattachement impossible");
     }
     return { ok: true };

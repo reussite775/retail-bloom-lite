@@ -37,6 +37,7 @@ import { Route as AdminStatistiquesRouteImport } from './routes/admin.statistiqu
 import { Route as AdminUtilisateursRouteImport } from './routes/admin.utilisateurs'
 import { Route as AdminVentesNumeriquesRouteImport } from './routes/admin.ventes-numeriques'
 import { Route as ApiAssistantRouteImport } from './routes/api/assistant'
+import { Route as ApiDigitalContentRouteImport } from './routes/api/digital-content'
 import { Route as ApprendreProductRouteImport } from './routes/apprendre.$product'
 import { Route as BoutiqueSlugRouteImport } from './routes/boutique.$slug'
 import { Route as CommandeOrderIdRouteImport } from './routes/commande.$orderId'
@@ -191,6 +192,11 @@ const ApiAssistantRoute = ApiAssistantRouteImport.update({
   path: '/api/assistant',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiDigitalContentRoute = ApiDigitalContentRouteImport.update({
+  id: '/api/digital-content',
+  path: '/api/digital-content',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApprendreProductRoute = ApprendreProductRouteImport.update({
   id: '/apprendre/$product',
   path: '/apprendre/$product',
@@ -291,6 +297,7 @@ export interface FileRoutesByFullPath {
   '/admin/utilisateurs': typeof AdminUtilisateursRoute
   '/admin/ventes-numeriques': typeof AdminVentesNumeriquesRoute
   '/api/assistant': typeof ApiAssistantRoute
+  '/api/digital-content': typeof ApiDigitalContentRoute
   '/apprendre/$product': typeof ApprendreProductRoute
   '/boutique/$slug': typeof BoutiqueSlugRoute
   '/commande/$orderId': typeof CommandeOrderIdRoute
@@ -332,6 +339,7 @@ export interface FileRoutesByTo {
   '/admin/utilisateurs': typeof AdminUtilisateursRoute
   '/admin/ventes-numeriques': typeof AdminVentesNumeriquesRoute
   '/api/assistant': typeof ApiAssistantRoute
+  '/api/digital-content': typeof ApiDigitalContentRoute
   '/apprendre/$product': typeof ApprendreProductRoute
   '/boutique/$slug': typeof BoutiqueSlugRoute
   '/commande/$orderId': typeof CommandeOrderIdRoute
@@ -377,6 +385,7 @@ export interface FileRoutesById {
   '/admin/utilisateurs': typeof AdminUtilisateursRoute
   '/admin/ventes-numeriques': typeof AdminVentesNumeriquesRoute
   '/api/assistant': typeof ApiAssistantRoute
+  '/api/digital-content': typeof ApiDigitalContentRoute
   '/apprendre/$product': typeof ApprendreProductRoute
   '/boutique/$slug': typeof BoutiqueSlugRoute
   '/commande/$orderId': typeof CommandeOrderIdRoute
@@ -422,6 +431,7 @@ export interface FileRouteTypes {
     | '/admin/utilisateurs'
     | '/admin/ventes-numeriques'
     | '/api/assistant'
+    | '/api/digital-content'
     | '/apprendre/$product'
     | '/boutique/$slug'
     | '/commande/$orderId'
@@ -463,6 +473,7 @@ export interface FileRouteTypes {
     | '/admin/utilisateurs'
     | '/admin/ventes-numeriques'
     | '/api/assistant'
+    | '/api/digital-content'
     | '/apprendre/$product'
     | '/boutique/$slug'
     | '/commande/$orderId'
@@ -507,6 +518,7 @@ export interface FileRouteTypes {
     | '/admin/utilisateurs'
     | '/admin/ventes-numeriques'
     | '/api/assistant'
+    | '/api/digital-content'
     | '/apprendre/$product'
     | '/boutique/$slug'
     | '/commande/$orderId'
@@ -532,6 +544,7 @@ export interface RootRouteChildren {
   MesAchatsRoute: typeof MesAchatsRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   ApiAssistantRoute: typeof ApiAssistantRoute
+  ApiDigitalContentRoute: typeof ApiDigitalContentRoute
   ApprendreProductRoute: typeof ApprendreProductRoute
   BoutiqueSlugRoute: typeof BoutiqueSlugRoute
   CommandeOrderIdRoute: typeof CommandeOrderIdRoute
@@ -740,6 +753,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAssistantRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/digital-content': {
+      id: '/api/digital-content'
+      path: '/api/digital-content'
+      fullPath: '/api/digital-content'
+      preLoaderRoute: typeof ApiDigitalContentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/apprendre/$product': {
       id: '/apprendre/$product'
       path: '/apprendre/$product'
@@ -929,6 +949,7 @@ const rootRouteChildren: RootRouteChildren = {
   MesAchatsRoute: MesAchatsRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   ApiAssistantRoute: ApiAssistantRoute,
+  ApiDigitalContentRoute: ApiDigitalContentRoute,
   ApprendreProductRoute: ApprendreProductRoute,
   BoutiqueSlugRoute: BoutiqueSlugRoute,
   CommandeOrderIdRoute: CommandeOrderIdRoute,

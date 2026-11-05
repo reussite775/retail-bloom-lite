@@ -48,7 +48,11 @@ function MyPurchases() {
   const visible = items.filter((i) => (type === "all" || i.type === type) && (!q.trim() || fold(i.title).includes(fold(q.trim()))));
   const busy = loading || (session ? lib.isLoading : saved === null || dev.isLoading);
 
-  const signOut = async () => { await qc.cancelQueries(); qc.clear(); await supabase.auth.signOut(); };
+  const signOut = async () => {
+    await qc.cancelQueries(); qc.clear();
+    await fetch("/api/digital-content", { method: "DELETE" });
+    await supabase.auth.signOut();
+  };
 
   return (
     <div className="min-h-screen bg-muted/40 px-3 py-6 sm:px-6">
@@ -100,7 +104,7 @@ function MyPurchases() {
                   <span className="flex items-center gap-1 font-semibold text-primary"><CheckCircle2 className="h-3.5 w-3.5" /> Accès actif</span>
                 </div>
                 <Button asChild className="mt-auto w-full">
-                  <Link to="/apprendre/$product" params={{ product: p.product }} search={{ o: p.orderId, t: p.token, l: p.lastLessonId ?? undefined }}>
+                  <Link to="/apprendre/$product" params={{ product: p.product }} search={{ o: p.orderId, t: p.token || undefined, l: p.lastLessonId ?? undefined }}>
                     <PlayCircle className="h-4 w-4" /> Accéder à mon contenu
                   </Link>
                 </Button>

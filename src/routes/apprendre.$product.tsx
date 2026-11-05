@@ -9,6 +9,7 @@ import { getCourse, getLesson, setLessonDone } from "@/lib/learner.functions";
 import { progressStats, resumeLesson, savePurchase, videoEmbedUrl } from "@/lib/learner-access";
 import { FORMAT_LABELS, formatSize, resourceFormat } from "@/lib/digital-content";
 import { PRODUCT_TYPE_LABELS } from "@/components/sales-page-view";
+import { useAuth } from "@/lib/auth";
 
 export const Route = createFileRoute("/apprendre/$product")({
   validateSearch: (s: Record<string, unknown>) => ({
@@ -42,8 +43,9 @@ function LearnerPage() {
   const fetchLesson = useServerFn(getLesson);
   const markDone = useServerFn(setLessonDone);
   const [showPlan, setShowPlan] = useState(false);
+  const { session, loading } = useAuth();
 
-  const course = useQuery({ queryKey: ["learn", product, o, t], queryFn: () => fetchCourse({ data: { product, o, t } }) });
+  const course = useQuery({ queryKey: ["learn", product, o, t, session?.user.id], queryFn: () => fetchCourse({ data: { product, o, t } }), enabled: !loading });
   const c = course.data;
   const completed = new Set(c?.completed ?? []);
   const ordered = c?.lessons ?? [];
@@ -53,13 +55,13 @@ function LearnerPage() {
   useEffect(() => { if (c?.purchased && o && t) savePurchase({ id: o, t }); }, [c?.purchased, o, t]);
 
   const lesson = useQuery({
-    queryKey: ["learn-lesson", product, currentId, o, t],
-    queryFn: () => fetchLesson({ data: { product, lesson: currentId!, o, t } }),
+    queryKey: ["learn-lesson", product, currentId, o, t, session?.user.id],
+    queryFn: () => { if (!currentId) throw new Error("Leçon introuvable"); return fetchLesson({ data: { product, lesson: currentId, o, t } }); },
     enabled: !!current?.open,
   });
 
   const toggle = useMutation({
-    mutationFn: (done: boolean) => markDone({ data: { product, lesson: currentId!, o: o!, t: t!, done } }),
+    mutationFn: (done: boolean) => { if (!currentId || !o) throw new Error("Accès refusé"); return markDone({ data: { product, lesson: currentId, o, t, done } }); },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["learn", product, o, t] }),
     onError: (e: Error) => toast.error(e.message),
   });
@@ -122,8 +124,8 @@ function LearnerPage() {
         )}
         {!c.purchased && (
           <div className="mt-4 flex flex-wrap items-center justify-between gap-2 rounded-lg bg-muted p-3 text-sm">
-            <span>Aperçu gratuit : seules les leçons gratuites sont accessibles.</span>
-            <Button asChild size="sm"><Link to="/p/$productId" params={{ productId: c.product.slug ?? c.product.id }}>Acheter pour tout débloquer</Link></Button>
+            <span>{o ? "Achat rattaché ? Connectez-vous au compte propriétaire pour retrouver votre contenu." : "Aperçu gratuit : seules les leçons gratuites sont accessibles."}</span>
+            {o ? <Button asChild size="sm"><a href="/auth?client=1">Se connecter</a></Button> : <Button asChild size="sm"><Link to="/p/$productId" params={{ productId: c.product.slug ?? c.product.id }}>Acheter pour tout débloquer</Link></Button>}
           </div>
         )}
       </header>
@@ -246,7 +248,7 @@ function Downloads({ c }: { c: { downloads: Delivered[]; mainFile: { name: strin
       )}
       <ResourceLinks resources={main} title="Ressources" />
       <ResourceLinks resources={bonus} title="Bonus" />
-      <p className="text-xs text-muted-foreground">Les liens de téléchargement sont valables 1 heure. Rechargez la page pour en obtenir de nouveaux.</p>
+      <p className="text-xs text-muted-foreground">Après rattachement, connectez-vous au compte propriétaire pour télécharger vos fichiers.</p>
     </section>
   );
 }

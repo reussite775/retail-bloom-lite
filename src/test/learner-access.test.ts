@@ -30,6 +30,14 @@ describe("orderUnlocks", () => {
     expect(orderUnlocks(order, "abcdef0123456789", "other-shop-product")).toBe(false);
     expect(orderUnlocks(null, "abcdef0123456789", "p1")).toBe(false);
   });
+  it("revokes a claimed secret link and accepts only its authenticated owner on either device", () => {
+    expect(orderUnlocks(order, order.access_token, "p1", "owner", null)).toBe(false);
+    expect(orderUnlocks(order, order.access_token, "p1", "owner", "other")).toBe(false);
+    for (const device of ["phone", "computer"]) {
+      expect(orderUnlocks(order, undefined, "p1", "owner", "owner"), device).toBe(true);
+    }
+    expect(orderUnlocks({ ...order, status: "pending" }, undefined, "p1", "owner", "owner")).toBe(false);
+  });
 });
 
 describe("videoEmbedUrl", () => {

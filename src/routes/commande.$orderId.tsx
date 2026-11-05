@@ -37,19 +37,19 @@ function OrderTracking() {
   const { orderId } = Route.useParams();
   const { t, cancelled } = Route.useSearch();
   const fetchOrder = useServerFn(getDigitalOrder);
+  const { session, loading } = useAuth();
   const q = useQuery({
-    queryKey: ["digital-order", orderId, t],
+    queryKey: ["digital-order", orderId, t, session?.user.id],
     queryFn: () => fetchOrder({ data: { id: orderId, token: t } }),
-    enabled: !!t,
+    enabled: !!t && !loading,
     refetchInterval: (query) => (query.state.data?.status === "pending" ? 6000 : false),
   });
   const o = q.data;
   useEffect(() => { if (o?.status === "paid" && t) savePurchase({ id: orderId, t }); }, [o?.status, orderId, t]);
-  const { session } = useAuth();
   const claimFn = useServerFn(claimOrder);
   const claim = useMutation({
     mutationFn: () => claimFn({ data: { id: orderId, t } }),
-    onSuccess: () => toast.success("Achat ajouté à votre bibliothèque"),
+    onSuccess: async () => { toast.success("Achat ajouté à votre bibliothèque"); await q.refetch(); },
     onError: (e: Error) => toast.error(e.message),
   });
 
@@ -103,20 +103,23 @@ function OrderTracking() {
                       <a href={o.downloadUrl}><Download className="h-4 w-4" /> Télécharger {o.fileName ?? "le fichier"}</a>
                     </Button>
                   )}
-                  {o.productType !== "file" && (
+                  {o.contentAllowed && o.productType !== "file" && (
                     <p className="rounded-lg bg-muted p-3 text-sm text-muted-foreground">
                       Le vendeur va vous contacter pour organiser votre {(PRODUCT_TYPE_LABELS[o.productType] ?? "prestation").toLowerCase()}.
                     </p>
                   )}
                   {o.shopContact && <ContactSeller contact={o.shopContact} order={o.id} title={o.productTitle} />}
-                  {session ? (
+                  {o.claimed ? <>
+                    <p className="text-sm text-muted-foreground">Cet achat est rattaché à un compte client. Le lien secret seul ne donne plus accès au contenu.</p>
+                    <Button asChild variant="outline" className="w-full"><Link to="/mes-achats"><Library className="h-4 w-4" /> Retrouver mon achat</Link></Button>
+                  </> : session ? (
                     <Button variant="outline" className="w-full" disabled={claim.isPending || claim.isSuccess} onClick={() => claim.mutate()}>
                       <Library className="h-4 w-4" /> {claim.isSuccess ? "Ajouté à ma bibliothèque" : "Ajouter à ma bibliothèque"}
                     </Button>
                   ) : (
                     <Button asChild variant="outline" className="w-full"><a href="/auth?client=1"><Library className="h-4 w-4" /> Créer mon espace client pour retrouver mes achats</a></Button>
                   )}
-                  <p className="text-center text-xs text-muted-foreground">Gardez ce lien : il vous permet de retrouver votre achat.</p>
+                  {!o.claimed && <p className="text-center text-xs text-muted-foreground">Gardez ce lien jusqu'au rattachement à votre compte client.</p>}
                 </div>
               )}
             </>

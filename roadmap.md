@@ -1,4 +1,7 @@
 # Roadmap
+- [x] Contrôle propriétaire appliqué aux cours/leçons/progression/suivi et téléchargements via relais serveur ; 25 tests ciblés réussis, refus HTTP 403 sans connexion/avec fausse connexion dans l’aperçu. Aucune donnée créée/modifiée, non publié.
+- [ ] Tester réellement propriétaire sur deux appareils et ancien lien révoqué : bloqué par absence de commande réelle (0 commande), faux achats interdits.
+- [x] Procédure de récupération et limites documentées : mot de passe via parcours existant ; perte d’e-mail exige vérification manuelle, aucun transfert automatique ; anciens liens directs valides jusqu’à expiration.
 - [x] Vérifié le 27 octobre 2026 dans l’aperçu et sur getcommercestream.app : clics Monter/Descendre reflétés immédiatement, ordre et contenus conservés après enregistrement/quitter/recharger/réouvrir, modèles Progression et Expert sans écrasement ; brouillon de test 623a84b7-b1ae-4480-8f58-d12482891f3e supprimé via l’interface, absence confirmée en base. Aucun changement fonctionnel ni nouveau lancement des tests automatisés.
 - [x] Liens personnalisés produits/boutiques : disponibilité, copie, modification, compatibilité UUID, brouillons et modification inter-créateurs vérifiés ; 12 tests ciblés réussis. Données temporaires nettoyées. Non publié.
 - [x] Corriger les liens produits vers le domaine public ; vrai produit vérifié sans session, brouillons couverts par un test ciblé (aucun brouillon existant). Aucun changement de données ou permissions.

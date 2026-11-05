@@ -82,23 +82,22 @@ export const getDigitalOrder = createServerFn({ method: "POST" })
       if (r !== "pending" && r !== "error") o = (await load()).data ?? o;
     }
     const { data: org } = await supabaseAdmin.from("organizations").select("name, contact").eq("id", o.organization_id).maybeSingle();
-    let downloadUrl: string | null = null;
-    let fileName: string | null = null;
-    if (o.status === "paid" && o.product_id) {
-      const { data: prod } = await supabaseAdmin.from("digital_products").select("file_path, file_name").eq("id", o.product_id).maybeSingle();
-      if (prod?.file_path) {
-        const { data: s } = await supabaseAdmin.storage.from("digital-files").createSignedUrl(prod.file_path, 3600, { download: prod.file_name ?? true });
-        downloadUrl = s?.signedUrl ?? null;
-        fileName = prod.file_name;
-      }
-    }
+    const { authorizePurchase, purchaseIdentity } = await import("@/lib/purchase-access.server");
+    const userId = await purchaseIdentity(supabaseAdmin);
+    const access = o.product_id ? await authorizePurchase(supabaseAdmin, o.id, data.token, o.product_id, o.organization_id, userId) : null;
+    const { data: claim, error: claimError } = await supabaseAdmin.from("digital_order_claims").select("order_id").eq("order_id", o.id).maybeSingle();
+    if (claimError) throw new Error("Vérification impossible");
+    const claimed = !!claim;
+    const { data: fileProduct } = access && o.product_id ? await supabaseAdmin.from("digital_products").select("file_path, file_name").eq("id", o.product_id).maybeSingle() : { data: null };
+    const downloadUrl = fileProduct?.file_path && access && o.product_id ? (await import("@/lib/learner-access")).contentUrl(o.product_id, "main", o.id, claimed ? undefined : data.token, true) : null;
+    const fileName = fileProduct?.file_name ?? null;
     return {
       id: o.id, status: o.status as "pending" | "paid" | "failed" | "expired", amount: Number(o.amount),
       productTitle: o.product_title, productType: o.product_type, buyerName: o.buyer_name,
       createdAt: o.created_at, paidAt: o.paid_at, shopName: org?.name ?? "",
-      shopContact: o.status === "paid" ? (org?.contact ?? "") : "",
-      downloadUrl, fileName,
-      productRef: o.status === "paid" ? o.product_id : null,
+      shopContact: access ? (org?.contact ?? "") : "",
+      downloadUrl, fileName, claimed, contentAllowed: !!access,
+      productRef: access ? o.product_id : null,
     };
   });
 
