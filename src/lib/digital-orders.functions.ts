@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { safeEqual } from "@/lib/learner-access";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
@@ -74,7 +75,7 @@ export const getDigitalOrder = createServerFn({ method: "POST" })
       .select("id, access_token, status, amount, product_id, product_title, product_type, buyer_name, created_at, paid_at, organization_id, session_id")
       .eq("id", data.id).maybeSingle();
     let { data: o } = await load();
-    if (!o || o.access_token !== data.token) return null;
+    if (!o || !safeEqual(o.access_token, data.token)) return null;
     if (o.status === "pending" && o.session_id) {
       const { reconcileDigitalOrder } = await import("@/lib/bkapay.server");
       const r = await reconcileDigitalOrder(o.id);

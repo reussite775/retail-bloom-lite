@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { sanitizeRichText } from "@/lib/rich-text";
-import { canOpenLesson, orderUnlocks, ownsOrder } from "@/lib/learner-access";
+import { canOpenLesson, claimDecision, orderUnlocks, ownsOrder, safeEqual } from "@/lib/learner-access";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 /*
@@ -138,7 +138,7 @@ export const listMyPurchases = createServerFn({ method: "POST" })
     if (!data.items.length) return [];
     const sb = await admin();
     const { data: orders } = await sb.from("digital_orders").select("id, access_token, status, product_id, product_title, product_type, paid_at, organization_id").in("id", data.items.map((i) => i.id));
-    const valid = (orders ?? []).filter((o) => o.product_id && o.status === "paid" && o.access_token === data.items.find((i) => i.id === o.id)?.t);
+    const valid = (orders ?? []).filter((o) => o.product_id && o.status === "paid" && safeEqual(o.access_token, data.items.find((i) => i.id === o.id)?.t));
     return Promise.all(valid.map(async (o) => {
       const [{ data: p }, { data: org }, { count: total }, { count: done }, { data: st }] = await Promise.all([
         sb.from("digital_products").select("id, slug, title, cover_path").eq("id", o.product_id!).maybeSingle(),
@@ -197,13 +197,15 @@ export const claimOrder = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ id: z.string().regex(UUID), t: z.string().regex(/^[a-f0-9]{16,128}$/) }).parse(d))
   .handler(async ({ data, context }) => {
-    const sb = await admin();
-    const { data: o } = await sb.from("digital_orders").select("id, access_token, status").eq("id", data.id).maybeSingle();
-    if (!o || o.access_token !== data.t || o.status !== "paid") throw new Error("Commande introuvable ou non payée");
-    const { data: existing } = await sb.from("digital_order_claims").select("user_id").eq("order_id", o.id).maybeSingle();
-    if (existing && existing.user_id !== context.userId) throw new Error("Cet achat est déjà rattaché à un autre compte client");
-    if (!existing) {
-      const { error } = await sb.from("digital_order_claims").insert({ order_id: o.id, user_id: context.userId });
+    const { sb, user } = await verifiedUser(context.userId);
+    const { data: o } = await sb.from("digital_orders").select("id, access_token, status, buyer_email").eq("id", data.id).maybeSingle();
+    const { data: existing } = o ? await sb.from("digital_order_claims").select("user_id").eq("order_id", o.id).maybeSingle() : { data: null };
+    const d = claimDecision(o, data.t, existing?.user_id ?? null, user);
+    if (d === "invalid") throw new Error("Commande introuvable ou non payée");
+    if (d === "taken") throw new Error("Cet achat est déjà rattaché à un autre compte client");
+    if (d === "other_email") throw new Error("Cet achat a été fait avec une autre adresse e-mail. Connectez-vous avec l'e-mail utilisé lors de l'achat pour le retrouver.");
+    if (d === "ok") {
+      const { error } = await sb.from("digital_order_claims").insert({ order_id: o!.id, user_id: context.userId });
       if (error) throw new Error("Rattachement impossible");
     }
     return { ok: true };

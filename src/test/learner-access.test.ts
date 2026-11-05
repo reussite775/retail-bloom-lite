@@ -80,3 +80,36 @@ describe("ownsOrder (Mes achats)", () => {
     expect(ownsOrder({ status: "paid", buyer_email: "", claimedBy: null }, me)).toBe(false);
   });
 });
+
+import { claimDecision, safeEqual } from "@/lib/learner-access";
+describe("claimDecision (rattachement d'un achat)", () => {
+  const tok = "a".repeat(48);
+  const me = { id: "u1", email: "client@mail.com", emailVerified: true };
+  const paid = (buyer_email: string | null) => ({ access_token: tok, status: "paid", buyer_email });
+  it("an order without e-mail can be attached with its exact secret link", () => {
+    expect(claimDecision(paid(""), tok, null, me)).toBe("ok");
+    expect(claimDecision(paid(null), tok, null, { ...me, email: null, emailVerified: false })).toBe("ok");
+  });
+  it("wrong or truncated link, unpaid or unknown order are refused", () => {
+    expect(claimDecision(paid(""), "b".repeat(48), null, me)).toBe("invalid");
+    expect(claimDecision(paid(""), tok.slice(0, 40), null, me)).toBe("invalid");
+    expect(claimDecision({ ...paid(""), status: "pending" }, tok, null, me)).toBe("invalid");
+    expect(claimDecision(null, tok, null, me)).toBe("invalid");
+  });
+  it("an order already attached to another client cannot be claimed", () => {
+    expect(claimDecision(paid(""), tok, "u2", me)).toBe("taken");
+    expect(claimDecision(paid("client@mail.com"), tok, "u2", me)).toBe("taken");
+    expect(claimDecision(paid(""), tok, "u1", me)).toBe("already_mine");
+  });
+  it("a forwarded link cannot take an order bought with someone else's e-mail", () => {
+    expect(claimDecision(paid("acheteur@mail.com"), tok, null, me)).toBe("other_email");
+    expect(claimDecision(paid("client@mail.com"), tok, null, { ...me, emailVerified: false })).toBe("other_email");
+    expect(claimDecision(paid(" Client@Mail.com "), tok, null, me)).toBe("ok");
+  });
+  it("safeEqual compares secrets exactly", () => {
+    expect(safeEqual(tok, tok)).toBe(true);
+    expect(safeEqual(tok, tok + "a")).toBe(false);
+    expect(safeEqual(tok, undefined)).toBe(false);
+    expect(orderUnlocks({ access_token: tok, status: "paid", product_id: "p" }, tok.toUpperCase(), "p")).toBe(false);
+  });
+});

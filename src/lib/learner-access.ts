@@ -12,13 +12,41 @@ export function canOpenLesson(lesson: LessonAccessInput, ctx: { purchased: boole
   return lesson.is_free && ctx.productPublished;
 }
 
+/** Constant-time string comparison for secret order tokens. */
+export function safeEqual(a: string | null | undefined, b: string | null | undefined): boolean {
+  if (typeof a !== "string" || typeof b !== "string" || a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+}
+
+/**
+ * Who may attach a paid order (proved by its secret link) to their library:
+ * - never an unpaid order or a wrong token;
+ * - an order already attached stays with its first owner;
+ * - an order bought with an e-mail can only be attached by the client whose verified e-mail matches,
+ *   so a forwarded link can never take it away from the buyer's library.
+ */
+export function claimDecision(
+  order: { access_token: string; status: string; buyer_email: string | null } | null | undefined,
+  token: string,
+  claimedBy: string | null,
+  user: { id: string; email: string | null; emailVerified: boolean },
+): "ok" | "already_mine" | "invalid" | "taken" | "other_email" {
+  if (!order || !safeEqual(order.access_token, token) || order.status !== "paid") return "invalid";
+  if (claimedBy) return claimedBy === user.id ? "already_mine" : "taken";
+  const buyer = (order.buyer_email ?? "").trim().toLowerCase();
+  if (buyer && !(user.emailVerified && (user.email ?? "").trim().toLowerCase() === buyer)) return "other_email";
+  return "ok";
+}
+
 /** A paid order unlocks a product only with its exact secret token and matching product. */
 export function orderUnlocks(
   order: { access_token: string; status: string; product_id: string | null } | null | undefined,
   token: string | undefined,
   productId: string,
 ): boolean {
-  return !!order && !!token && order.access_token === token && order.status === "paid" && order.product_id === productId;
+  return !!order && !!token && safeEqual(order.access_token, token) && order.status === "paid" && order.product_id === productId;
 }
 
 /** Embeddable player URL for YouTube / Vimeo links, otherwise null. */
