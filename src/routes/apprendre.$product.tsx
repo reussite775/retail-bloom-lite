@@ -1,11 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { BookOpen, CheckCircle2, ChevronLeft, ChevronRight, Circle, Download, ExternalLink, FileText, Gift, Library, ListTree, Lock, PlayCircle } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { getCourse, getLesson, setLessonDone } from "@/lib/learner.functions";
+import { getCourse, getLesson, recordLessonView, setLessonDone } from "@/lib/learner.functions";
 import { progressStats, resumeLesson, savePurchase, videoEmbedUrl } from "@/lib/learner-access";
 import { FORMAT_LABELS, formatSize, resourceFormat } from "@/lib/digital-content";
 import { PRODUCT_TYPE_LABELS } from "@/components/sales-page-view";
@@ -43,6 +43,8 @@ function LearnerPage() {
   const fetchCourse = useServerFn(getCourse);
   const fetchLesson = useServerFn(getLesson);
   const markDone = useServerFn(setLessonDone);
+  const recordView = useServerFn(recordLessonView);
+  const viewedKey = useRef<string | null>(null);
   const [showPlan, setShowPlan] = useState(false);
   const { session, loading } = useAuth();
 
@@ -64,9 +66,26 @@ function LearnerPage() {
 
   const toggle = useMutation({
     mutationFn: (done: boolean) => { if (!currentId || !o) throw new Error("Accès refusé"); return markDone({ data: { product, lesson: currentId, o, t, done } }); },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["learn", product, o, t] }),
+    onSuccess: async () => {
+      await Promise.all([qc.invalidateQueries({ queryKey: ["learn", product, o, t] }), qc.invalidateQueries({ queryKey: ["my-library", session?.user.id] })]);
+    },
     onError: (e: Error) => toast.error(e.message),
   });
+
+  const view = useMutation({
+    mutationFn: (id: string) => recordView({ data: { product, lesson: id } }),
+    onSuccess: async () => {
+      await Promise.all([qc.invalidateQueries({ queryKey: ["learn", product, o, t] }), qc.invalidateQueries({ queryKey: ["my-library", session?.user.id] })]);
+    },
+  });
+  const lessonLoaded = lesson.data?.ok ? lesson.data.lesson.id : null;
+  useEffect(() => {
+    if (!session || !c?.progress || !current?.open || !currentId || lessonLoaded !== currentId) return;
+    const key = `${session.user.id}:${product}:${currentId}`;
+    if (viewedKey.current === key) return;
+    viewedKey.current = key;
+    view.mutate(currentId);
+  }, [session?.user.id, !!c?.progress, current?.open, currentId, lessonLoaded, product]);
 
   const go = (id: string) => { navigate({ search: (s) => ({ ...s, l: id }) }); setShowPlan(false); window.scrollTo({ top: 0 }); };
 
@@ -75,7 +94,7 @@ function LearnerPage() {
   if (!c) return <Shell><Notice title="Contenu indisponible" text="Ce lien n'est pas valide ou ce produit n'est plus proposé. Utilisez le lien reçu après votre paiement." /></Shell>;
 
   const isCourse = c.product.type === "formation";
-  const stats = progressStats(ordered, completed);
+  const stats = progressStats(ordered.filter((x) => x.open), completed);
   const idx = ordered.findIndex((x) => x.id === currentId);
   const prev = ordered.slice(0, Math.max(idx, 0)).reverse().find((x) => x.open);
   const next = ordered.slice(idx + 1).find((x) => x.open);
@@ -88,16 +107,17 @@ function LearnerPage() {
         const mDone = ls.every((x) => completed.has(x.id));
         return (
           <div key={m.id}>
-            <p className="flex items-center gap-1.5 text-xs font-bold uppercase text-primary">{c.purchased && mDone && <CheckCircle2 className="h-3.5 w-3.5" />}Module {mi + 1} · {m.title}</p>
+            <p className="flex flex-wrap items-center gap-1.5 text-xs font-bold uppercase text-primary">{c.progress && mDone && <CheckCircle2 className="h-3.5 w-3.5" />}Module {mi + 1} · {m.title}</p>
+            {c.progress && <p className="mt-1 text-xs text-muted-foreground">{mDone ? "Terminé" : ls.some((x) => completed.has(x.id) || c.progress?.history.some((h) => h.lesson_id === x.id && h.first_viewed_at)) ? "En cours" : "Non commencé"} · {ls.filter((x) => completed.has(x.id)).length}/{ls.length}</p>}
             <ol className="mt-1 space-y-0.5">
               {ls.map((x) => (
                 <li key={x.id}>
-                  <button type="button" disabled={!x.open} onClick={() => go(x.id)} data-testid="plan-lesson"
+                  <Button type="button" variant="ghost" disabled={!x.open} onClick={() => go(x.id)} data-testid="plan-lesson"
                     className={`flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm ${x.id === currentId ? "bg-primary/10 font-semibold text-primary" : "hover:bg-muted"} disabled:cursor-not-allowed disabled:opacity-60`}>
                     {!x.open ? <Lock className="h-3.5 w-3.5 shrink-0" aria-label="Verrouillée" /> : completed.has(x.id) ? <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-primary" aria-label="Terminée" /> : <Circle className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-label="Non terminée" />}
                     <span className="min-w-0 flex-1 truncate">{x.title}</span>
                     {x.is_free && <span className="shrink-0 rounded-full bg-primary/15 px-1.5 text-[10px] font-semibold text-primary">Gratuite</span>}
-                  </button>
+                  </Button>
                 </li>
               ))}
             </ol>
@@ -118,12 +138,16 @@ function LearnerPage() {
             {c.purchased && c.buyerName && <p className="text-sm text-muted-foreground">Bonjour {c.buyerName}</p>}
           </div>
         </div>
-        {isCourse && c.purchased && (
+        {isCourse && c.progress && (
           <div className="mt-4" data-testid="progress">
-            <div className="flex justify-between text-xs text-muted-foreground"><span>{stats.done}/{stats.total} leçons terminées · {stats.modulesDone}/{stats.modulesTotal} modules</span><span className="font-semibold text-primary">{stats.percent} %</span></div>
-            <div className="mt-1 h-2 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-primary transition-all" style={{ width: `${stats.percent}%` }} /></div>
+            <div className="flex flex-wrap justify-between gap-2 text-xs text-muted-foreground"><span>{stats.done}/{stats.total} leçons terminées · {stats.total - stats.done} restantes · {stats.modulesDone}/{stats.modulesTotal} modules</span><span className="font-semibold text-primary">{stats.percent} % · {c.progress.status}</span></div>
+            <progress className="mt-2 h-2 w-full accent-primary" value={stats.percent} max={100} aria-label="Progression de la formation" />
+            <Button className="mt-3" disabled={!c.progress.resumeId} onClick={() => c.progress?.resumeId && go(c.progress.resumeId)}><PlayCircle className="h-4 w-4" />{c.progress.action}</Button>
+            {view.isPending && <p className="mt-2 text-xs text-muted-foreground" role="status">Enregistrement de la consultation…</p>}
+            {view.isError && <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-destructive" role="alert"><span>Consultation non enregistrée. Vérifiez votre connexion.</span><Button size="sm" variant="outline" onClick={() => currentId && view.mutate(currentId)}>Réessayer</Button></div>}
           </div>
         )}
+        {isCourse && c.purchased && !session && <Button asChild className="mt-3" variant="outline"><a href="/auth?client=1">Se connecter pour enregistrer ma progression</a></Button>}
         {!c.purchased && (
           <div className="mt-4 flex flex-wrap items-center justify-between gap-2 rounded-lg bg-muted p-3 text-sm">
             <span>{o ? "Achat rattaché ? Connectez-vous au compte propriétaire pour retrouver votre contenu." : "Aperçu gratuit : seules les leçons gratuites sont accessibles."}</span>
@@ -135,9 +159,9 @@ function LearnerPage() {
       {isCourse ? (
         <div className="grid gap-4 lg:grid-cols-[280px_minmax(0,1fr)]">
           <aside className="rounded-2xl border bg-card p-3 lg:sticky lg:top-4 lg:self-start">
-            <button type="button" className="flex w-full items-center justify-between text-sm font-bold lg:hidden" onClick={() => setShowPlan(!showPlan)} aria-expanded={showPlan}>
+            <Button type="button" variant="ghost" className="flex w-full items-center justify-between text-sm font-bold lg:hidden" onClick={() => setShowPlan(!showPlan)} aria-expanded={showPlan}>
               <span className="flex items-center gap-2"><ListTree className="h-4 w-4 text-primary" /> Programme</span><span className="text-xs text-muted-foreground">{showPlan ? "Masquer" : "Afficher"}</span>
-            </button>
+            </Button>
             <div className={`${showPlan ? "mt-3 block" : "hidden"} lg:block`}>{c.modules.length ? plan : <p className="text-sm text-muted-foreground">Le programme n'est pas encore disponible.</p>}</div>
           </aside>
           <main className="min-w-0 space-y-4">
@@ -159,7 +183,7 @@ function LearnerPage() {
                 {lesson.data.lesson.content && <div className="prose prose-sm max-w-none break-words sm:prose-base [&_a]:text-primary [&_a]:underline [&_h2]:mt-3 [&_h2]:text-lg [&_h2]:font-bold [&_h3]:font-bold [&_ol]:list-decimal [&_ol]:pl-5 [&_p]:my-2 [&_ul]:list-disc [&_ul]:pl-5" dangerouslySetInnerHTML={{ __html: lesson.data.lesson.content }} />}
                 <ResourceLinks resources={lesson.data.resources.filter((r) => !isMedia(r))} title="Documents et ressources" />
                 <div className="flex flex-wrap items-center gap-2 border-t pt-4">
-                  {c.purchased && (
+                  {c.progress && session && (
                     <Button variant={completed.has(current.id) ? "outline" : "default"} disabled={toggle.isPending} onClick={() => toggle.mutate(!completed.has(current.id))}>
                       <CheckCircle2 className="h-4 w-4" /> {completed.has(current.id) ? "Terminée — annuler" : "Marquer comme terminée"}
                     </Button>

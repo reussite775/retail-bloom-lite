@@ -33,7 +33,7 @@ async function resolve(sb: Admin, product: string, o?: string, t?: string) {
   const productPublished = p.status === "published";
   // Without a valid purchase, only products still on sale are visible.
   if (!purchased && !productPublished) return null;
-  return { p, purchased, order, productPublished };
+  return { p, purchased, order, productPublished, userId };
 }
 
 type ResRow = { id: string; kind: string; role: string; name: string; description: string; file_path: string | null; file_name: string | null; mime_type: string | null; size_bytes: number | null; url: string | null; position: number };
@@ -56,8 +56,8 @@ export const getCourse = createServerFn({ method: "POST" })
     const { p, purchased, order, productPublished } = r;
     const [{ data: org }, { data: mods }, { data: les }] = await Promise.all([
       sb.from("organizations").select("name").eq("id", p.organization_id).maybeSingle(),
-      sb.from("digital_modules").select("id, title, description, position, created_at").eq("product_id", p.id),
-      sb.from("digital_lessons").select("id, module_id, title, is_free, is_published, position, created_at").eq("product_id", p.id).eq("is_published", true),
+      sb.from("digital_modules").select("id, title, description, position, created_at").eq("product_id", p.id).eq("organization_id", p.organization_id),
+      sb.from("digital_lessons").select("id, module_id, title, is_free, is_published, position, created_at").eq("product_id", p.id).eq("organization_id", p.organization_id).eq("is_published", true),
     ]);
     const byPos = <T extends { position: number; created_at: string }>(a: T, b: T) => a.position - b.position || a.created_at.localeCompare(b.created_at);
     const modules = (mods ?? []).sort(byPos);
@@ -66,16 +66,19 @@ export const getCourse = createServerFn({ method: "POST" })
 
     let completed: string[] = [];
     let lastLessonId: string | null = null;
+    let progress: Awaited<ReturnType<typeof import("@/lib/learner-progress.server")["readLearnerProgress"]>> | null = null;
+    if (r.userId && p.product_type === "formation") {
+      const { ownsFormation, readLearnerProgress } = await import("@/lib/learner-progress.server");
+      if (await ownsFormation(sb, r.userId, p.id, p.organization_id)) {
+        progress = await readLearnerProgress(sb, r.userId, p.id, p.organization_id);
+        completed = progress.completed;
+        lastLessonId = progress.lastLessonId;
+      }
+    }
     let downloads: Awaited<ReturnType<typeof deliverResources>> = [];
     let mainFile: { name: string; url: string | null } | null = null;
     if (purchased && order) {
-      const [{ data: prog }, { data: st }, { data: res }] = await Promise.all([
-        sb.from("digital_lesson_progress").select("lesson_id").eq("order_id", order.id),
-        sb.from("digital_learning_state").select("last_lesson_id").eq("order_id", order.id).maybeSingle(),
-        sb.from("digital_resources").select("id, kind, role, name, description, file_path, file_name, mime_type, size_bytes, url, position").eq("product_id", p.id).is("lesson_id", null),
-      ]);
-      completed = (prog ?? []).map((x) => x.lesson_id);
-      lastLessonId = st?.last_lesson_id ?? null;
+      const { data: res } = await sb.from("digital_resources").select("id, kind, role, name, description, file_path, file_name, mime_type, size_bytes, url, position").eq("product_id", p.id).is("lesson_id", null);
       downloads = await deliverResources((res ?? []) as ResRow[], p.id, data.o, data.t);
       if (p.file_path) mainFile = { name: p.file_name ?? "Fichier principal", url: contentUrl(p.id, "main", data.o, data.t, true) };
     }
@@ -87,7 +90,7 @@ export const getCourse = createServerFn({ method: "POST" })
       purchased, buyerName: order?.buyer_name ?? null,
       modules: modules.map((m) => ({ id: m.id, title: m.title, description: m.description })),
       lessons: lessons.map((l) => ({ id: l.id, module_id: l.module_id, title: l.title, is_free: l.is_free, open: canOpenLesson(l, { purchased, productPublished }) })),
-      completed, lastLessonId, downloads, mainFile,
+      completed, lastLessonId, progress, downloads, mainFile,
     };
   });
 
@@ -102,27 +105,24 @@ export const getLesson = createServerFn({ method: "POST" })
     if (!l || l.product_id !== r.p.id || !l.is_published) return { ok: false as const, reason: "not_found" as const };
     if (!canOpenLesson(l, { purchased: r.purchased, productPublished: r.productPublished })) return { ok: false as const, reason: "locked" as const };
     const { data: res } = await sb.from("digital_resources").select("id, kind, role, name, description, file_path, file_name, mime_type, size_bytes, url, position").eq("lesson_id", l.id).eq("product_id", r.p.id);
-    if (r.purchased && r.order) {
-      await sb.from("digital_learning_state").upsert({ order_id: r.order.id, organization_id: r.p.organization_id, last_lesson_id: l.id, updated_at: new Date().toISOString() });
-    }
     return { ok: true as const, lesson: { id: l.id, title: l.title, is_free: l.is_free, content: sanitizeRichText(l.content) }, resources: await deliverResources((res ?? []) as ResRow[], r.p.id, data.o, data.t) };
   });
 
 export const setLessonDone = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ product: ident, lesson: z.string().regex(UUID), o: z.string().regex(UUID), t: token, done: z.boolean() }).parse(d))
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
     const sb = await admin();
-    const r = await resolve(sb, data.product, data.o, data.t);
-    if (!r?.purchased || !r.order) throw new Error("Accès refusé");
-    const { data: l } = await sb.from("digital_lessons").select("id, product_id, is_published").eq("id", data.lesson).maybeSingle();
-    if (!l || l.product_id !== r.p.id || !l.is_published) throw new Error("Leçon introuvable");
-    if (data.done) {
-      const { error } = await sb.from("digital_lesson_progress").upsert({ order_id: r.order.id, lesson_id: l.id, organization_id: r.p.organization_id });
-      if (error) throw new Error("Enregistrement impossible");
-    } else {
-      await sb.from("digital_lesson_progress").delete().eq("order_id", r.order.id).eq("lesson_id", l.id);
-    }
-    return { ok: true };
+    const { writeLearnerActivity } = await import("@/lib/learner-progress.server");
+    return writeLearnerActivity(sb, context.userId, data.product, data.lesson, data.done ? "done" : "undone");
+  });
+
+export const recordLessonView = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ product: ident, lesson: z.string().regex(UUID) }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { writeLearnerActivity } = await import("@/lib/learner-progress.server");
+    return writeLearnerActivity(await admin(), context.userId, data.product, data.lesson, "view");
   });
 
 /** "Mes achats": summaries for purchase links saved on this device. Invalid or unpaid links are dropped. */
@@ -137,17 +137,14 @@ export const listMyPurchases = createServerFn({ method: "POST" })
     const claimed = new Set((claims ?? []).map((c) => c.order_id));
     const valid = (orders ?? []).filter((o) => !claimed.has(o.id) && o.product_id && o.status === "paid" && safeEqual(o.access_token, data.items.find((i) => i.id === o.id)?.t));
     return Promise.all(valid.map(async (o) => {
-      const [{ data: p }, { data: org }, { count: total }, { count: done }, { data: st }] = await Promise.all([
+      const [{ data: p }, { data: org }] = await Promise.all([
         sb.from("digital_products").select("id, slug, title, cover_path").eq("id", o.product_id ?? "").maybeSingle(),
         sb.from("organizations").select("name").eq("id", o.organization_id).maybeSingle(),
-        sb.from("digital_lessons").select("id", { count: "exact", head: true }).eq("product_id", o.product_id ?? "").eq("is_published", true),
-        sb.from("digital_lesson_progress").select("lesson_id", { count: "exact", head: true }).eq("order_id", o.id),
-        sb.from("digital_learning_state").select("last_lesson_id").eq("order_id", o.id).maybeSingle(),
       ]);
       const coverUrl = p?.cover_path ? (await sb.storage.from("digital-covers").createSignedUrl(p.cover_path, SIGN_SECONDS)).data?.signedUrl ?? null : null;
       return {
         orderId: o.id, token: o.access_token, product: p?.slug ?? o.product_id ?? "", title: p?.title ?? o.product_title, type: o.product_type,
-        shopName: org?.name ?? "", paidAt: o.paid_at, coverUrl, lessonsTotal: total ?? 0, lessonsDone: Math.min(done ?? 0, total ?? 0), lastLessonId: st?.last_lesson_id ?? null,
+        shopName: org?.name ?? "", paidAt: o.paid_at, coverUrl, progress: null, lastLessonId: null,
       };
     }));
   });
@@ -184,7 +181,9 @@ export const listMyLibrary = createServerFn({ method: "GET" })
       // The product must still exist and belong to the shop that sold it.
       if (!p || p.organization_id !== o.organization_id) return null;
       const coverUrl = p.cover_path ? (await sb.storage.from("digital-covers").createSignedUrl(p.cover_path, SIGN_SECONDS)).data?.signedUrl ?? null : null;
-      return { orderId: o.id, token: claimedBy.has(o.id) ? "" : o.access_token, product: p.slug ?? p.id, title: p.title, type: o.product_type, shopName: org?.name ?? "", paidAt: o.paid_at, coverUrl };
+      const { readLearnerProgress } = await import("@/lib/learner-progress.server");
+      const progress = o.product_type === "formation" ? await readLearnerProgress(sb, user.id, p.id, p.organization_id) : null;
+      return { orderId: o.id, token: claimedBy.has(o.id) ? "" : o.access_token, product: p.slug ?? p.id, title: p.title, type: o.product_type, shopName: org?.name ?? "", paidAt: o.paid_at, coverUrl, progress, lastLessonId: progress?.resumeId ?? null };
     }));
     return items.filter((x): x is NonNullable<typeof x> => !!x).sort((a, b) => (b.paidAt ?? "").localeCompare(a.paidAt ?? ""));
   });

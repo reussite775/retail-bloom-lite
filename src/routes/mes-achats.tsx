@@ -11,6 +11,7 @@ import { listMyLibrary, listMyPurchases } from "@/lib/learner.functions";
 import { PURCHASES_KEY, type SavedPurchase } from "@/lib/learner-access";
 import { PRODUCT_TYPE_LABELS } from "@/components/sales-page-view";
 import { purchaseQueryOptions } from "@/lib/purchase-cache";
+import type { learnerSummary } from "@/lib/learner-progress";
 
 export const Route = createFileRoute("/mes-achats")({
   head: () => ({
@@ -28,7 +29,7 @@ export const Route = createFileRoute("/mes-achats")({
   component: MyPurchases,
 });
 
-type Item = { orderId: string; token: string; product: string; title: string; type: string; shopName: string; paidAt: string | null; coverUrl: string | null; lessonsTotal?: number; lessonsDone?: number; lastLessonId?: string | null };
+type Item = { orderId: string; token: string; product: string; title: string; type: string; shopName: string; paidAt: string | null; coverUrl: string | null; progress?: ReturnType<typeof learnerSummary> | null; lastLessonId?: string | null };
 
 function MyPurchases() {
   const { session, loading } = useAuth();
@@ -104,9 +105,14 @@ function MyPurchases() {
                   {p.paidAt && <span>Acheté le {new Date(p.paidAt).toLocaleDateString("fr-FR")}</span>}
                   <span className="flex items-center gap-1 font-semibold text-primary"><CheckCircle2 className="h-3.5 w-3.5" /> Accès actif</span>
                 </div>
+                {p.type === "formation" && p.progress && <div className="my-2 space-y-1">
+                  <div className="flex flex-wrap justify-between gap-1 text-xs"><span>{p.progress.status}</span><span className="font-semibold text-primary">{p.progress.percent} %</span></div>
+                  <progress className="h-2 w-full accent-primary" value={p.progress.percent} max={100} aria-label={`Progression de ${p.title}`} />
+                  <p className="text-xs text-muted-foreground">{p.progress.done}/{p.progress.total} leçons terminées</p>
+                </div>}
                 <Button asChild className="mt-auto w-full">
                   <Link to="/apprendre/$product" params={{ product: p.product }} search={{ o: p.orderId, t: p.token || undefined, l: p.lastLessonId ?? undefined }}>
-                    <PlayCircle className="h-4 w-4" /> Accéder à mon contenu
+                    <PlayCircle className="h-4 w-4" /> {p.progress?.action ?? "Accéder à mon contenu"}
                   </Link>
                 </Button>
               </div>

@@ -1,0 +1,3 @@
+ALTER TABLE public.digital_lessons ADD CONSTRAINT digital_lessons_identity_tenant UNIQUE (id, product_id, organization_id);
+ALTER TABLE public.digital_learner_lessons ADD CONSTRAINT learner_lesson_same_course FOREIGN KEY (lesson_id, product_id, organization_id) REFERENCES public.digital_lessons(id, product_id, organization_id);
+ALTER TABLE public.digital_learner_courses ADD CONSTRAINT learner_resume_same_course FOREIGN KEY (last_lesson_id, product_id, organization_id) REFERENCES public.digital_lessons(id, product_id, organization_id);

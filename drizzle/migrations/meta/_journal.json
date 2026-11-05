@@ -239,6 +239,20 @@
       "when": 1793836521564,
       "tag": "0033_buyer_library_claims",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1793863022880,
+      "tag": "0034_learner_individual_progress",
+      "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1793863215518,
+      "tag": "0035_learner_progress_same_course_constraints",
+      "breakpoints": true
     }
   ]
 }

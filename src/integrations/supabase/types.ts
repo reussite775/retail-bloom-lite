@@ -323,6 +323,124 @@ export type Database = {
           },
         ]
       }
+      digital_learner_courses: {
+        Row: {
+          first_viewed_at: string | null
+          last_lesson_id: string | null
+          last_viewed_at: string | null
+          organization_id: string
+          product_id: string
+          user_id: string
+        }
+        Insert: {
+          first_viewed_at?: string | null
+          last_lesson_id?: string | null
+          last_viewed_at?: string | null
+          organization_id: string
+          product_id: string
+          user_id: string
+        }
+        Update: {
+          first_viewed_at?: string | null
+          last_lesson_id?: string | null
+          last_viewed_at?: string | null
+          organization_id?: string
+          product_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "digital_learner_courses_last_lesson_id_fkey"
+            columns: ["last_lesson_id"]
+            isOneToOne: false
+            referencedRelation: "digital_lessons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "digital_learner_courses_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "digital_learner_courses_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "digital_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "learner_resume_same_course"
+            columns: ["last_lesson_id", "product_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "digital_lessons"
+            referencedColumns: ["id", "product_id", "organization_id"]
+          },
+        ]
+      }
+      digital_learner_lessons: {
+        Row: {
+          completed_at: string | null
+          first_viewed_at: string | null
+          is_completed: boolean
+          last_viewed_at: string | null
+          lesson_id: string
+          organization_id: string
+          product_id: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          first_viewed_at?: string | null
+          is_completed?: boolean
+          last_viewed_at?: string | null
+          lesson_id: string
+          organization_id: string
+          product_id: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          first_viewed_at?: string | null
+          is_completed?: boolean
+          last_viewed_at?: string | null
+          lesson_id?: string
+          organization_id?: string
+          product_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "digital_learner_lessons_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "digital_lessons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "digital_learner_lessons_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "digital_learner_lessons_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "digital_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "learner_lesson_same_course"
+            columns: ["lesson_id", "product_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "digital_lessons"
+            referencedColumns: ["id", "product_id", "organization_id"]
+          },
+        ]
+      }
       digital_learning_state: {
         Row: {
           last_lesson_id: string | null
@@ -1599,6 +1717,16 @@ export type Database = {
           slug: string
           title: string
         }[]
+      }
+      record_learner_activity: {
+        Args: {
+          _action: string
+          _lesson: string
+          _organization: string
+          _product: string
+          _user: string
+        }
+        Returns: undefined
       }
       record_payment: {
         Args: { _amount: number; _customer_id: string }

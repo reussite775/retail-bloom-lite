@@ -1,4 +1,6 @@
 # Roadmap
+- [x] Lot 3.2 implémenté : tables individuelles et historique/reprise, 50 tests ciblés réussis, refus des mutations sans connexion et écrans vides vérifiés sur ordinateur/téléphone ; non publié, aucun compte/achat créé.
+- [ ] Lot 3.2 validation réelle : persistance après retour et second appareil, fin complète, isolation entre acheteurs et formation remplie sur téléphone ; bloquée par 0 commande payée et aucune formation publiée, faux achats interdits en production. Rapport docs/learner-progress-validation.md.
 - [x] Validation ciblée : 32 tests en mémoire et navigateur (refus fichiers inexistants, récupération sans session, effacement cookie). Corrigé cache des contenus et destination récupération client. Rapport dans docs/purchase-validation.md ; aucun compte/commande créé, non publié.
 - [x] Contrôle propriétaire appliqué aux cours/leçons/progression/suivi et téléchargements via relais serveur ; 25 tests ciblés réussis, refus HTTP 403 sans connexion/avec fausse connexion dans l’aperçu. Aucune donnée créée/modifiée, non publié.
 - [ ] Tester réellement propriétaire sur deux appareils et ancien lien révoqué : bloqué par absence de commande réelle (0 commande), faux achats interdits.
