@@ -1,4 +1,4 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider, defaultShouldDehydrateQuery } from "@tanstack/react-query";
 import {
   Outlet,
   Link,
@@ -18,6 +18,7 @@ import { persistQueryClient } from "@tanstack/react-query-persist-client";
 import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
 import { setupServiceWorker } from "@/lib/pwa";
 import { syncPendingSales } from "@/lib/offline";
+import { isPurchaseQuery } from "@/lib/purchase-cache";
 
 function NotFoundComponent() {
   return (
@@ -132,7 +133,20 @@ function RootComponent() {
   useEffect(() => {
     setupServiceWorker();
     const persister = createSyncStoragePersister({ storage: window.localStorage, key: "boutik-cache" });
-    const [unsub] = persistQueryClient({ queryClient, persister, maxAge: 1000 * 60 * 60 * 24 * 7 });
+    // Purge only buyer entries saved by older versions; preserve merchant offline data.
+    const safePersister = {
+      ...persister,
+      restoreClient: async () => {
+        const saved = await persister.restoreClient();
+        if (!saved) return saved;
+        saved.clientState.queries = saved.clientState.queries.filter((q) => !isPurchaseQuery(q.queryKey));
+        await persister.persistClient(saved);
+        return saved;
+      },
+    };
+    const [unsub] = persistQueryClient({ queryClient, persister: safePersister, maxAge: 1000 * 60 * 60 * 24 * 7,
+      dehydrateOptions: { shouldDehydrateQuery: (q) => !isPurchaseQuery(q.queryKey) && defaultShouldDehydrateQuery(q) },
+    });
     const sync = () => syncPendingSales(queryClient);
     sync();
     window.addEventListener("online", sync);

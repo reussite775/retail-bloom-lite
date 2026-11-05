@@ -16,6 +16,8 @@ export const Route = createFileRoute("/auth")({
       { name: "description", content: "Connectez-vous ou créez votre compte GestiPro." },
       { property: "og:title", content: "Connexion — GestiPro" },
       { property: "og:description", content: "Connectez-vous ou créez votre compte GestiPro." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: AuthPage,
@@ -114,7 +116,7 @@ function AuthPage() {
 
   const forgot = async () => {
     if (!email) { toast.error("Saisissez d'abord votre email"); return; }
-    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${window.location.origin}/reset-password` });
+    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${window.location.origin}/reset-password${client ? "?client=1" : ""}` });
     if (error) toast.error(error.message);
     else toast.success("Si un compte existe, un email de réinitialisation vient d'être envoyé.");
   };

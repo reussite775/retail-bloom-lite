@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 export const Route = createFileRoute("/reset-password")({
+  validateSearch: (s: Record<string, unknown>) => ({ client: s["client"] === "1" }),
   head: () => ({
     meta: [
       { title: "Nouveau mot de passe — GestiPro" },
@@ -24,6 +25,7 @@ export const Route = createFileRoute("/reset-password")({
 
 function ResetPassword() {
   const navigate = useNavigate();
+  const { client } = Route.useSearch();
   const [ready, setReady] = useState(false);
   const [pw, setPw] = useState("");
   const [pw2, setPw2] = useState("");
@@ -46,7 +48,7 @@ function ResetPassword() {
     setBusy(false);
     if (error) { toast.error(error.message); return; }
     toast.success("Mot de passe modifié");
-    navigate({ to: "/dashboard" });
+    navigate({ to: client ? "/mes-achats" : "/dashboard" });
   };
 
   return (

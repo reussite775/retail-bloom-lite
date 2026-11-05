@@ -1,4 +1,5 @@
 # Roadmap
+- [x] Validation ciblée : 32 tests en mémoire et navigateur (refus fichiers inexistants, récupération sans session, effacement cookie). Corrigé cache des contenus et destination récupération client. Rapport dans docs/purchase-validation.md ; aucun compte/commande créé, non publié.
 - [x] Contrôle propriétaire appliqué aux cours/leçons/progression/suivi et téléchargements via relais serveur ; 25 tests ciblés réussis, refus HTTP 403 sans connexion/avec fausse connexion dans l’aperçu. Aucune donnée créée/modifiée, non publié.
 - [ ] Tester réellement propriétaire sur deux appareils et ancien lien révoqué : bloqué par absence de commande réelle (0 commande), faux achats interdits.
 - [x] Procédure de récupération et limites documentées : mot de passe via parcours existant ; perte d’e-mail exige vérification manuelle, aucun transfert automatique ; anciens liens directs valides jusqu’à expiration.

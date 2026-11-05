@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { money } from "@/lib/format";
 import { getDigitalOrder } from "@/lib/digital-orders.functions";
 import { PRODUCT_TYPE_LABELS } from "@/components/sales-page-view";
+import { purchaseQueryOptions } from "@/lib/purchase-cache";
 
 export const Route = createFileRoute("/commande/$orderId")({
   validateSearch: (s: Record<string, unknown>) => ({
@@ -39,6 +40,7 @@ function OrderTracking() {
   const fetchOrder = useServerFn(getDigitalOrder);
   const { session, loading } = useAuth();
   const q = useQuery({
+    ...purchaseQueryOptions,
     queryKey: ["digital-order", orderId, t, session?.user.id],
     queryFn: () => fetchOrder({ data: { id: orderId, token: t } }),
     enabled: !!t && !loading,

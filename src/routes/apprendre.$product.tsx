@@ -10,6 +10,7 @@ import { progressStats, resumeLesson, savePurchase, videoEmbedUrl } from "@/lib/
 import { FORMAT_LABELS, formatSize, resourceFormat } from "@/lib/digital-content";
 import { PRODUCT_TYPE_LABELS } from "@/components/sales-page-view";
 import { useAuth } from "@/lib/auth";
+import { purchaseQueryOptions } from "@/lib/purchase-cache";
 
 export const Route = createFileRoute("/apprendre/$product")({
   validateSearch: (s: Record<string, unknown>) => ({
@@ -45,8 +46,8 @@ function LearnerPage() {
   const [showPlan, setShowPlan] = useState(false);
   const { session, loading } = useAuth();
 
-  const course = useQuery({ queryKey: ["learn", product, o, t, session?.user.id], queryFn: () => fetchCourse({ data: { product, o, t } }), enabled: !loading });
-  const c = course.data;
+  const course = useQuery({ ...purchaseQueryOptions, queryKey: ["learn", product, o, t, session?.user.id], queryFn: () => fetchCourse({ data: { product, o, t } }), enabled: !loading });
+  const c = course.isError || loading ? undefined : course.data;
   const completed = new Set(c?.completed ?? []);
   const ordered = c?.lessons ?? [];
   const currentId = l && ordered.some((x) => x.id === l) ? l : c ? resumeLesson(ordered, c.lastLessonId, completed) : null;
@@ -55,6 +56,7 @@ function LearnerPage() {
   useEffect(() => { if (c?.purchased && o && t) savePurchase({ id: o, t }); }, [c?.purchased, o, t]);
 
   const lesson = useQuery({
+    ...purchaseQueryOptions,
     queryKey: ["learn-lesson", product, currentId, o, t, session?.user.id],
     queryFn: () => { if (!currentId) throw new Error("Leçon introuvable"); return fetchLesson({ data: { product, lesson: currentId, o, t } }); },
     enabled: !!current?.open,
@@ -145,7 +147,7 @@ function LearnerPage() {
               <Notice title="Leçon réservée aux acheteurs" text="Achetez la formation pour accéder à cette leçon." />
             ) : lesson.isLoading ? (
               <p className="rounded-2xl border bg-card p-6 text-center text-muted-foreground">Chargement de la leçon…</p>
-            ) : !lesson.data?.ok ? (
+            ) : lesson.isError || !lesson.data?.ok ? (
               <Notice title={lesson.data?.reason === "locked" ? "Leçon réservée aux acheteurs" : "Leçon indisponible"} text="Cette leçon ne peut pas être affichée." />
             ) : (
               <article className="space-y-4 rounded-2xl border bg-card p-4 sm:p-6" data-testid="lesson-view">

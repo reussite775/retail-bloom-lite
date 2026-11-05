@@ -10,6 +10,7 @@ import { useAuth } from "@/lib/auth";
 import { listMyLibrary, listMyPurchases } from "@/lib/learner.functions";
 import { PURCHASES_KEY, type SavedPurchase } from "@/lib/learner-access";
 import { PRODUCT_TYPE_LABELS } from "@/components/sales-page-view";
+import { purchaseQueryOptions } from "@/lib/purchase-cache";
 
 export const Route = createFileRoute("/mes-achats")({
   head: () => ({
@@ -40,8 +41,8 @@ function MyPurchases() {
   useEffect(() => {
     try { const v = JSON.parse(localStorage.getItem(PURCHASES_KEY) ?? "[]"); setSaved(Array.isArray(v) ? v : []); } catch { setSaved([]); }
   }, []);
-  const lib = useQuery({ queryKey: ["my-library", session?.user.id], queryFn: () => library(), enabled: !!session });
-  const dev = useQuery({ queryKey: ["my-purchases", saved], queryFn: () => deviceList({ data: { items: saved ?? [] } }), enabled: !session && !loading && saved !== null && saved.length > 0 });
+  const lib = useQuery({ ...purchaseQueryOptions, queryKey: ["my-library", session?.user.id], queryFn: () => library(), enabled: !!session });
+  const dev = useQuery({ ...purchaseQueryOptions, queryKey: ["my-purchases", saved], queryFn: () => deviceList({ data: { items: saved ?? [] } }), enabled: !session && !loading && saved !== null && saved.length > 0 });
 
   const items: Item[] = session ? (lib.data ?? []) : (dev.data ?? []);
   const fold = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
