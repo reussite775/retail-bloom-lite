@@ -253,6 +253,13 @@
       "when": 1793863215518,
       "tag": "0035_learner_progress_same_course_constraints",
       "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1795536411446,
+      "tag": "0036_trial_37_days",
+      "breakpoints": true
     }
   ]
 }

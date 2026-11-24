@@ -1,0 +1,2 @@
+ALTER TABLE public.organizations ALTER COLUMN trial_ends_at SET DEFAULT (now() + interval '37 days');
+COMMENT ON COLUMN public.organizations.trial_ends_at IS 'Trial end, set by the database at shop creation (37 days). Existing rows unchanged.';

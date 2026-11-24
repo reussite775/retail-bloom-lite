@@ -58,12 +58,13 @@ function AppLayout() {
   const online = useOnline();
   const [menuOpen, setMenuOpen] = useState(false);
   const pending = usePendingSales();
-  const digital = profile.data?.account_type === "digital";
+  // Digital creator space retired from the UI: every shop uses the physical space (data kept).
+  const digital = false;
   const allowed = digital
     ? digitalNav.filter((n) => isAdmin || !n.admin)
     : nav.filter((n) => (isAdmin || !n.admin) && (!("online" in n) || profile.data?.business_mode === "online"));
   const inStudio = pathname.startsWith("/studio");
-  const wrongSpace = !!profile.data && (digital ? !allowed.some((n) => n.to === "/studio" ? pathname.replace(/\/$/, "") === "/studio" : pathname.startsWith(n.to)) : inStudio);
+  const wrongSpace = inStudio;
   const forbidden = !!member.data && ((!isAdmin && !allowed.some((n) => n.to === "/studio" ? pathname.replace(/\/$/, "") === "/studio" : pathname.startsWith(n.to))) || wrongSpace);
 
   useEffect(() => {
@@ -95,7 +96,6 @@ function AppLayout() {
   const subActive = !!p && p.subscription_active && (!p.subscription_ends_at || new Date(p.subscription_ends_at).getTime() > Date.now());
   const hasAccess = !!p && (subActive || daysLeft > 0);
 
-  if (p && shopId === uid && !p.space_chosen_at) return <WelcomeChoice uid={uid!} />;
   if (!isAdmin && !hasPremium(p)) return <CashierPremiumWall />;
   if (!superAdmin.data && !hasAccess && (!isAdmin || pathname !== "/abonnement")) return <Paywall isAdmin={isAdmin} />;
 
@@ -185,45 +185,6 @@ function AppLayout() {
   );
 }
 
-function WelcomeChoice({ uid }: { uid: string }) {
-  const qc = useQueryClient();
-  const navigate = useNavigate();
-  const [busy, setBusy] = useState<string | null>(null);
-  const choose = async (t: "physical" | "digital") => {
-    setBusy(t);
-    const { error } = await supabase.from("organizations")
-      .update({ account_type: t, space_chosen_at: new Date().toISOString() }).eq("id", uid);
-    if (error) { setBusy(null); toast.error("Impossible d'enregistrer votre choix. Réessayez."); return; }
-    await qc.invalidateQueries({ queryKey: ["profile", uid] });
-    navigate({ to: t === "digital" ? "/studio" : "/dashboard", replace: true });
-  };
-  const cards = [
-    { t: "physical" as const, icon: Store, title: "Commerçant physique", desc: "Caisse, ventes, produits et stocks, carnet de crédits et dépenses." },
-    { t: "digital" as const, icon: Globe, title: "Créateur numérique", desc: "Produits numériques, ventes et affiliation." },
-  ];
-  return (
-    <div className="grid min-h-screen place-items-center bg-background px-4 py-10">
-      <div className="w-full max-w-3xl text-center">
-        <h1 className="font-display text-3xl font-extrabold">Bienvenue dans GestiPro !</h1>
-        <p className="mt-2 text-lg text-muted-foreground">Quelle activité souhaitez-vous gérer ?</p>
-        <div className="mt-8 grid gap-4 md:grid-cols-2">
-          {cards.map((c) => (
-            <div key={c.t} className="flex flex-col rounded-2xl border bg-card p-6 text-left shadow-sm">
-              <span className="grid h-12 w-12 place-items-center rounded-xl bg-primary-soft text-primary"><c.icon className="h-6 w-6" /></span>
-              <h2 className="mt-4 text-xl font-bold">{c.title}</h2>
-              <p className="mt-1 flex-1 text-muted-foreground">{c.desc}</p>
-              <Button className="mt-6" disabled={!!busy} onClick={() => choose(c.t)}>
-                {busy === c.t ? "Enregistrement…" : "Continuer"}
-              </Button>
-            </div>
-          ))}
-        </div>
-        <p className="mt-6 text-sm text-muted-foreground">Vous pourrez changer d'espace plus tard dans Paramètres.</p>
-      </div>
-    </div>
-  );
-}
-
 function CashierPremiumWall() {
   return (
     <div className="grid min-h-screen place-items-center bg-background px-4">
@@ -249,7 +210,7 @@ function Paywall({ isAdmin }: { isAdmin: boolean }) {
         <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-primary-soft text-primary"><Lock className="h-7 w-7" /></div>
         <h1 className="mt-5 text-2xl font-bold">Votre essai gratuit est terminé</h1>
         <p className="mt-2 text-muted-foreground">
-          Vos 7 jours d'essai sont écoulés. La caisse, les stocks et le carnet de crédits sont bloqués. Vos données sont conservées — abonnez-vous pour continuer.
+          Vos 37 jours d'essai sont écoulés. La caisse, les stocks et le carnet de crédits sont bloqués. Vos données sont conservées — abonnez-vous pour continuer.
         </p>
         {isAdmin ? (
           <div className="mt-6 space-y-3">

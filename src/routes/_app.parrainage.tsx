@@ -56,7 +56,7 @@ function Referral() {
   });
   const list = refs.data ?? [];
   const months = list.reduce((a, r) => a + (r.reward_months ?? 0), 0);
-  const message = `Je gère ma boutique avec GestiPro (caisse, stocks, crédits, commandes en ligne). Essaie-le gratuitement 7 jours avec mon lien : ${link}`;
+  const message = `Je gère ma boutique avec GestiPro (caisse, stocks, crédits, commandes en ligne). Essaie-le gratuitement 37 jours avec mon lien : ${link}`;
 
   const copy = async (text: string, what: string) => {
     try { await navigator.clipboard.writeText(text); toast.success(`${what} copié`); } catch { toast.error("Copie impossible"); }

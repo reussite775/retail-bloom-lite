@@ -92,7 +92,7 @@ function Subscription() {
           <p className="font-medium">
             {daysLeft > 0
               ? `Essai gratuit : ${daysLeft} jour${daysLeft > 1 ? "s" : ""} restant${daysLeft > 1 ? "s" : ""} — accès à toutes les fonctionnalités.`
-              : "Votre essai gratuit de 7 jours est terminé. Choisissez une offre pour continuer."}
+              : "Votre essai gratuit de 37 jours est terminé. Choisissez une offre pour continuer."}
           </p>
         </div>
       )}

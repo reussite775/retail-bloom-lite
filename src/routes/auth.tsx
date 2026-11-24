@@ -135,7 +135,7 @@ function AuthPage() {
         </div>
         <h1 className="text-2xl font-bold">{client ? (mode === "in" ? "Mon espace client" : "Créer mon espace client") : mode === "in" ? "Bon retour" : "Créer un compte"}</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          {client ? "Retrouvez vos achats numériques avec l'e-mail utilisé lors de l'achat." : mode === "in" ? "Connectez-vous à votre boutique." : "7 jours d'essai gratuit, sans engagement."}
+          {client ? "Retrouvez vos achats numériques avec l'e-mail utilisé lors de l'achat." : mode === "in" ? "Connectez-vous à votre boutique." : "37 jours d'essai gratuit, sans engagement."}
         </p>
         {invited && <p className="mt-3 rounded-lg bg-primary-soft p-2 text-sm text-accent-foreground">Vous êtes invité par un commerçant GestiPro (code de parrainage {refCode}).</p>}
         {invited && session && (

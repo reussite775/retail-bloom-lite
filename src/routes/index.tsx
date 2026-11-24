@@ -8,9 +8,9 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "GestiPro — La gestion simple pour commerçants" },
-      { name: "description", content: "Caisse, stocks et chiffre d'affaires du jour. Essai gratuit 7 jours." },
+      { name: "description", content: "Caisse, stocks et chiffre d'affaires du jour. Essai gratuit 37 jours." },
       { property: "og:title", content: "GestiPro — La gestion simple pour commerçants" },
-      { property: "og:description", content: "Caisse, stocks et chiffre d'affaires du jour. Essai gratuit 7 jours." },
+      { property: "og:description", content: "Caisse, stocks et chiffre d'affaires du jour. Essai gratuit 37 jours." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -41,7 +41,7 @@ function Landing() {
         <Button asChild variant="outline"><Link to="/auth">Se connecter</Link></Button>
       </header>
       <main className="mx-auto max-w-6xl px-6 pb-24 pt-16">
-        <p className="mb-4 inline-block rounded-full bg-primary-soft px-3 py-1 text-sm font-semibold text-accent-foreground">7 jours d'essai gratuit · sans carte</p>
+        <p className="mb-4 inline-block rounded-full bg-primary-soft px-3 py-1 text-sm font-semibold text-accent-foreground">1 mois et 7 jours d'essai gratuit · sans carte</p>
         <h1 className="max-w-3xl text-5xl font-extrabold leading-tight md:text-6xl">
           Votre boutique, <span className="text-primary">sous contrôle</span>.
         </h1>
