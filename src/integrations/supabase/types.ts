@@ -935,6 +935,109 @@ export type Database = {
           },
         ]
       }
+      inventories: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          note: string
+          organization_id: string
+          status: string
+          validated_at: string | null
+          validated_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          note?: string
+          organization_id: string
+          status?: string
+          validated_at?: string | null
+          validated_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          note?: string
+          organization_id?: string
+          status?: string
+          validated_at?: string | null
+          validated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventories_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inventory_lines: {
+        Row: {
+          counted: number | null
+          expected: number
+          id: string
+          inventory_id: string
+          item_name: string
+          organization_id: string
+          product_id: string | null
+          variant_id: string | null
+        }
+        Insert: {
+          counted?: number | null
+          expected: number
+          id?: string
+          inventory_id: string
+          item_name: string
+          organization_id: string
+          product_id?: string | null
+          variant_id?: string | null
+        }
+        Update: {
+          counted?: number | null
+          expected?: number
+          id?: string
+          inventory_id?: string
+          item_name?: string
+          organization_id?: string
+          product_id?: string | null
+          variant_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_lines_inventory_id_fkey"
+            columns: ["inventory_id"]
+            isOneToOne: false
+            referencedRelation: "inventories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_lines_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_lines_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_lines_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "product_variants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       online_orders: {
         Row: {
           amount: number
@@ -1209,38 +1312,206 @@ export type Database = {
         }
         Relationships: []
       }
-      products: {
+      product_categories: {
         Row: {
           created_at: string
           id: string
-          low_stock_threshold: number
           name: string
-          purchase_price: number
-          sale_price: number
-          stock: number
-          user_id: string
+          organization_id: string
+          parent_id: string | null
         }
         Insert: {
           created_at?: string
           id?: string
-          low_stock_threshold?: number
           name: string
-          purchase_price?: number
-          sale_price?: number
-          stock?: number
-          user_id?: string
+          organization_id?: string
+          parent_id?: string | null
         }
         Update: {
           created_at?: string
           id?: string
+          name?: string
+          organization_id?: string
+          parent_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_categories_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_categories_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "product_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_units: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          organization_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          organization_id?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          organization_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_units_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_variants: {
+        Row: {
+          attributes: Json
+          barcode: string
+          created_at: string
+          id: string
+          is_archived: boolean
+          low_stock_threshold: number
+          name: string
+          organization_id: string
+          product_id: string
+          purchase_price: number | null
+          sale_price: number | null
+          sku: string
+          stock: number
+        }
+        Insert: {
+          attributes?: Json
+          barcode?: string
+          created_at?: string
+          id?: string
+          is_archived?: boolean
+          low_stock_threshold?: number
+          name: string
+          organization_id?: string
+          product_id: string
+          purchase_price?: number | null
+          sale_price?: number | null
+          sku?: string
+          stock?: number
+        }
+        Update: {
+          attributes?: Json
+          barcode?: string
+          created_at?: string
+          id?: string
+          is_archived?: boolean
+          low_stock_threshold?: number
+          name?: string
+          organization_id?: string
+          product_id?: string
+          purchase_price?: number | null
+          sale_price?: number | null
+          sku?: string
+          stock?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_variants_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_variants_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      products: {
+        Row: {
+          allow_negative_stock: boolean
+          barcode: string
+          category_id: string | null
+          created_at: string
+          description: string
+          has_variants: boolean
+          id: string
+          image_url: string
+          is_archived: boolean
+          low_stock_threshold: number
+          name: string
+          purchase_price: number
+          sale_price: number
+          sku: string
+          stock: number
+          unit: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          allow_negative_stock?: boolean
+          barcode?: string
+          category_id?: string | null
+          created_at?: string
+          description?: string
+          has_variants?: boolean
+          id?: string
+          image_url?: string
+          is_archived?: boolean
+          low_stock_threshold?: number
+          name: string
+          purchase_price?: number
+          sale_price?: number
+          sku?: string
+          stock?: number
+          unit?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          allow_negative_stock?: boolean
+          barcode?: string
+          category_id?: string | null
+          created_at?: string
+          description?: string
+          has_variants?: boolean
+          id?: string
+          image_url?: string
+          is_archived?: boolean
           low_stock_threshold?: number
           name?: string
           purchase_price?: number
           sale_price?: number
+          sku?: string
           stock?: number
+          unit?: string
+          updated_at?: string
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "products_category_fk"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "product_categories"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "products_org_fkey"
             columns: ["user_id"]
@@ -1349,30 +1620,36 @@ export type Database = {
           product_id: string | null
           product_name: string
           quantity: number
+          returned_quantity: number
           sale_id: string
           unit_cost: number
           unit_price: number
           user_id: string
+          variant_id: string | null
         }
         Insert: {
           id?: string
           product_id?: string | null
           product_name: string
           quantity: number
+          returned_quantity?: number
           sale_id: string
           unit_cost: number
           unit_price: number
           user_id: string
+          variant_id?: string | null
         }
         Update: {
           id?: string
           product_id?: string | null
           product_name?: string
           quantity?: number
+          returned_quantity?: number
           sale_id?: string
           unit_cost?: number
           unit_price?: number
           user_id?: string
+          variant_id?: string | null
         }
         Relationships: [
           {
@@ -1401,6 +1678,81 @@ export type Database = {
             columns: ["sale_id"]
             isOneToOne: false
             referencedRelation: "sales"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sale_items_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "product_variants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sale_returns: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          organization_id: string
+          quantity: number
+          reason: string
+          restocked: boolean
+          sale_id: string
+          sale_item_id: string
+          user_id: string | null
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          id?: string
+          organization_id: string
+          quantity: number
+          reason?: string
+          restocked: boolean
+          sale_id: string
+          sale_item_id: string
+          user_id?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          organization_id?: string
+          quantity?: number
+          reason?: string
+          restocked?: boolean
+          sale_id?: string
+          sale_item_id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sale_returns_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sale_returns_sale_id_fkey"
+            columns: ["sale_id"]
+            isOneToOne: false
+            referencedRelation: "debts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sale_returns_sale_id_fkey"
+            columns: ["sale_id"]
+            isOneToOne: false
+            referencedRelation: "sales"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sale_returns_sale_item_id_fkey"
+            columns: ["sale_item_id"]
+            isOneToOne: false
+            referencedRelation: "sale_items"
             referencedColumns: ["id"]
           },
         ]
@@ -1487,6 +1839,73 @@ export type Database = {
             columns: ["shop_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stock_movements: {
+        Row: {
+          created_at: string
+          id: string
+          item_name: string
+          kind: string
+          organization_id: string
+          product_id: string | null
+          quantity: number
+          reason: string
+          ref_id: string | null
+          stock_after: number
+          user_id: string | null
+          variant_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          item_name?: string
+          kind: string
+          organization_id: string
+          product_id?: string | null
+          quantity: number
+          reason?: string
+          ref_id?: string | null
+          stock_after: number
+          user_id?: string | null
+          variant_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          item_name?: string
+          kind?: string
+          organization_id?: string
+          product_id?: string | null
+          quantity?: number
+          reason?: string
+          ref_id?: string | null
+          stock_after?: number
+          user_id?: string | null
+          variant_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_movements_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_movements_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_movements_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "product_variants"
             referencedColumns: ["id"]
           },
         ]
@@ -1637,6 +2056,10 @@ export type Database = {
         Returns: string
       }
       claim_referral: { Args: { _code: string }; Returns: boolean }
+      close_inventory: {
+        Args: { _inventory: string; _validate: boolean }
+        Returns: number
+      }
       create_credit_sale: {
         Args: { _customer_id: string; _items: Json }
         Returns: string
@@ -1732,7 +2155,27 @@ export type Database = {
         Args: { _amount: number; _customer_id: string }
         Returns: string
       }
+      record_stock_movement: {
+        Args: {
+          _kind: string
+          _product: string
+          _quantity: number
+          _reason: string
+          _variant: string
+        }
+        Returns: number
+      }
+      return_sale_item: {
+        Args: {
+          _quantity: number
+          _reason: string
+          _restock: boolean
+          _sale_item: string
+        }
+        Returns: string
+      }
       shop_has_premium: { Args: { _org: string }; Returns: boolean }
+      start_inventory: { Args: { _note: string }; Returns: string }
       valid_public_slug: { Args: { _slug: string }; Returns: boolean }
     }
     Enums: {

@@ -260,6 +260,13 @@
       "when": 1795536411446,
       "tag": "0036_trial_37_days",
       "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1795536901153,
+      "tag": "0037_advanced_catalog_stock",
+      "breakpoints": true
     }
   ]
 }
