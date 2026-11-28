@@ -47,3 +47,12 @@ export function attributeObject(entries: { key: string; value: string }[]) {
   }
   return result;
 }
+
+export function movementInput(kind: string, value: string, reason: string, hasVariants: boolean, variant: string) {
+  const quantity = Number(value);
+  if (!['in', 'out', 'adjustment', 'loss', 'damage'].includes(kind)) throw new Error('Opération invalide');
+  if (!value.trim() || !Number.isInteger(quantity) || quantity < (kind === 'adjustment' ? 0 : 1)) throw new Error('Quantité invalide');
+  if (!reason.trim()) throw new Error('Le motif est requis');
+  if (hasVariants && !variant) throw new Error('Choisissez une variante');
+  return { quantity, reason: reason.trim() };
+}
